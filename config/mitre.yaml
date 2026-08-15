@@ -1,0 +1,11 @@
+mitre:
+  enabled: true
+  domain: enterprise-attack
+  mapping:
+    default_source: sentinelsiem
+    default_confidence: 1.0
+  coverage:
+    include_subtechniques: true
+  navigator:
+    version: "4.5"
+    name: "SentinelSIEM MITRE Coverage"
