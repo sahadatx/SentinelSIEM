@@ -1,0 +1,17 @@
+threat_intelligence:
+  enabled: true
+  matching:
+    case_insensitive: true
+  cache:
+    ttl_seconds: 300
+  lifecycle:
+    default_status: active
+    reject_expired_on_create: true
+  feeds:
+    enabled: []
+    refresh_interval_seconds: 3600
+  reputation:
+    unknown: 0
+    benign: 1
+    suspicious: 2
+    malicious: 3
