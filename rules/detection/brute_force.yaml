@@ -1,0 +1,19 @@
+id: brute-force
+name: Brute Force Login Attempt
+description: Detect an individual failed authentication event that can contribute to brute-force analysis.
+enabled: true
+severity: high
+category: authentication
+match: all
+conditions:
+  - field: action
+    operator: equals
+    value: login
+  - field: outcome
+    operator: equals
+    value: failure
+  - field: source_ip
+    operator: exists
+tags:
+  - authentication
+  - brute-force

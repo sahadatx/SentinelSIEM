@@ -1,0 +1,7 @@
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@
+     "pydantic-settings>=2.6,<3.0",
++    "pyyaml>=6.0,<7.0",
+     "typer>=0.15,<1.0",
+*** End Patch

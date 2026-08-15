@@ -1,0 +1,14 @@
+id: account-compromise
+name: Possible Account Compromise
+description: Multiple failed authentications followed by a successful authentication from the same source.
+mode: sequence
+window_seconds: 300
+group_by:
+  - source_ip
+conditions:
+  - field: outcome
+    equals: failure
+  - field: outcome
+    equals: success
+severity: high
+enabled: true

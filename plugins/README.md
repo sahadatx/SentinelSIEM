@@ -1,16 +1,21 @@
-# Collector Plugins
+# Detection Plugins
 
-Phase 04 establishes the collector extension point and core ingestion
-contracts. Collector-specific implementations are intentionally kept behind
-this plugin boundary.
+Detector plugins live under `plugins/detectors/`.
 
-The locked project structure reserves these collector plugin namespaces:
+Each detector directory contains:
 
-- `plugins/collectors/syslog/`
-- `plugins/collectors/linux_auth/`
-- `plugins/collectors/nginx/`
-- `plugins/collectors/apache/`
-- `plugins/collectors/windows/`
+```text
+<plugin-id>/
+├── __init__.py
+└── plugin.py
+```
 
-Do not couple collector implementations directly to parsing, detection,
-correlation, risk, alert, or storage logic.
+`plugin.py` must expose:
+
+```python
+def create_plugin() -> DetectorPlugin:
+    ...
+```
+
+The core system discovers detector plugins automatically. The detection
+engine does not contain hard-coded imports for individual detectors.

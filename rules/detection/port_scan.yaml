@@ -1,0 +1,20 @@
+id: port-scan
+name: Port Scan Indicator
+description: Detect a network connection event with a destination port for later multi-event correlation.
+enabled: true
+severity: medium
+category: network
+match: all
+conditions:
+  - field: source_ip
+    operator: exists
+  - field: destination_port
+    operator: exists
+  - field: protocol
+    operator: in
+    value:
+      - tcp
+      - udp
+tags:
+  - network
+  - reconnaissance

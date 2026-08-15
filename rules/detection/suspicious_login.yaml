@@ -1,0 +1,20 @@
+id: suspicious-login
+name: Suspicious Login Failure
+description: Detect a failed SSH authentication attempt for an invalid or suspicious login.
+enabled: true
+severity: medium
+category: authentication
+match: all
+conditions:
+  - field: source
+    operator: equals
+    value: sshd
+  - field: action
+    operator: equals
+    value: login
+  - field: outcome
+    operator: equals
+    value: failure
+tags:
+  - authentication
+  - ssh

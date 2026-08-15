@@ -1,0 +1,10 @@
+id: repeated-failed-auth
+name: Repeated Failed Authentication
+description: Repeated authentication failures from the same source within a bounded window.
+mode: threshold
+window_seconds: 300
+group_by:
+  - source_ip
+threshold: 5
+severity: high
+enabled: true
