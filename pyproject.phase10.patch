@@ -1,0 +1,2 @@
+[tool.pyright]
+# Phase 10 requires no new runtime dependency.

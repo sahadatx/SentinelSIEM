@@ -1,0 +1,24 @@
+risk:
+  version: 1
+
+  score_range:
+    min: 0
+    max: 100
+
+  thresholds:
+    low: 0
+    medium: 30
+    high: 60
+    critical: 80
+
+  factors:
+    severity: 0.25
+    confidence: 0.10
+    asset_criticality: 0.15
+    user_risk: 0.10
+    ioc_reputation: 0.08
+    threat_intelligence: 0.08
+    frequency: 0.04
+    correlation_strength: 0.10
+    mitre_technique: 0.05
+    historical_context: 0.05
