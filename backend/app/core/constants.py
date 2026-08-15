@@ -1,0 +1,7 @@
+from __future__ import annotations
+
+DEFAULT_APP_NAME = "siem-security-platform"
+DEFAULT_ENVIRONMENT = "development"
+DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_MAX_REQUEST_BYTES = 1_048_576
+DEFAULT_SHUTDOWN_TIMEOUT_SECONDS = 10

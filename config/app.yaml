@@ -1,0 +1,11 @@
+app:
+  name: siem-security-platform
+  environment: development
+  debug: false
+  version: 0.1.0
+
+runtime:
+  shutdown_timeout_seconds: 10
+
+request:
+  max_request_bytes: 1048576

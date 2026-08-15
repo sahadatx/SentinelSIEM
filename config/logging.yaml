@@ -1,0 +1,10 @@
+logging:
+  level: INFO
+  format: json
+  redact_sensitive_fields: true
+  prohibited_fields:
+    - password
+    - token
+    - api_key
+    - secret
+    - credential

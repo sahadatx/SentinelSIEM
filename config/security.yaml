@@ -1,0 +1,5 @@
+security:
+  secure_defaults: true
+  expose_debug_errors: false
+  require_secret_from_environment: true
+  max_request_bytes: 1048576
