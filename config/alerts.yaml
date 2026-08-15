@@ -1,0 +1,37 @@
+alerts:
+  lifecycle:
+    initial_state: new
+    terminal_states:
+      - closed
+      - suppressed
+
+  deduplication:
+    enabled: true
+    key_fields:
+      - source_type
+      - rule_id
+      - asset_id
+      - user_id
+      - title
+
+  suppression:
+    enabled: true
+    minimum_occurrences: 10
+    never_suppress_priorities:
+      - critical
+
+  escalation:
+    enabled: true
+    minimum_risk_score: 80
+    severities:
+      - high
+      - critical
+
+  sla:
+    enabled: true
+    # SLA duration policy is intentionally configuration-only in Phase 11.
+    # Runtime scheduling belongs to later operational phases.
+
+  notification:
+    enabled: true
+    adapter: application_boundary
