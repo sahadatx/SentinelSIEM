@@ -14,6 +14,12 @@ from app.alerts.models import (
 )
 from app.alerts.notification import AlertNotificationSink
 from app.alerts.suppression import AlertSuppression
+from app.core.metrics import REGISTRY
+
+_ALERTS_CREATED_HELP = "Total alerts created."
+_ALERTS_DEDUPLICATED_HELP = "Total duplicate alert occurrences merged."
+_ALERTS_SUPPRESSED_HELP = "Total alerts suppressed by policy."
+_ALERTS_ESCALATED_HELP = "Total alerts escalated."
 
 
 class AlertManager:
@@ -77,6 +83,11 @@ class AlertManager:
                 ),
             )
 
+            REGISTRY.inc_counter(
+                "siem_alerts_deduplicated_total",
+                help_text=_ALERTS_DEDUPLICATED_HELP,
+            )
+
             return updated
 
         alert = Alert(
@@ -110,6 +121,11 @@ class AlertManager:
                 to_status=AlertStatus.NEW,
                 created_at=now,
             ),
+        )
+
+        REGISTRY.inc_counter(
+            "siem_alerts_created_total",
+            help_text=_ALERTS_CREATED_HELP,
         )
 
         if self._suppression.should_suppress(alert):
@@ -254,6 +270,18 @@ class AlertManager:
 
         self._alerts[alert.alert_id] = updated
         self._record(updated, audit)
+
+        if target is AlertStatus.SUPPRESSED:
+            REGISTRY.inc_counter(
+                "siem_alerts_suppressed_total",
+                help_text=_ALERTS_SUPPRESSED_HELP,
+            )
+
+        if target is AlertStatus.ESCALATED:
+            REGISTRY.inc_counter(
+                "siem_alerts_escalated_total",
+                help_text=_ALERTS_ESCALATED_HELP,
+            )
 
         if self._notification_sink is not None:
             self._notification_sink.notify(

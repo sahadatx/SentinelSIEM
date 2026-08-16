@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Ruff
+        run: |
+          ruff check \
+            backend/app/core/metrics.py \
+            backend/app/core/health.py \
+            backend/app/api/middleware/metrics.py \
+            backend/app/api/routes/metrics.py \
+            backend/app/ingestion/pipeline.py \
+            backend/app/ingestion/dead_letter.py \
+            backend/app/ingestion/queues/redis.py \
+            backend/app/detection/engine.py \
+            backend/app/correlation/engine.py \
+            backend/app/alerts/manager.py \
+            backend/app/storage/redis/client.py \
+            backend/app/storage/opensearch/client.py \
+            backend/app/storage/opensearch/events.py \
+            backend/tests/unit/observability \
+            backend/tests/contract \
+            backend/tests/performance \
+            backend/tests/resilience \
+            backend/tests/security/test_phase18_observability_security.py
+
+      - name: MyPy
+        run: |
+          mypy \
+            backend/app/core/metrics.py \
+            backend/app/core/health.py \
+            backend/app/api/middleware/metrics.py \
+            backend/app/api/routes/metrics.py \
+            backend/app/ingestion/pipeline.py \
+            backend/app/ingestion/dead_letter.py \
+            backend/app/ingestion/queues/redis.py \
+            backend/app/detection/engine.py \
+            backend/app/correlation/engine.py \
+            backend/app/alerts/manager.py \
+            backend/app/storage/redis/client.py \
+            backend/app/storage/opensearch/client.py \
+            backend/app/storage/opensearch/events.py
+
+      - name: Tests
+        run: |
+          pytest -q
