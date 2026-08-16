@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from fastapi import FastAPI
@@ -11,6 +12,8 @@ from app.api.websocket.manager import ConnectionManager
 from app.core.config import get_settings
 from app.core.health import HealthStatus
 from app.core.version import __version__
+from app.auth.tokens import TokenService
+from app.storage.postgres.session import PostgresSessionManager
 
 
 def build_application(
@@ -21,6 +24,7 @@ def build_application(
     websocket_manager: ConnectionManager | None = None,
 ) -> FastAPI:
     settings = get_settings()
+
     app = FastAPI(
         title=settings.app_name,
         version=version,
@@ -29,8 +33,41 @@ def build_application(
         lifespan=lifespan,
     )
 
-    app.state.api = api_container or APIContainer()
-    app.state.websocket_manager = websocket_manager or ConnectionManager()
+    container = api_container or APIContainer()
+
+    # ------------------------------------------------------------------
+    # PostgreSQL lifecycle
+    # ------------------------------------------------------------------
+    if (
+        container.postgres_session_manager is None
+        and settings.database_configured
+    ):
+        container.postgres_session_manager = PostgresSessionManager(
+            settings.database_url
+        )
+
+    # ------------------------------------------------------------------
+    # Authentication token service
+    # ------------------------------------------------------------------
+    if (
+        container.token_service is None
+        and settings.authentication_configured
+    ):
+        container.token_service = TokenService(
+            secret_key=settings.auth_secret_key,
+            issuer=settings.auth_issuer,
+            audience=settings.auth_audience,
+            algorithm=settings.auth_algorithm,
+            ttl=timedelta(
+                minutes=settings.auth_access_token_expire_minutes
+            ),
+        )
+
+    app.state.api = container
+    app.state.websocket_manager = (
+        websocket_manager or ConnectionManager()
+    )
+
     app.add_middleware(RequestIDMiddleware)
     app.include_router(api_router)
 

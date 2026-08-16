@@ -1,37 +1,155 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.api.dependencies import require_permission
 from app.api.schemas.stubs import CapabilityResponse
 
-router = APIRouter(tags=["platform"])
+
+router = APIRouter(
+    tags=["platform"],
+)
 
 
-@router.get("/detections", response_model=CapabilityResponse)
+# ============================================================================
+# Detection Capability
+# ============================================================================
+
+
+@router.get(
+    "/detections",
+    response_model=CapabilityResponse,
+    summary="Detection capability",
+)
 def detections() -> CapabilityResponse:
-    return CapabilityResponse(resource="detections", status="available", message="Detection API contract is reserved for the detection service integration.")
+    """Return the availability status of the detection API capability."""
+
+    return CapabilityResponse(
+        resource="detections",
+        status="available",
+        message=(
+            "Detection API contract is reserved for the detection "
+            "service integration."
+        ),
+    )
 
 
-@router.get("/assets", response_model=CapabilityResponse)
+# ============================================================================
+# Asset Capability
+# ============================================================================
+
+
+@router.get(
+    "/assets",
+    response_model=CapabilityResponse,
+    summary="Asset capability",
+)
 def assets() -> CapabilityResponse:
-    return CapabilityResponse(resource="assets", status="planned", message="Asset management is not implemented before its dedicated platform capability is available.")
+    """Return the availability status of asset management."""
+
+    return CapabilityResponse(
+        resource="assets",
+        status="planned",
+        message=(
+            "Asset management is not implemented before its dedicated "
+            "platform capability is available."
+        ),
+    )
 
 
-@router.get("/users", response_model=CapabilityResponse)
+# ============================================================================
+# User Management Capability
+# ============================================================================
+
+
+@router.get(
+    "/users",
+    response_model=CapabilityResponse,
+    summary="User management capability",
+    dependencies=[
+        Depends(require_permission("users:read")),
+    ],
+)
 def users() -> CapabilityResponse:
-    return CapabilityResponse(resource="users", status="planned", message="Identity management belongs to the authentication/RBAC phase.")
+    """Return the availability status of user management."""
+
+    return CapabilityResponse(
+        resource="users",
+        status="available",
+        message=(
+            "User identity infrastructure is available through the "
+            "Phase 17 authentication and RBAC subsystem."
+        ),
+    )
 
 
-@router.get("/roles", response_model=CapabilityResponse)
+# ============================================================================
+# Role Management Capability
+# ============================================================================
+
+
+@router.get(
+    "/roles",
+    response_model=CapabilityResponse,
+    summary="Role management capability",
+    dependencies=[
+        Depends(require_permission("roles:read")),
+    ],
+)
 def roles() -> CapabilityResponse:
-    return CapabilityResponse(resource="roles", status="planned", message="Role management belongs to the authentication/RBAC phase.")
+    """Return the availability status of role-based access control."""
+
+    return CapabilityResponse(
+        resource="roles",
+        status="available",
+        message=(
+            "Role-based access control is available through the "
+            "Phase 17 authorization and RBAC subsystem."
+        ),
+    )
 
 
-@router.get("/auth", response_model=CapabilityResponse)
+# ============================================================================
+# Authentication Capability
+# ============================================================================
+
+
+@router.get(
+    "/auth",
+    response_model=CapabilityResponse,
+    summary="Authentication capability",
+)
 def auth() -> CapabilityResponse:
-    return CapabilityResponse(resource="auth", status="planned", message="Authentication is intentionally deferred to the authentication/RBAC phase.")
+    """Return the availability status of authentication."""
+
+    return CapabilityResponse(
+        resource="auth",
+        status="available",
+        message=(
+            "Authentication is available through the Phase 17 "
+            "JWT-based authentication and session management subsystem."
+        ),
+    )
 
 
-@router.get("/dashboard", response_model=CapabilityResponse)
+# ============================================================================
+# Dashboard Capability
+# ============================================================================
+
+
+@router.get(
+    "/dashboard",
+    response_model=CapabilityResponse,
+    summary="Dashboard capability",
+)
 def dashboard() -> CapabilityResponse:
-    return CapabilityResponse(resource="dashboard", status="available", message="Dashboard aggregation API surface is available; frontend implementation is a later phase.")
+    """Return the availability status of the dashboard API."""
+
+    return CapabilityResponse(
+        resource="dashboard",
+        status="available",
+        message=(
+            "Dashboard aggregation API surface is available; "
+            "frontend implementation is provided by the dashboard."
+        ),
+    )
