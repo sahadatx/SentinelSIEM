@@ -8,18 +8,32 @@ import type {
   SecurityEvent,
   SystemResponse,
 } from "../types/api";
+import { useAuthStore } from "../store/auth";
 
 /*
  * Keep the API client relative to the frontend origin.
  *
- * In development:
+ * Development:
  *   Browser -> Vite :5173 -> proxy -> FastAPI :8000
  *
- * In production/preview:
- *   The same relative /api path can be handled by the
- *   configured reverse proxy.
+ * Production:
+ *   Browser -> Nginx/frontend origin -> /api -> backend
  */
 const API_BASE_URL = "";
+
+export interface AuthUser {
+  user_id: string;
+  username: string;
+  roles: string[];
+  permissions: string[];
+  session_id: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -40,19 +54,36 @@ async function request<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
+  const token =
+    useAuthStore.getState().accessToken;
+
+  const headers = new Headers(
+    init?.headers,
+  );
+
+  headers.set(
+    "Accept",
+    "application/json",
+  );
+
+  if (token) {
+    headers.set(
+      "Authorization",
+      `Bearer ${token}`,
+    );
+  }
+
   const response = await fetch(
     `${API_BASE_URL}${path}`,
     {
       ...init,
-      headers: {
-        Accept: "application/json",
-        ...(init?.headers ?? {}),
-      },
+      headers,
     },
   );
 
   if (!response.ok) {
-    let detail = `Request failed with status ${response.status}`;
+    let detail =
+      `Request failed with status ${response.status}`;
 
     try {
       const body = (await response.json()) as {
@@ -68,10 +99,31 @@ async function request<T>(
       // Keep the default HTTP error message.
     }
 
+    /*
+     * Authentication state is no longer valid.
+     *
+     * Do not automatically clear the session for every
+     * 403 response because a 403 can also mean that the
+     * authenticated user simply lacks a permission.
+     */
+    if (response.status === 401) {
+      useAuthStore
+        .getState()
+        .clearAuthentication();
+    }
+
     throw new ApiError(
       response.status,
       detail,
     );
+  }
+
+  /*
+   * Support endpoints such as logout that may return
+   * HTTP 204 No Content.
+   */
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return (await response.json()) as T;
@@ -91,9 +143,73 @@ function paginatedPath(
 }
 
 /**
- * Phase 15 API
+ * Phase 15 / Phase 17 API
  */
 export const api = {
+  /**
+   * POST /api/v1/auth/login
+   */
+  async login(
+    login: string,
+    password: string,
+  ): Promise<LoginResponse> {
+    const response =
+      await request<LoginResponse>(
+        "/api/v1/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            login,
+            password,
+          }),
+        },
+      );
+
+    useAuthStore
+      .getState()
+      .setAuthentication(
+        response.access_token,
+        response.user,
+      );
+
+    return response;
+  },
+
+  /**
+   * GET /api/v1/auth/me
+   */
+  me(): Promise<AuthUser> {
+    return request<AuthUser>(
+      "/api/v1/auth/me",
+    );
+  },
+
+  /**
+   * POST /api/v1/auth/logout
+   */
+  async logout(): Promise<void> {
+    try {
+      await request<void>(
+        "/api/v1/auth/logout",
+        {
+          method: "POST",
+        },
+      );
+    } finally {
+      /*
+       * Always clear local authentication state after
+       * logout attempt.
+       */
+      useAuthStore
+        .getState()
+        .clearAuthentication();
+    }
+  },
+
   /**
    * GET /api/v1/health
    */
@@ -118,7 +234,9 @@ export const api = {
   events(
     page = 1,
     pageSize = 100,
-  ): Promise<PaginatedResponse<SecurityEvent>> {
+  ): Promise<
+    PaginatedResponse<SecurityEvent>
+  > {
     return request<
       PaginatedResponse<SecurityEvent>
     >(
@@ -136,7 +254,9 @@ export const api = {
   alerts(
     page = 1,
     pageSize = 100,
-  ): Promise<PaginatedResponse<Alert>> {
+  ): Promise<
+    PaginatedResponse<Alert>
+  > {
     return request<
       PaginatedResponse<Alert>
     >(
@@ -154,7 +274,9 @@ export const api = {
   incidents(
     page = 1,
     pageSize = 100,
-  ): Promise<PaginatedResponse<Incident>> {
+  ): Promise<
+    PaginatedResponse<Incident>
+  > {
     return request<
       PaginatedResponse<Incident>
     >(
@@ -172,7 +294,9 @@ export const api = {
   iocs(
     page = 1,
     pageSize = 100,
-  ): Promise<PaginatedResponse<IOC>> {
+  ): Promise<
+    PaginatedResponse<IOC>
+  > {
     return request<
       PaginatedResponse<IOC>
     >(

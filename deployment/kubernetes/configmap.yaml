@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentinelsiem-config
+  namespace: sentinelsiem
+
+data:
+  # ------------------------------------------------------------------
+  # Application
+  # ------------------------------------------------------------------
+
+  SIEM_ENVIRONMENT: production
+  SIEM_DEBUG: "false"
+  SIEM_API_HOST: "0.0.0.0"
+  SIEM_API_PORT: "8000"
+  SIEM_LOG_LEVEL: INFO
+
+  # ------------------------------------------------------------------
+  # Authentication
+  # ------------------------------------------------------------------
+
+  SIEM_AUTH_ALGORITHM: HS256
+  SIEM_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+  SIEM_AUTH_ISSUER: sentinelsiem
+  SIEM_AUTH_AUDIENCE: sentinelsiem-api
+
+  # ------------------------------------------------------------------
+  # Redis
+  # ------------------------------------------------------------------
+
+  REDIS_HOST: sentinelsiem-redis
+  REDIS_PORT: "6379"
+
+  # ------------------------------------------------------------------
+  # OpenSearch
+  # ------------------------------------------------------------------
+
+  # Kubernetes Service DNS name used by the worker.
+  # The OpenSearch HTTP certificate must contain this hostname
+  # in its Subject Alternative Name (SAN).
+  OPENSEARCH_URL: "https://sentinelsiem-opensearch:9200"
+
+  OPENSEARCH_USERNAME: admin
+
+  # Production TLS certificate verification is mandatory.
+  OPENSEARCH_VERIFY_CERTS: "true"
+
+  # Trusted Root CA mounted into the worker container.
+  OPENSEARCH_CA_CERTS: "/run/secrets/opensearch-root-ca.pem"
+
+  # ------------------------------------------------------------------
+  # Ingestion
+  # ------------------------------------------------------------------
+
+  EVENT_QUEUE_NAME: "siem:events"
+  WORKER_RETRY_DELAY_SECONDS: "2.0"
+
+  # ------------------------------------------------------------------
+  # Collector
+  # ------------------------------------------------------------------
+
+  COLLECTOR_COMMAND: "siem collector"

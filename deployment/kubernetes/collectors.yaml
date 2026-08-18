@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: sentinelsiem-collector
+  namespace: sentinelsiem
+  labels:
+    app: sentinelsiem-collector
+
+spec:
+  replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  selector:
+    matchLabels:
+      app: sentinelsiem-collector
+
+  template:
+    metadata:
+      labels:
+        app: sentinelsiem-collector
+
+    spec:
+      terminationGracePeriodSeconds: 60
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10003
+        runAsGroup: 10003
+        fsGroup: 10003
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: collector
+          image: sentinelsiem/collector:0.1.1
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - /bin/sh
+            - -c
+
+          args:
+            - |
+              set -eu
+
+              export REDIS_URL="redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/0"
+
+              exec ${COLLECTOR_COMMAND}
+
+          envFrom:
+            - configMapRef:
+                name: sentinelsiem-config
+            - secretRef:
+                name: sentinelsiem-secrets
+
+          ports:
+            - name: tcp-events
+              containerPort: 1514
+              protocol: TCP
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: sentinelsiem-collector
+  namespace: sentinelsiem
+  labels:
+    app: sentinelsiem-collector
+
+spec:
+  type: ClusterIP
+
+  selector:
+    app: sentinelsiem-collector
+
+  ports:
+    - name: tcp-events
+      protocol: TCP
+      port: 1514
+      targetPort: tcp-events

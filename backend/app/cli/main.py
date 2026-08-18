@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typer
 
+from app.cli.collector import collector
+from app.cli.worker import worker
 from app.core.version import __version__
 
 cli = typer.Typer(
@@ -21,6 +23,10 @@ def version() -> None:
 def health() -> None:
     """Show local application foundation status."""
     typer.echo("SIEM Security Platform foundation: ready")
+
+
+cli.command(name="worker")(worker)
+cli.command(name="collector")(collector)
 
 
 def main() -> None:

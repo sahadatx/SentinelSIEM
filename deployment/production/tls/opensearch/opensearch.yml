@@ -1,0 +1,87 @@
+---
+cluster.name: docker-cluster
+
+network.host: 0.0.0.0
+discovery.type: single-node
+
+######## SentinelSIEM TLS Configuration ########
+
+# Transport-layer TLS
+plugins.security.ssl.transport.pemcert_filepath: opensearch-transport.crt
+plugins.security.ssl.transport.pemkey_filepath: opensearch-transport.key
+plugins.security.ssl.transport.pemtrustedcas_filepath: opensearch-root-ca.pem
+
+# Single-node Docker deployment.
+# Hostname verification is intentionally disabled here because
+# the OpenSearch transport layer uses Docker-assigned addresses
+# internally. REST-layer certificate verification remains enabled
+# for clients.
+plugins.security.ssl.transport.enforce_hostname_verification: false
+
+# REST/HTTP TLS
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemcert_filepath: opensearch-http.crt
+plugins.security.ssl.http.pemkey_filepath: opensearch-http.key
+plugins.security.ssl.http.pemtrustedcas_filepath: opensearch-root-ca.pem
+
+######## Security Plugin Configuration ########
+
+# The node certificate subject:
+# C=BD, O=SentinelSIEM, OU=Security, CN=sentinelsiem-opensearch
+plugins.security.nodes_dn:
+  - "C=BD,O=SentinelSIEM,OU=Security,CN=sentinelsiem-opensearch"
+
+# Existing demo admin DN is retained for compatibility with the
+# current security index. A custom SentinelSIEM admin certificate
+# can be introduced separately when securityadmin operations are
+# required.
+plugins.security.authcz.admin_dn:
+  - "CN=kirk,OU=client,O=client,L=test,C=de"
+
+# Keep security-index initialization compatible with the existing
+# single-node data volume.
+plugins.security.allow_default_init_securityindex: true
+
+plugins.security.audit.type: internal_opensearch
+
+plugins.security.enable_snapshot_restore_privilege: true
+plugins.security.check_snapshot_restore_write_privileges: true
+
+plugins.security.restapi.roles_enabled:
+  - all_access
+  - security_rest_api_access
+
+plugins.security.system_indices.enabled: true
+plugins.security.system_indices.indices:
+  - .plugins-ml-agent
+  - .plugins-ml-config
+  - .plugins-ml-connector
+  - .plugins-ml-controller
+  - .plugins-ml-model-group
+  - .plugins-ml-model
+  - .plugins-ml-task
+  - .plugins-ml-conversation-meta
+  - .plugins-ml-conversation-interactions
+  - .plugins-ml-memory-meta
+  - .plugins-ml-memory-message
+  - .plugins-ml-stop-words
+  - .opendistro-alerting-config
+  - .opendistro-alerting-alert*
+  - .opendistro-anomaly-results*
+  - .opendistro-anomaly-detector*
+  - .opendistro-anomaly-checkpoints
+  - .opendistro-anomaly-detection-state
+  - .opendistro-reports-*
+  - .opensearch-notifications-*
+  - .opensearch-notebooks
+  - .opensearch-observability
+  - .ql-datasources
+  - .opendistro-asynchronous-search-response*
+  - .replication-metadata-store
+  - .opensearch-knn-models
+  - .geospatial-ip2geo-data*
+  - .plugins-flow-framework-config
+  - .plugins-flow-framework-templates
+  - .plugins-flow-framework-state
+
+node.max_local_storage_nodes: 3

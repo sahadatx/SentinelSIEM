@@ -4,6 +4,8 @@ from enum import StrEnum
 
 
 class EventStage(StrEnum):
+    """Processing lifecycle stage of a security event."""
+
     RAW = "raw"
     PARSED = "parsed"
     NORMALIZED = "normalized"
@@ -12,6 +14,8 @@ class EventStage(StrEnum):
 
 
 class EventSourceType(StrEnum):
+    """Origin or transport type of an incoming event."""
+
     SYSLOG = "syslog"
     HTTP = "http"
     TCP = "tcp"
@@ -22,6 +26,8 @@ class EventSourceType(StrEnum):
 
 
 class EventSeverity(StrEnum):
+    """Severity assigned to a security event."""
+
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
@@ -30,6 +36,8 @@ class EventSeverity(StrEnum):
 
 
 class EventCategory(StrEnum):
+    """Security category associated with an event."""
+
     AUTHENTICATION = "authentication"
     AUTHORIZATION = "authorization"
     NETWORK = "network"
@@ -43,6 +51,8 @@ class EventCategory(StrEnum):
 
 
 class EventOutcome(StrEnum):
+    """Outcome of the activity represented by an event."""
+
     SUCCESS = "success"
     FAILURE = "failure"
     UNKNOWN = "unknown"

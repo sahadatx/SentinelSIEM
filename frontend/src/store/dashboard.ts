@@ -21,17 +21,16 @@ interface DashboardState {
   health: HealthResponse | null;
   system: SystemResponse | null;
 
+  error: string | null;
   live: boolean;
 
-  setSnapshot: (
-    snapshot: Partial<DashboardState>,
-  ) => void;
-
+  setSnapshot: (snapshot: Partial<DashboardState>) => void;
+  setError: (error: string | null) => void;
   setLive: (live: boolean) => void;
 }
 
-export const useDashboardStore =
-  create<DashboardState>((set) => ({
+export const useDashboardStore = create<DashboardState>(
+  (set) => ({
     events: null,
     alerts: null,
     incidents: null,
@@ -41,11 +40,19 @@ export const useDashboardStore =
     health: null,
     system: null,
 
+    error: null,
     live: false,
 
-    setSnapshot: (snapshot) =>
-      set(snapshot),
+    setSnapshot: (snapshot) => {
+      set(snapshot);
+    },
 
-    setLive: (live) =>
-      set({ live }),
-  }));
+    setError: (error) => {
+      set({ error });
+    },
+
+    setLive: (live) => {
+      set({ live });
+    },
+  }),
+);

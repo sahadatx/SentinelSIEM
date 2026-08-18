@@ -11,9 +11,13 @@ from app.storage.repositories.events import EventSearchResult
 _OPENSEARCH_LATENCY_HELP = (
     "OpenSearch repository operation latency in seconds."
 )
+
 _OPENSEARCH_FAILURES_HELP = (
     "Total OpenSearch repository operation failures."
 )
+
+_EVENT_INDEX_SHARDS = 1
+_EVENT_INDEX_REPLICAS = 0
 
 
 class OpenSearchEventRepository:
@@ -25,11 +29,14 @@ class OpenSearchEventRepository:
         *,
         index: str = "siem-events-v1",
     ) -> None:
+        if not index.strip():
+            raise ValueError("index must not be empty")
+
         self.client = client
         self.index = index
 
     async def ensure_index(self) -> None:
-        """Create the event index when it does not already exist."""
+        """Create or reconcile the security event index."""
         try:
             with Timer(
                 REGISTRY,
@@ -38,58 +45,18 @@ class OpenSearchEventRepository:
                 labels={"operation": "ensure_index"},
             ):
                 exists = await self.client.indices.exists(
-                    index=self.index
+                    index=self.index,
                 )
 
-                if exists:
+                if not exists:
+                    await self.client.indices.create(
+                        index=self.index,
+                        body=self._index_definition(),
+                    )
                     return
 
-                await self.client.indices.create(
-                    index=self.index,
-                    body={
-                        "settings": {
-                            "number_of_shards": 1,
-                            "number_of_replicas": 1,
-                        },
-                        "mappings": {
-                            "dynamic": "strict",
-                            "properties": {
-                                "event_id": {"type": "keyword"},
-                                "timestamp": {"type": "date"},
-                                "ingestion_timestamp": {"type": "date"},
-                                "source": {"type": "keyword"},
-                                "source_type": {"type": "keyword"},
-                                "hostname": {"type": "keyword"},
-                                "source_ip": {"type": "ip"},
-                                "destination_ip": {"type": "ip"},
-                                "source_port": {"type": "integer"},
-                                "destination_port": {"type": "integer"},
-                                "protocol": {"type": "keyword"},
-                                "username": {"type": "keyword"},
-                                "process": {"type": "keyword"},
-                                "command": {"type": "text"},
-                                "action": {"type": "keyword"},
-                                "outcome": {"type": "keyword"},
-                                "severity": {"type": "keyword"},
-                                "category": {"type": "keyword"},
-                                "raw_event": {"type": "text"},
-                                "normalized_data": {
-                                    "type": "object",
-                                    "enabled": True,
-                                },
-                                "enrichment": {
-                                    "type": "object",
-                                    "enabled": True,
-                                },
-                                "metadata": {
-                                    "type": "object",
-                                    "enabled": True,
-                                },
-                                "stage": {"type": "keyword"},
-                            },
-                        },
-                    },
-                )
+                await self._ensure_required_fields()
+                await self._ensure_index_settings()
 
         except Exception:
             REGISTRY.inc_counter(
@@ -98,6 +65,167 @@ class OpenSearchEventRepository:
                 labels={"operation": "ensure_index"},
             )
             raise
+
+    async def _ensure_required_fields(self) -> None:
+        """Reconcile required event mappings on an existing index."""
+        mapping = await self.client.indices.get_mapping(
+            index=self.index,
+        )
+
+        index_mapping = mapping.get(self.index, {})
+        mappings = index_mapping.get("mappings", {})
+        properties = mappings.get("properties", {})
+
+        required_properties: dict[str, Any] = {}
+
+        if "parsed_data" not in properties:
+            required_properties["parsed_data"] = {
+                "type": "object",
+                "enabled": True,
+            }
+
+        if "normalized_data" not in properties:
+            required_properties["normalized_data"] = {
+                "type": "object",
+                "enabled": True,
+            }
+
+        if "enrichment" not in properties:
+            required_properties["enrichment"] = {
+                "type": "object",
+                "enabled": True,
+            }
+
+        metadata_mapping = properties.get("metadata")
+
+        if not isinstance(metadata_mapping, dict):
+            required_properties["metadata"] = {
+                "type": "object",
+                "dynamic": False,
+                "enabled": True,
+            }
+        else:
+            metadata_dynamic = metadata_mapping.get("dynamic")
+
+            if metadata_dynamic is not False:
+                required_properties["metadata"] = {
+                    "type": "object",
+                    "dynamic": False,
+                    "enabled": True,
+                }
+
+        if not required_properties:
+            return
+
+        await self.client.indices.put_mapping(
+            index=self.index,
+            body={
+                "properties": required_properties,
+            },
+        )
+
+    async def _ensure_index_settings(self) -> None:
+        """Reconcile shard settings for the current deployment topology."""
+        await self.client.indices.put_settings(
+            index=self.index,
+            body={
+                "index": {
+                    "number_of_replicas": _EVENT_INDEX_REPLICAS,
+                },
+            },
+        )
+
+    @staticmethod
+    def _index_definition() -> dict[str, Any]:
+        """Return the canonical security-event index definition."""
+        return {
+            "settings": {
+                "number_of_shards": _EVENT_INDEX_SHARDS,
+                "number_of_replicas": _EVENT_INDEX_REPLICAS,
+            },
+            "mappings": {
+                "dynamic": "strict",
+                "properties": {
+                    "event_id": {
+                        "type": "keyword",
+                    },
+                    "timestamp": {
+                        "type": "date",
+                    },
+                    "ingestion_timestamp": {
+                        "type": "date",
+                    },
+                    "source": {
+                        "type": "keyword",
+                    },
+                    "source_type": {
+                        "type": "keyword",
+                    },
+                    "hostname": {
+                        "type": "keyword",
+                    },
+                    "source_ip": {
+                        "type": "ip",
+                    },
+                    "destination_ip": {
+                        "type": "ip",
+                    },
+                    "source_port": {
+                        "type": "integer",
+                    },
+                    "destination_port": {
+                        "type": "integer",
+                    },
+                    "protocol": {
+                        "type": "keyword",
+                    },
+                    "username": {
+                        "type": "keyword",
+                    },
+                    "process": {
+                        "type": "keyword",
+                    },
+                    "command": {
+                        "type": "text",
+                    },
+                    "action": {
+                        "type": "keyword",
+                    },
+                    "outcome": {
+                        "type": "keyword",
+                    },
+                    "severity": {
+                        "type": "keyword",
+                    },
+                    "category": {
+                        "type": "keyword",
+                    },
+                    "raw_event": {
+                        "type": "text",
+                    },
+                    "parsed_data": {
+                        "type": "object",
+                        "enabled": True,
+                    },
+                    "normalized_data": {
+                        "type": "object",
+                        "enabled": True,
+                    },
+                    "enrichment": {
+                        "type": "object",
+                        "enabled": True,
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "dynamic": False,
+                        "enabled": True,
+                    },
+                    "stage": {
+                        "type": "keyword",
+                    },
+                },
+            },
+        }
 
     async def save(
         self,
@@ -170,7 +298,9 @@ class OpenSearchEventRepository:
     ) -> EventSearchResult:
         """Search stored security events with optional filters."""
         if not 1 <= limit <= 1000:
-            raise ValueError("limit must be between 1 and 1000")
+            raise ValueError(
+                "limit must be between 1 and 1000"
+            )
 
         try:
             with Timer(
@@ -189,23 +319,31 @@ class OpenSearchEventRepository:
                 ):
                     if value is not None:
                         filters.append(
-                            {"term": {field: value}}
+                            {
+                                "term": {
+                                    field: value,
+                                },
+                            }
                         )
 
                 if start_time is not None or end_time is not None:
                     range_query: dict[str, str] = {}
 
                     if start_time is not None:
-                        range_query["gte"] = start_time.isoformat()
+                        range_query["gte"] = (
+                            start_time.isoformat()
+                        )
 
                     if end_time is not None:
-                        range_query["lte"] = end_time.isoformat()
+                        range_query["lte"] = (
+                            end_time.isoformat()
+                        )
 
                     filters.append(
                         {
                             "range": {
                                 "timestamp": range_query,
-                            }
+                            },
                         }
                     )
 
@@ -223,7 +361,7 @@ class OpenSearchEventRepository:
                                     "command",
                                     "username",
                                 ],
-                            }
+                            },
                         }
                     ]
 
@@ -243,14 +381,19 @@ class OpenSearchEventRepository:
                 )
 
                 hits = response["hits"]
+
                 events = tuple(
-                    self._from_document(hit["_source"])
+                    self._from_document(
+                        hit["_source"]
+                    )
                     for hit in hits["hits"]
                 )
 
                 return EventSearchResult(
                     events=events,
-                    total=int(hits["total"]["value"]),
+                    total=int(
+                        hits["total"]["value"]
+                    ),
                 )
 
         except Exception:
@@ -271,7 +414,7 @@ class OpenSearchEventRepository:
                 labels={"operation": "count"},
             ):
                 response = await self.client.count(
-                    index=self.index
+                    index=self.index,
                 )
 
         except Exception:
@@ -290,6 +433,10 @@ class OpenSearchEventRepository:
     ) -> CanonicalSecurityEvent | EnrichedEvent:
         """Convert an OpenSearch document into the appropriate event model."""
         if document.get("stage") == "enriched":
-            return EnrichedEvent.model_validate(document)
+            return EnrichedEvent.model_validate(
+                document
+            )
 
-        return CanonicalSecurityEvent.model_validate(document)
+        return CanonicalSecurityEvent.model_validate(
+            document
+        )

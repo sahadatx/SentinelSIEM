@@ -11,6 +11,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.alerts.manager import AlertManager
+from app.api.websocket.publisher import WebSocketPublisher
 from app.auth.adapters import (
     PostgresAuthAuditRepository,
     PostgresSessionRepository,
@@ -41,7 +42,6 @@ logger = logging.getLogger(__name__)
 # Defaults
 # ============================================================================
 
-
 DEFAULT_AUTH_SESSION_TTL = timedelta(minutes=30)
 DEFAULT_AUTH_TOKEN_TTL = timedelta(minutes=30)
 
@@ -49,7 +49,6 @@ DEFAULT_AUTH_TOKEN_TTL = timedelta(minutes=30)
 # ============================================================================
 # Bearer authentication
 # ============================================================================
-
 
 bearer_scheme = HTTPBearer(
     auto_error=False,
@@ -70,7 +69,6 @@ class APIContainer:
 
     IMPORTANT:
     AsyncSession is intentionally NOT stored in this container.
-
     Database sessions are request-scoped and are created through
     get_db_session().
     """
@@ -88,6 +86,12 @@ class APIContainer:
     threat_intelligence: ThreatIntelligenceService | None = None
 
     mitre_service: Any | None = None
+
+    # ------------------------------------------------------------------------
+    # Realtime WebSocket publisher
+    # ------------------------------------------------------------------------
+
+    websocket_publisher: WebSocketPublisher | None = None
 
     # ------------------------------------------------------------------------
     # Phase 17 application-scoped dependencies
@@ -181,7 +185,6 @@ def get_api_container(
     """
     Resolve the application dependency container.
     """
-
     container = getattr(
         request.app.state,
         "api",
@@ -197,17 +200,42 @@ def get_api_container(
 
 
 # ============================================================================
+# WebSocket realtime publisher resolver
+# ============================================================================
+
+
+def get_websocket_publisher(
+    container: APIContainer = Depends(
+        get_api_container,
+    ),
+) -> WebSocketPublisher:
+    """
+    Resolve the application-scoped realtime WebSocket publisher.
+    """
+    publisher = container.websocket_publisher
+
+    if publisher is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Realtime WebSocket publisher is not configured.",
+        )
+
+    return publisher
+
+
+# ============================================================================
 # PostgreSQL session manager resolver
 # ============================================================================
 
 
 def get_postgres_session_manager(
-    container: APIContainer = Depends(get_api_container),
+    container: APIContainer = Depends(
+        get_api_container,
+    ),
 ) -> PostgresSessionManager:
     """
     Resolve the application PostgreSQL session manager.
     """
-
     manager = container.postgres_session_manager
 
     if manager is None:
@@ -243,7 +271,6 @@ async def get_db_session(
         always
             -> CLOSE
     """
-
     async with manager.session() as session:
         try:
             yield session
@@ -265,7 +292,6 @@ def _request_id(
     """
     Resolve the current request ID defensively.
     """
-
     value = getattr(
         request.state,
         "request_id",
@@ -286,7 +312,6 @@ def _source_ip(
     """
     Resolve the client source IP defensively.
     """
-
     client = request.client
 
     if client is None:
@@ -335,8 +360,8 @@ class _PostgresDurableAuthAuditSink:
             +--> HTTP 401
             |
             +--> ROLLBACK
-                     |
-                     +--> audit disappears
+                    |
+                    +--> audit disappears
 
     This sink instead creates:
 
@@ -369,7 +394,6 @@ class _PostgresDurableAuthAuditSink:
         which deliberately treats audit persistence failure as non-fatal to
         the authentication response.
         """
-
         async with self._manager.session() as audit_session:
             repository = PostgresAuthAuditRepository(
                 audit_session,
@@ -399,11 +423,10 @@ async def _record_authorization_audit(
     Persist an authorization audit event using an independent transaction.
 
     Authorization failures return HTTP 403.
-
     Therefore the request-scoped database transaction may be rolled back.
+
     Authorization audit records must survive that rollback.
     """
-
     if manager is None:
         return
 
@@ -571,7 +594,6 @@ def get_authentication_service(
 
     Failed-login auditing is additionally backed by an independent session.
     """
-
     del request
 
     if container.postgres_session_manager is None:
@@ -599,7 +621,6 @@ def get_authorization_service(
     """
     Resolve the centralized authorization service.
     """
-
     service = container.authorization_service
 
     if service is None:
@@ -626,7 +647,6 @@ def get_bearer_token(
 
     Missing or malformed authentication is normalized to HTTP 401.
     """
-
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -692,7 +712,6 @@ async def get_current_principal(
     - token/session binding
     - user/session binding
     """
-
     try:
         return await authentication.authenticate_token(
             token,
@@ -721,7 +740,6 @@ async def require_authenticated_user(
     """
     Require a valid authenticated principal.
     """
-
     if principal is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -749,7 +767,6 @@ def require_permission(
 
         Depends(require_permission("events:read"))
     """
-
     normalized_permission = permission.strip()
 
     if not normalized_permission:
@@ -810,7 +827,6 @@ def require_role(
 
         Depends(require_role("ADMIN"))
     """
-
     normalized_role = role.strip()
 
     if not normalized_role:
@@ -881,7 +897,6 @@ async def get_optional_principal(
     Invalid supplied credentials:
         -> HTTP 401
     """
-
     if credentials is None:
         return None
 

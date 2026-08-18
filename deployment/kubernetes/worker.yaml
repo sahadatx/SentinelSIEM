@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentinelsiem-worker
+  namespace: sentinelsiem
+
+spec:
+  replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  selector:
+    matchLabels:
+      app: sentinelsiem-worker
+
+  template:
+    metadata:
+      labels:
+        app: sentinelsiem-worker
+
+    spec:
+      terminationGracePeriodSeconds: 60
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10002
+        runAsGroup: 10002
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: worker
+
+          image: sentinelsiem/worker:0.1.4
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - /bin/sh
+            - -c
+
+          args:
+            - >-
+              export REDIS_URL="redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/0";
+              exec siem worker
+
+          envFrom:
+            - configMapRef:
+                name: sentinelsiem-config
+
+            - secretRef:
+                name: sentinelsiem-secrets
+
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+
+            limits:
+              cpu: "2"
+              memory: 2Gi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            # --------------------------------------------------------
+            # Temporary runtime storage
+            # --------------------------------------------------------
+
+            - name: tmp
+              mountPath: /tmp
+
+            # --------------------------------------------------------
+            # OpenSearch TLS Root CA
+            # --------------------------------------------------------
+
+            - name: opensearch-root-ca
+              mountPath: /run/secrets/opensearch-root-ca.pem
+              subPath: opensearch-root-ca.pem
+              readOnly: true
+
+      volumes:
+
+        # ------------------------------------------------------------
+        # Temporary runtime storage
+        # ------------------------------------------------------------
+
+        - name: tmp
+          emptyDir: {}
+
+        # ------------------------------------------------------------
+        # Dedicated OpenSearch TLS Secret
+        # ------------------------------------------------------------
+
+        - name: opensearch-root-ca
+          secret:
+            secretName: sentinelsiem-opensearch-tls
+            items:
+              - key: root-ca.pem
+                path: opensearch-root-ca.pem
+            defaultMode: 0444

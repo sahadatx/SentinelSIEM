@@ -1,23 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { api } from "../services/api";
 import { useDashboardStore } from "../store/dashboard";
 
 export function useDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(
-    null,
-  );
-
   const setSnapshot = useDashboardStore(
     (state) => state.setSnapshot,
+  );
+
+  const setError = useDashboardStore(
+    (state) => state.setError,
   );
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadDashboard() {
-      setLoading(true);
       setError(null);
 
       const results = await Promise.allSettled([
@@ -44,9 +42,7 @@ export function useDashboard() {
         system,
       ] = results;
 
-      const snapshot: Parameters<
-        typeof setSnapshot
-      >[0] = {
+      setSnapshot({
         events:
           events.status === "fulfilled"
             ? events.value
@@ -81,23 +77,17 @@ export function useDashboard() {
           system.status === "fulfilled"
             ? system.value
             : null,
-      };
-
-      setSnapshot(snapshot);
+      });
 
       const failedEndpoints = results.filter(
         (result) => result.status === "rejected",
       );
 
-      if (failedEndpoints.length > 0) {
-        setError(
-          `${failedEndpoints.length} API endpoint(s) unavailable`,
-        );
-      } else {
-        setError(null);
-      }
-
-      setLoading(false);
+      setError(
+        failedEndpoints.length
+          ? `${failedEndpoints.length} API endpoint(s) unavailable`
+          : null,
+      );
     }
 
     void loadDashboard();
@@ -105,10 +95,5 @@ export function useDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [setSnapshot]);
-
-  return {
-    loading,
-    error,
-  };
+  }, [setSnapshot, setError]);
 }

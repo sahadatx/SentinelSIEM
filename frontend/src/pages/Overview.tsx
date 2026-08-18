@@ -6,7 +6,6 @@ import {
   Siren,
 } from "lucide-react";
 
-import { useDashboard } from "../hooks/useDashboard";
 import { useDashboardStore } from "../store/dashboard";
 
 import { MetricCard } from "../components/ui/MetricCard";
@@ -15,8 +14,6 @@ import { SeverityBadge } from "../components/ui/SeverityBadge";
 import { ActivityChart } from "../components/charts/ActivityChart";
 
 export default function Overview() {
-  const { error } = useDashboard();
-
   const {
     events,
     alerts,
@@ -24,6 +21,7 @@ export default function Overview() {
     mitre,
     health,
     system,
+    error,
   } = useDashboardStore();
 
   const alertItems = alerts?.items ?? [];
@@ -42,15 +40,12 @@ export default function Overview() {
     },
     {
       name: "System",
-      state: system
-        ? system.environment
-        : "unavailable",
+      state: system?.environment ?? "unavailable",
     },
   ];
 
   return (
     <>
-      {/* Page Header */}
       <div className="page-heading">
         <div>
           <h2>SOC Overview</h2>
@@ -67,7 +62,6 @@ export default function Overview() {
         </span>
       </div>
 
-      {/* Partial API warning */}
       {error && (
         <div className="notice warning">
           <AlertTriangle size={16} />
@@ -79,7 +73,6 @@ export default function Overview() {
         </div>
       )}
 
-      {/* Security Metrics */}
       <div className="metrics-grid">
         <MetricCard
           label="Security Events"
@@ -103,7 +96,11 @@ export default function Overview() {
 
         <MetricCard
           label="Open Alerts"
-          value={alerts ? alertItems.length : "—"}
+          value={
+            alerts
+              ? alertItems.length
+              : "—"
+          }
           detail={
             alerts
               ? `${criticalAlerts} critical`
@@ -142,16 +139,14 @@ export default function Overview() {
           }
           detail={
             mitre
-              ? `${mitre.covered_techniques}/${mitre.total_techniques} techniques`
+              ? `${mitre.mapped_techniques}/${mitre.total_techniques} techniques`
               : "MITRE service unavailable"
           }
           icon={<BrainCircuit />}
         />
       </div>
 
-      {/* Dashboard Panels */}
       <div className="dashboard-grid">
-        {/* Event Activity */}
         <Panel
           title="Event Activity"
           subtitle="Normalized security events"
@@ -161,12 +156,11 @@ export default function Overview() {
             <ActivityChart />
           ) : (
             <div className="empty">
-              Event repository is not configured.
+              Event repository is unavailable.
             </div>
           )}
         </Panel>
 
-        {/* Platform Status */}
         <Panel
           title="Platform Status"
           subtitle="Current API and system state"
@@ -194,6 +188,7 @@ export default function Overview() {
             <div className="snapshot-list">
               <div>
                 <span>Version</span>
+
                 <strong>
                   {system.version}
                 </strong>
@@ -201,6 +196,7 @@ export default function Overview() {
 
               <div>
                 <span>Environment</span>
+
                 <strong>
                   {system.environment}
                 </strong>
@@ -209,7 +205,6 @@ export default function Overview() {
           )}
         </Panel>
 
-        {/* Recent Alerts */}
         <Panel
           title="Recent Alerts"
           subtitle={
@@ -290,7 +285,6 @@ export default function Overview() {
           </div>
         </Panel>
 
-        {/* Platform Snapshot */}
         <Panel
           title="Platform Snapshot"
           subtitle="Current API capabilities"
@@ -324,18 +318,17 @@ export default function Overview() {
               <span>Capabilities</span>
 
               <strong>
-                {system?.capabilities.length ?? "—"}
+                {system?.capabilities?.length ?? "—"}
               </strong>
             </div>
           </div>
         </Panel>
 
-        {/* Capabilities */}
         <Panel
           title="Platform Capabilities"
           subtitle="Features exposed by the backend"
         >
-          {system?.capabilities.length ? (
+          {system?.capabilities?.length ? (
             <div className="snapshot-list">
               {system.capabilities.map(
                 (capability) => (

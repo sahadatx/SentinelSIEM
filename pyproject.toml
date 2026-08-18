@@ -20,6 +20,8 @@ dependencies = [
     "opensearch-py>=2.8,<3.0",
     "redis>=6.0,<7.0",
     "aiohttp>=3.10,<4.0",
+    "argon2-cffi>=23.1,<26.0",
+    "PyJWT>=2.9,<3.0",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +32,7 @@ dev = [
     "ruff>=0.8,<1.0",
     "bandit>=1.7,<2.0",
     "pip-audit>=2.7,<3.0",
+    "httpx2>=2.0,<3.0",
 ]
 
 [project.scripts]

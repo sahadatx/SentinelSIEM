@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import asyncio
+import logging
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from app.alerts.deduplication import AlertDeduplicator
@@ -16,14 +20,28 @@ from app.alerts.notification import AlertNotificationSink
 from app.alerts.suppression import AlertSuppression
 from app.core.metrics import REGISTRY
 
+logger = logging.getLogger(__name__)
+
 _ALERTS_CREATED_HELP = "Total alerts created."
 _ALERTS_DEDUPLICATED_HELP = "Total duplicate alert occurrences merged."
 _ALERTS_SUPPRESSED_HELP = "Total alerts suppressed by policy."
 _ALERTS_ESCALATED_HELP = "Total alerts escalated."
 
 
+AlertRealtimePublisher = Callable[
+    [dict[str, Any]],
+    Awaitable[int],
+]
+
+
 class AlertManager:
-    """Manage alert creation, deduplication, lifecycle, ownership and audit."""
+    """
+    Manage alert creation, deduplication, lifecycle, ownership and audit.
+
+    Realtime publication is intentionally injected through an optional
+    async callback so the alert domain remains independent from Redis
+    and WebSocket infrastructure.
+    """
 
     def __init__(
         self,
@@ -33,16 +51,30 @@ class AlertManager:
         suppression: AlertSuppression | None = None,
         escalator: AlertEscalator | None = None,
         notification_sink: AlertNotificationSink | None = None,
+        realtime_publisher: AlertRealtimePublisher | None = None,
     ) -> None:
         self._lifecycle = lifecycle or AlertLifecycle()
         self._deduplicator = deduplicator or AlertDeduplicator()
         self._suppression = suppression or AlertSuppression()
         self._escalator = escalator or AlertEscalator()
         self._notification_sink = notification_sink
+        self._realtime_publisher = realtime_publisher
 
         self._alerts: dict[UUID, Alert] = {}
         self._dedup_index: dict[str, UUID] = {}
         self._audit: dict[UUID, list[AlertAuditEntry]] = {}
+
+    def set_realtime_publisher(
+        self,
+        publisher: AlertRealtimePublisher | None,
+    ) -> None:
+        """
+        Configure or replace the realtime alert publisher.
+
+        The publisher is intentionally optional so AlertManager remains
+        fully usable in unit tests and non-realtime contexts.
+        """
+        self._realtime_publisher = publisher
 
     def create(
         self,
@@ -50,7 +82,12 @@ class AlertManager:
         *,
         actor: str = "system",
     ) -> Alert:
-        """Create an alert or merge it with an existing duplicate."""
+        """
+        Create an alert or merge it with an existing duplicate.
+
+        A realtime event is emitted after the final alert state for this
+        operation has been determined.
+        """
         now = datetime.now(UTC)
         key = self._deduplicator.build_key(data)
         existing_id = self._dedup_index.get(key)
@@ -67,7 +104,7 @@ class AlertManager:
                         existing.risk_score,
                         data.risk_score,
                     ),
-                }
+                },
             )
 
             self._alerts[existing_id] = updated
@@ -86,6 +123,11 @@ class AlertManager:
             REGISTRY.inc_counter(
                 "siem_alerts_deduplicated_total",
                 help_text=_ALERTS_DEDUPLICATED_HELP,
+            )
+
+            self._schedule_realtime_publish(
+                updated,
+                event_type="deduplicated",
             )
 
             return updated
@@ -135,6 +177,11 @@ class AlertManager:
                 actor=actor,
                 reason="suppression policy",
             )
+
+        self._schedule_realtime_publish(
+            alert,
+            event_type="created",
+        )
 
         return alert
 
@@ -209,7 +256,7 @@ class AlertManager:
                 "assigned_to": assignee,
                 "ownership_group": ownership_group,
                 "updated_at": now,
-            }
+            },
         )
 
         self._alerts[alert_id] = updated
@@ -228,15 +275,23 @@ class AlertManager:
             ),
         )
 
+        self._schedule_realtime_publish(
+            updated,
+            event_type="assignment_changed",
+        )
+
         return updated
 
-    def get(self, alert_id: UUID) -> Alert:
+    def get(
+        self,
+        alert_id: UUID,
+    ) -> Alert:
         """Return an alert by identifier."""
         try:
             return self._alerts[alert_id]
         except KeyError as exc:
             raise KeyError(
-                f"alert not found: {alert_id}"
+                f"alert not found: {alert_id}",
             ) from exc
 
     def list_alerts(self) -> list[Alert]:
@@ -250,7 +305,9 @@ class AlertManager:
         """Return immutable audit history for an alert."""
         self.get(alert_id)
 
-        return tuple(self._audit[alert_id])
+        return tuple(
+            self._audit[alert_id],
+        )
 
     def _transition(
         self,
@@ -269,7 +326,10 @@ class AlertManager:
         )
 
         self._alerts[alert.alert_id] = updated
-        self._record(updated, audit)
+        self._record(
+            updated,
+            audit,
+        )
 
         if target is AlertStatus.SUPPRESSED:
             REGISTRY.inc_counter(
@@ -289,6 +349,11 @@ class AlertManager:
                 f"status:{target.value}",
             )
 
+        self._schedule_realtime_publish(
+            updated,
+            event_type=f"status:{target.value}",
+        )
+
         return updated
 
     def _record(
@@ -301,3 +366,89 @@ class AlertManager:
             alert.alert_id,
             [],
         ).append(audit)
+
+    def _schedule_realtime_publish(
+        self,
+        alert: Alert,
+        *,
+        event_type: str,
+    ) -> None:
+        """
+        Schedule realtime publication without turning the synchronous
+        AlertManager API into an async API.
+
+        Realtime delivery must never break alert creation, lifecycle
+        transitions, or assignment operations.
+        """
+        publisher = self._realtime_publisher
+
+        if publisher is None:
+            return
+
+        payload = {
+            "event_type": event_type,
+            "alert": alert.model_dump(
+                mode="json",
+            ),
+        }
+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            logger.debug(
+                "Realtime alert publication skipped because "
+                "no running event loop is available.",
+            )
+            return
+
+        task = loop.create_task(
+            self._publish_realtime(
+                publisher,
+                payload,
+            ),
+            name="alert-realtime-publisher",
+        )
+
+        task.add_done_callback(
+            self._handle_realtime_task_result,
+        )
+
+    async def _publish_realtime(
+        self,
+        publisher: AlertRealtimePublisher,
+        payload: dict[str, Any],
+    ) -> None:
+        """Publish one alert payload through the injected publisher."""
+        try:
+            delivered = await publisher(
+                payload,
+            )
+
+            logger.debug(
+                "Alert realtime payload published "
+                "(delivered=%d, event_type=%s).",
+                delivered,
+                payload.get("event_type"),
+            )
+
+        except Exception:
+            logger.exception(
+                "Alert realtime publication failed "
+                "(event_type=%s).",
+                payload.get("event_type"),
+            )
+
+    @staticmethod
+    def _handle_realtime_task_result(
+        task: asyncio.Task[Any],
+    ) -> None:
+        """Consume completed realtime task exceptions defensively."""
+        if task.cancelled():
+            return
+
+        try:
+            task.result()
+        except Exception:
+            logger.exception(
+                "Unexpected alert realtime publisher task failure."
+            )

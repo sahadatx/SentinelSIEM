@@ -314,8 +314,7 @@ export function MitrePage() {
 
             <div>
               <h3>
-                {mitre.covered_techniques} of{" "}
-                {mitre.total_techniques} techniques covered
+                {mitre.mapped_techniques} of {mitre.total_techniques} techniques covered
               </h3>
 
               <p>

@@ -1,0 +1,51 @@
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/backend/Dockerfile
+
+    environment:
+      SIEM_ENVIRONMENT: production
+      SIEM_DEBUG: "false"
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.50"
+          memory: 512M
+
+    restart: always
+
+  worker:
+    environment:
+      WORKER_COMMAND: ${WORKER_COMMAND:?WORKER_COMMAND must be set to a real worker entrypoint}
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+    restart: always
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/frontend/Dockerfile
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.10"
+          memory: 64M
+
+    restart: always

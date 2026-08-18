@@ -50,3 +50,9 @@ node_modules/
 
 # Docker local overrides
 docker-compose.override.yml
+
+# SentinelSIEM generated OpenSearch TLS private material
+deployment/production/tls/opensearch/**/*.key
+deployment/production/tls/opensearch/**/*.pem
+deployment/production/tls/opensearch/**/*.csr
+deployment/production/tls/opensearch/**/*.srl

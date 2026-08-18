@@ -33,10 +33,7 @@ class IngestionPipeline:
     ) -> None:
         self.queue = queue
         self.processor = processor
-        self.backpressure = (
-            backpressure
-            or BackpressurePolicy(max_queue_size=10_000)
-        )
+        self.backpressure = backpressure or BackpressurePolicy(max_queue_size=10_000)
         self.retry_policy = retry_policy or RetryPolicy()
         self.dead_letter = dead_letter or DeadLetterService()
 
@@ -56,25 +53,19 @@ class IngestionPipeline:
             REGISTRY.inc_counter(
                 "siem_ingestion_submission_rejections_total",
                 help_text=(
-                    "Total ingestion submissions rejected because "
-                    "the queue reached capacity."
+                    "Total ingestion submissions rejected because the queue reached capacity."
                 ),
             )
 
             self._set_queue_depth_metric()
 
-            raise RuntimeError(
-                "ingestion queue is at capacity"
-            )
+            raise RuntimeError("ingestion queue is at capacity")
 
         await self.queue.put(event)
 
         REGISTRY.inc_counter(
             "siem_ingestion_submitted_total",
-            help_text=(
-                "Total events successfully submitted "
-                "to the ingestion queue."
-            ),
+            help_text=("Total events successfully submitted to the ingestion queue."),
         )
 
         self._set_queue_depth_metric()
@@ -88,10 +79,7 @@ class IngestionPipeline:
             with Timer(
                 REGISTRY,
                 "siem_ingestion_processing_duration_seconds",
-                help_text=(
-                    "Ingestion event processing duration "
-                    "in seconds."
-                ),
+                help_text=("Ingestion event processing duration in seconds."),
             ):
                 await with_retry(
                     lambda: self.processor(event),
@@ -101,18 +89,12 @@ class IngestionPipeline:
         except Exception as exc:
             REGISTRY.inc_counter(
                 "siem_ingestion_processing_failures_total",
-                help_text=(
-                    "Total ingestion processing failures "
-                    "after retry exhaustion."
-                ),
+                help_text=("Total ingestion processing failures after retry exhaustion."),
             )
 
             await self.dead_letter.store(
                 event,
-                reason=(
-                    str(exc)
-                    or exc.__class__.__name__
-                ),
+                reason=(str(exc) or exc.__class__.__name__),
                 attempts=self.retry_policy.max_attempts,
             )
 
@@ -120,10 +102,7 @@ class IngestionPipeline:
 
         REGISTRY.inc_counter(
             "siem_ingestion_processed_total",
-            help_text=(
-                "Total events successfully processed "
-                "by the ingestion pipeline."
-            ),
+            help_text=("Total events successfully processed by the ingestion pipeline."),
         )
 
         self._set_queue_depth_metric()

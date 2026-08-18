@@ -1,0 +1,387 @@
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sentinelsiem}
+      POSTGRES_USER: ${POSTGRES_USER:-sentinelsiem}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+    security_opt:
+      - no-new-privileges:true
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    restart: unless-stopped
+
+    command:
+      [
+        "sh",
+        "-c",
+        "exec redis-server --requirepass \"$${REDIS_PASSWORD}\" --appendonly yes",
+      ]
+
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    security_opt:
+      - no-new-privileges:true
+
+  opensearch:
+    image: ${OPENSEARCH_IMAGE:-opensearchproject/opensearch:2.19.0}
+    restart: unless-stopped
+
+    environment:
+      discovery.type: single-node
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:?OPENSEARCH_INITIAL_ADMIN_PASSWORD must be set}
+      bootstrap.memory_lock: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
+      # ----------------------------------------------------------------
+      # SentinelSIEM OpenSearch configuration.
+      #
+      # Compose file:
+      # deployment/docker-compose/docker-compose.yml
+      #
+      # Correct project-relative location:
+      # deployment/production/tls/opensearch/
+      # ----------------------------------------------------------------
+
+      - type: bind
+        source: ${OPENSEARCH_CONFIG_HOST_PATH:-../production/tls/opensearch/opensearch.yml}
+        target: /usr/share/opensearch/config/opensearch.yml
+        read_only: true
+
+      - type: bind
+        source: ${OPENSEARCH_ROOT_CA_HOST_PATH:-../production/tls/opensearch/opensearch-root-ca.pem}
+        target: /usr/share/opensearch/config/opensearch-root-ca.pem
+        read_only: true
+
+      - type: bind
+        source: ${OPENSEARCH_HTTP_CERT_HOST_PATH:-../production/tls/opensearch/opensearch-http.crt}
+        target: /usr/share/opensearch/config/opensearch-http.crt
+        read_only: true
+
+      - type: bind
+        source: ${OPENSEARCH_HTTP_KEY_HOST_PATH:-../production/tls/opensearch/opensearch-http.key}
+        target: /usr/share/opensearch/config/opensearch-http.key
+        read_only: true
+
+      - type: bind
+        source: ${OPENSEARCH_TRANSPORT_CERT_HOST_PATH:-../production/tls/opensearch/opensearch-transport.crt}
+        target: /usr/share/opensearch/config/opensearch-transport.crt
+        read_only: true
+
+      - type: bind
+        source: ${OPENSEARCH_TRANSPORT_KEY_HOST_PATH:-../production/tls/opensearch/opensearch-transport.key}
+        target: /usr/share/opensearch/config/opensearch-transport.key
+        read_only: true
+
+    networks:
+      data:
+        aliases:
+          - sentinelsiem-opensearch
+          - node-0.example.com
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --silent --show-error --fail --cacert /usr/share/opensearch/config/opensearch-root-ca.pem -u \"admin:$${OPENSEARCH_INITIAL_ADMIN_PASSWORD}\" https://sentinelsiem-opensearch:9200/_cluster/health >/dev/null",
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/backend/Dockerfile
+
+    restart: unless-stopped
+
+    environment:
+      SIEM_ENVIRONMENT: ${SIEM_ENVIRONMENT:-development}
+      SIEM_DEBUG: ${SIEM_DEBUG:-false}
+      SIEM_API_HOST: 0.0.0.0
+      SIEM_API_PORT: 8000
+      SIEM_LOG_LEVEL: ${SIEM_LOG_LEVEL:-INFO}
+      SIEM_MAX_REQUEST_BYTES: ${SIEM_MAX_REQUEST_BYTES:-10485760}
+      SIEM_SHUTDOWN_TIMEOUT_SECONDS: ${SIEM_SHUTDOWN_TIMEOUT_SECONDS:-30}
+
+      SIEM_DATABASE_URL: >-
+        postgresql+asyncpg://${POSTGRES_USER:-sentinelsiem}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelsiem}
+
+      SIEM_AUTH_SECRET_KEY: ${SIEM_AUTH_SECRET_KEY:?SIEM_AUTH_SECRET_KEY must be set}
+      SIEM_AUTH_ALGORITHM: ${SIEM_AUTH_ALGORITHM:-HS256}
+      SIEM_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES: ${SIEM_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      SIEM_AUTH_ISSUER: ${SIEM_AUTH_ISSUER:-sentinelsiem}
+      SIEM_AUTH_AUDIENCE: ${SIEM_AUTH_AUDIENCE:-sentinelsiem-api}
+
+      # ----------------------------------------------------------------
+      # Redis realtime + ingestion configuration.
+      # ----------------------------------------------------------------
+      REDIS_URL: >-
+        redis://:${REDIS_PASSWORD}@redis:6379/0
+      EVENT_QUEUE_NAME: ${EVENT_QUEUE_NAME:-siem:events}
+
+      # ----------------------------------------------------------------
+      # OpenSearch event repository.
+      # ----------------------------------------------------------------
+      OPENSEARCH_URL: https://sentinelsiem-opensearch:9200
+      OPENSEARCH_USERNAME: ${OPENSEARCH_USERNAME:-admin}
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:?OPENSEARCH_INITIAL_ADMIN_PASSWORD must be set}
+      OPENSEARCH_VERIFY_CERTS: "true"
+      OPENSEARCH_CA_CERTS: /run/secrets/opensearch-root-ca.pem
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      opensearch:
+        condition: service_healthy
+
+    networks:
+      - edge
+      - app
+      - data
+
+    volumes:
+      # Same certificate location used by OpenSearch.
+      - type: bind
+        source: ${OPENSEARCH_ROOT_CA_HOST_PATH:-../production/tls/opensearch/opensearch-root-ca.pem}
+        target: /run/secrets/opensearch-root-ca.pem
+        read_only: true
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    ports:
+      - "127.0.0.1:8000:8000"
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.environ.get('SIEM_API_PORT', '8000') + '/health/live', timeout=3)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/worker/Dockerfile
+
+    restart: unless-stopped
+
+    environment:
+      WORKER_COMMAND: ${WORKER_COMMAND:?WORKER_COMMAND must be set to a real worker entrypoint}
+
+      REDIS_URL: >-
+        redis://:${REDIS_PASSWORD}@redis:6379/0
+
+      OPENSEARCH_URL: https://sentinelsiem-opensearch:9200
+      OPENSEARCH_USERNAME: ${OPENSEARCH_USERNAME:-admin}
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:?OPENSEARCH_INITIAL_ADMIN_PASSWORD must be set}
+      OPENSEARCH_VERIFY_CERTS: "true"
+      OPENSEARCH_CA_CERTS: /run/secrets/opensearch-root-ca.pem
+
+      EVENT_QUEUE_NAME: ${EVENT_QUEUE_NAME:-siem:events}
+      WORKER_RETRY_DELAY_SECONDS: ${WORKER_RETRY_DELAY_SECONDS:-2.0}
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+      opensearch:
+        condition: service_healthy
+
+    networks:
+      - data
+
+    volumes:
+      - type: bind
+        source: ${OPENSEARCH_ROOT_CA_HOST_PATH:-../production/tls/opensearch/opensearch-root-ca.pem}
+        target: /run/secrets/opensearch-root-ca.pem
+        read_only: true
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+  collector:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/collector/Dockerfile
+
+    restart: unless-stopped
+
+    environment:
+      REDIS_URL: >-
+        redis://:${REDIS_PASSWORD}@redis:6379/0
+
+      EVENT_QUEUE_NAME: ${EVENT_QUEUE_NAME:-siem:events}
+
+      COLLECTOR_HOST: "0.0.0.0"
+      COLLECTOR_PORT: ${COLLECTOR_PORT:-1514}
+      COLLECTOR_NAME: ${COLLECTOR_NAME:-tcp-collector}
+      COLLECTOR_SOURCE: ${COLLECTOR_SOURCE:-tcp-collector}
+      COLLECTOR_MAX_LINE_BYTES: ${COLLECTOR_MAX_LINE_BYTES:-65536}
+      COLLECTOR_QUEUE_SIZE: ${COLLECTOR_QUEUE_SIZE:-10000}
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    networks:
+      - edge
+      - data
+
+    ports:
+      - "127.0.0.1:${COLLECTOR_PORT:-1514}:${COLLECTOR_PORT:-1514}"
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/frontend/Dockerfile
+
+    restart: unless-stopped
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    networks:
+      - edge
+      - app
+
+    read_only: true
+
+    tmpfs:
+      - /tmp/nginx:mode=1777
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:8080/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+networks:
+  edge:
+    name: sentinelsiem_edge
+
+  app:
+    name: sentinelsiem_app
+
+  data:
+    name: sentinelsiem_data
+    internal: true
+
+volumes:
+  postgres_data:
+    name: sentinelsiem_postgres_data
+
+  redis_data:
+    name: sentinelsiem_redis_data
+
+  opensearch_data:
+    name: sentinelsiem_opensearch_data

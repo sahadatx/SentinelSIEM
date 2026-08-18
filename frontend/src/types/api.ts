@@ -56,7 +56,7 @@ export interface IOC {
 
 export interface MitreCoverage {
   total_techniques: number;
-  covered_techniques: number;
+  mapped_techniques: number;
   coverage_percent: number;
 }
 

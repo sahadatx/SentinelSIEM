@@ -1,0 +1,26 @@
+[req]
+default_bits = 2048
+prompt = no
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[req_distinguished_name]
+C = BD
+O = SentinelSIEM
+OU = Security
+CN = sentinelsiem-opensearch
+
+[v3_req]
+basicConstraints = critical,CA:FALSE
+keyUsage = critical,digitalSignature,keyEncipherment
+extendedKeyUsage = serverAuth
+subjectKeyIdentifier = hash
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = sentinelsiem-opensearch
+DNS.2 = sentinelsiem-opensearch.sentinelsiem
+DNS.3 = sentinelsiem-opensearch.sentinelsiem.svc
+DNS.4 = sentinelsiem-opensearch.sentinelsiem.svc.cluster.local
+DNS.5 = localhost
+IP.1 = 127.0.0.1
