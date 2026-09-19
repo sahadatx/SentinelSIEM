@@ -1,6 +1,8 @@
 from datetime import timedelta
 from uuid import uuid4
+
 import pytest
+
 from app.auth.sessions import SessionError, SessionStore
 
 

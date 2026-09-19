@@ -1,21 +1,44 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
 
+from app.auth.audit import AuditRecord
 from app.auth.authentication import (
     AuthenticationError,
     AuthenticationService,
 )
-from app.auth.audit import AuditSink
-from app.auth.models import AuditRecord, SessionRecord, UserIdentity
+from app.auth.models import (
+    AuditAction,
+    AuditOutcome,
+    SessionRecord,
+    UserIdentity,
+)
 from app.auth.password import PasswordHasher
 from app.auth.roles import RoleRegistry
 from app.auth.sessions import SessionError
 from app.auth.tokens import TokenService
+
+# ============================================================================
+# Test Constants
+# ============================================================================
+
+TEST_PASSWORD = "Correct-Horse-Battery-7!"
+WRONG_PASSWORD = "Wrong-Password-123!"
+
+TEST_SECRET = "test-secret-key-with-at-least-32-characters"
+TEST_ISSUER = "sentinelsiem"
+TEST_AUDIENCE = "sentinelsiem-api"
+
+SESSION_TTL = timedelta(minutes=30)
+TOKEN_TTL = timedelta(minutes=30)
+
+DEFAULT_USERNAME = "analyst"
+DEFAULT_EMAIL = "analyst@example.test"
+DEFAULT_ROLE = "SOC_ANALYST"
 
 
 # ============================================================================
@@ -24,13 +47,16 @@ from app.auth.tokens import TokenService
 
 
 class FakeUserRepository:
-    """Async in-memory user repository."""
+    """
+    Minimal in-memory user repository used by AuthenticationService tests.
 
-    def __init__(
-        self,
-        users: list[UserIdentity],
-    ) -> None:
-        self.users = users
+    This fake intentionally implements only the repository behavior required
+    by AuthenticationService. Detailed repository behavior belongs in the
+    repository/user-management test suites.
+    """
+
+    def __init__(self, users: list[UserIdentity]) -> None:
+        self.users = list(users)
 
     async def get_by_login(
         self,
@@ -39,10 +65,7 @@ class FakeUserRepository:
         normalized = login.strip().lower()
 
         for user in self.users:
-            if (
-                user.username.lower() == normalized
-                or user.email.lower() == normalized
-            ):
+            if user.username.lower() == normalized or user.email.lower() == normalized:
                 return user
 
         return None
@@ -57,6 +80,105 @@ class FakeUserRepository:
 
         return None
 
+    async def record_failed_login(
+        self,
+        user_id: UUID,
+        *,
+        max_attempts: int = 5,
+    ) -> UserIdentity | None:
+        user = await self.get_by_id(user_id)
+
+        if user is None:
+            return None
+
+        failed_count = user.failed_login_count + 1
+
+        updated = replace(
+            user,
+            failed_login_count=failed_count,
+            is_locked=(user.is_locked or failed_count >= max_attempts),
+            updated_at=datetime.now(UTC),
+        )
+
+        self._replace(updated)
+
+        return updated
+
+    async def reset_failed_login_count(
+        self,
+        user_id: UUID,
+    ) -> UserIdentity | None:
+        user = await self.get_by_id(user_id)
+
+        if user is None:
+            return None
+
+        updated = replace(
+            user,
+            failed_login_count=0,
+            updated_at=datetime.now(UTC),
+        )
+
+        self._replace(updated)
+
+        return updated
+
+    async def record_successful_login(
+        self,
+        user_id: UUID,
+    ) -> UserIdentity | None:
+        user = await self.get_by_id(user_id)
+
+        if user is None:
+            return None
+
+        if not user.is_active or user.is_locked:
+            return user
+
+        now = datetime.now(UTC)
+
+        updated = replace(
+            user,
+            failed_login_count=0,
+            last_login_at=now,
+            updated_at=now,
+        )
+
+        self._replace(updated)
+
+        return updated
+
+    async def set_last_login_at(
+        self,
+        user_id: UUID,
+        last_login_at: datetime,
+    ) -> UserIdentity | None:
+        user = await self.get_by_id(user_id)
+
+        if user is None:
+            return None
+
+        if last_login_at.tzinfo is None:
+            raise ValueError(
+                "Timestamp must be timezone-aware.",
+            )
+
+        updated = replace(
+            user,
+            last_login_at=last_login_at.astimezone(UTC),
+            updated_at=datetime.now(UTC),
+        )
+
+        self._replace(updated)
+
+        return updated
+
+    def _replace(self, updated: UserIdentity) -> None:
+        for index, current in enumerate(self.users):
+            if current.user_id == updated.user_id:
+                self.users[index] = updated
+                return
+
 
 # ============================================================================
 # Fake Session Repository
@@ -64,7 +186,11 @@ class FakeUserRepository:
 
 
 class FakeSessionRepository:
-    """Async in-memory session repository."""
+    """
+    Minimal session repository required by AuthenticationService.
+
+    Repository-specific lifecycle tests are intentionally not kept here.
+    """
 
     def __init__(self) -> None:
         self.sessions: dict[UUID, SessionRecord] = {}
@@ -85,7 +211,7 @@ class FakeSessionRepository:
         if session is None:
             return None
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if session.revoked_at is not None:
             return None
@@ -103,7 +229,9 @@ class FakeSessionRepository:
         session = self.sessions.get(session_id)
 
         if session is None:
-            raise SessionError("Session does not exist.")
+            raise SessionError(
+                "Session does not exist.",
+            )
 
         updated = replace(
             session,
@@ -126,12 +254,10 @@ class FakeSessionRepository:
         if session.revoked_at is not None:
             return False
 
-        updated = replace(
+        self.sessions[session_id] = replace(
             session,
-            revoked_at=datetime.now(timezone.utc),
+            revoked_at=datetime.now(UTC),
         )
-
-        self.sessions[session_id] = updated
 
         return True
 
@@ -139,7 +265,7 @@ class FakeSessionRepository:
         self,
         user_id: UUID,
     ) -> int:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         count = 0
 
         for session_id, session in list(
@@ -158,28 +284,14 @@ class FakeSessionRepository:
 
         return count
 
-    async def purge_expired(self) -> int:
-        now = datetime.now(timezone.utc)
-
-        expired_ids = [
-            session_id
-            for session_id, session in self.sessions.items()
-            if session.expires_at <= now
-        ]
-
-        for session_id in expired_ids:
-            del self.sessions[session_id]
-
-        return len(expired_ids)
-
 
 # ============================================================================
-# Test Audit Sink
+# Recording Audit Sink
 # ============================================================================
 
 
 class RecordingAuditSink:
-    """Async audit sink that records events for assertions."""
+    """In-memory audit sink for authentication tests."""
 
     def __init__(self) -> None:
         self.events: list[AuditRecord] = []
@@ -192,49 +304,65 @@ class RecordingAuditSink:
 
 
 # ============================================================================
-# Test Service Factory
+# Test Factory
 # ============================================================================
 
 
-def build_service() -> tuple[
+def make_user(
+    *,
+    username: str = DEFAULT_USERNAME,
+    email: str = DEFAULT_EMAIL,
+    password: str = TEST_PASSWORD,
+    roles: frozenset[str] = frozenset({DEFAULT_ROLE}),
+    is_active: bool = True,
+    is_locked: bool = False,
+    failed_login_count: int = 0,
+) -> UserIdentity:
+    """Create an isolated test identity."""
+
+    hasher = PasswordHasher()
+
+    return UserIdentity(
+        user_id=uuid4(),
+        username=username,
+        email=email,
+        password_hash=hasher.hash(password),
+        roles=roles,
+        is_active=is_active,
+        is_locked=is_locked,
+        failed_login_count=failed_login_count,
+    )
+
+
+def build_service(
+    *,
+    user: UserIdentity | None = None,
+) -> tuple[
     AuthenticationService,
     RecordingAuditSink,
+    FakeUserRepository,
+    FakeSessionRepository,
 ]:
-    """Build an isolated authentication service."""
+    """
+    Build a completely isolated AuthenticationService.
+
+    No database, Redis, Docker, network, or application lifespan is used.
+    """
 
     password_hasher = PasswordHasher()
 
-    user = UserIdentity(
-        user_id=uuid4(),
-        username="analyst",
-        email="analyst@example.test",
-        password_hash=password_hasher.hash(
-            "Correct-Horse-Battery-7!",
-        ),
-        roles=frozenset(
-            {
-                "SOC_ANALYST",
-            },
-        ),
-        is_active=True,
-        is_locked=False,
-    )
+    if user is None:
+        user = make_user()
 
-    users = FakeUserRepository(
-        [user],
-    )
-
+    users = FakeUserRepository([user])
     sessions = FakeSessionRepository()
-
     audit = RecordingAuditSink()
 
     tokens = TokenService(
-        secret_key=(
-            "test-secret-key-with-at-least-32-characters"
-        ),
-        issuer="sentinelsiem",
-        audience="sentinelsiem-api",
-        ttl=timedelta(minutes=30),
+        secret_key=TEST_SECRET,
+        issuer=TEST_ISSUER,
+        audience=TEST_AUDIENCE,
+        ttl=TOKEN_TTL,
         algorithm="HS256",
     )
 
@@ -245,270 +373,349 @@ def build_service() -> tuple[
         password_hasher=password_hasher,
         audit=audit,
         roles=RoleRegistry(),
-        session_ttl=timedelta(minutes=30),
+        session_ttl=SESSION_TTL,
     )
 
-    return service, audit
+    return (
+        service,
+        audit,
+        users,
+        sessions,
+    )
 
 
 # ============================================================================
-# Login
+# Authentication — Successful Login
 # ============================================================================
 
 
 @pytest.mark.asyncio
-async def test_login_by_username_and_email_and_logout() -> None:
-    """Authenticate by email, validate token, then logout."""
-
-    service, audit = build_service()
+async def test_login_by_username() -> None:
+    service, audit, _, _ = build_service()
 
     result = await service.login(
-        login="analyst@example.test",
-        password="Correct-Horse-Battery-7!",
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
     )
 
     assert result.access_token
-    assert result.principal.username == "analyst"
     assert result.principal.user_id
+    assert result.principal.session_id
+    assert result.principal.username == DEFAULT_USERNAME
+
+    assert audit.events
+
+    record = audit.events[-1]
+
+    assert record.action == AuditAction.LOGIN_SUCCESS
+    assert record.outcome == AuditOutcome.SUCCESS
+
+
+@pytest.mark.asyncio
+async def test_login_by_email() -> None:
+    service, audit, _, _ = build_service()
+
+    result = await service.login(
+        login=DEFAULT_EMAIL,
+        password=TEST_PASSWORD,
+    )
+
+    assert result.access_token
+    assert result.principal.username == DEFAULT_USERNAME
+    assert audit.events[-1].action == AuditAction.LOGIN_SUCCESS
+
+
+@pytest.mark.asyncio
+async def test_login_normalizes_login_input() -> None:
+    service, _, _, _ = build_service()
+
+    result = await service.login(
+        login=f"  {DEFAULT_EMAIL.upper()}  ",
+        password=TEST_PASSWORD,
+    )
+
+    assert result.access_token
+    assert result.principal.username == DEFAULT_USERNAME
+
+
+@pytest.mark.asyncio
+async def test_successful_login_returns_expected_principal() -> None:
+    service, _, _, _ = build_service()
+
+    result = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    principal = result.principal
+
+    assert principal.user_id
+    assert principal.username == DEFAULT_USERNAME
+    assert principal.roles == frozenset({DEFAULT_ROLE})
+    assert principal.session_id
+
+    assert not hasattr(principal, "password")
+    assert not hasattr(principal, "password_hash")
+
+
+# ============================================================================
+# Authentication — Invalid Credentials
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_invalid_password_returns_generic_error() -> None:
+    service, audit, users, _ = build_service()
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        await service.login(
+            login=DEFAULT_USERNAME,
+            password=WRONG_PASSWORD,
+        )
+
+    assert str(exc_info.value) == "Invalid credentials."
+
+    user = await users.get_by_login(DEFAULT_USERNAME)
+
+    assert user is not None
+    assert user.failed_login_count == 1
+
+    record = audit.events[-1]
+
+    assert record.action == AuditAction.LOGIN_FAILURE
+    assert record.outcome == AuditOutcome.FAILURE
+
+
+@pytest.mark.asyncio
+async def test_unknown_user_returns_generic_error() -> None:
+    service, audit, _, _ = build_service()
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        await service.login(
+            login="unknown@example.test",
+            password=TEST_PASSWORD,
+        )
+
+    assert str(exc_info.value) == "Invalid credentials."
+
+    record = audit.events[-1]
+
+    assert record.action == AuditAction.LOGIN_FAILURE
+    assert record.outcome == AuditOutcome.FAILURE
+    assert record.target_user_id is None
+
+
+@pytest.mark.asyncio
+async def test_empty_login_is_rejected() -> None:
+    service, audit, _, _ = build_service()
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        await service.login(
+            login="   ",
+            password=TEST_PASSWORD,
+        )
+
+    assert str(exc_info.value) == "Invalid credentials."
+    assert audit.events[-1].action == AuditAction.LOGIN_FAILURE
+
+
+@pytest.mark.asyncio
+async def test_empty_password_is_rejected() -> None:
+    service, audit, _, _ = build_service()
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        await service.login(
+            login=DEFAULT_USERNAME,
+            password="",
+        )
+
+    assert str(exc_info.value) == "Invalid credentials."
+    assert audit.events[-1].action == AuditAction.LOGIN_FAILURE
+
+
+@pytest.mark.asyncio
+async def test_authentication_does_not_reveal_account_existence() -> None:
+    service, _, _, _ = build_service()
+
+    with pytest.raises(AuthenticationError) as known_error:
+        await service.login(
+            login=DEFAULT_USERNAME,
+            password=WRONG_PASSWORD,
+        )
+
+    with pytest.raises(AuthenticationError) as unknown_error:
+        await service.login(
+            login="does-not-exist@example.test",
+            password=WRONG_PASSWORD,
+        )
+
+    assert str(known_error.value) == str(unknown_error.value)
+    assert str(known_error.value) == "Invalid credentials."
+
+
+# ============================================================================
+# Authentication — Account State
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_inactive_account_is_rejected() -> None:
+    user = make_user(
+        username="inactive",
+        email="inactive@example.test",
+        is_active=False,
+    )
+
+    service, audit, _, _ = build_service(user=user)
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        await service.login(
+            login="inactive",
+            password=TEST_PASSWORD,
+        )
+
+    assert str(exc_info.value) == "Invalid credentials."
+    assert audit.events[-1].action == AuditAction.LOGIN_FAILURE
+
+
+@pytest.mark.asyncio
+async def test_locked_account_is_rejected() -> None:
+    user = make_user(
+        username="locked",
+        email="locked@example.test",
+        is_locked=True,
+    )
+
+    service, audit, _, _ = build_service(user=user)
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        await service.login(
+            login="locked",
+            password=TEST_PASSWORD,
+        )
+
+    assert str(exc_info.value) == "Invalid credentials."
+    assert audit.events[-1].action == AuditAction.LOGIN_FAILURE
+
+
+# ============================================================================
+# Authentication — Failed Login Protection
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_failed_login_increments_counter() -> None:
+    service, _, users, _ = build_service()
+
+    with pytest.raises(AuthenticationError):
+        await service.login(
+            login=DEFAULT_USERNAME,
+            password=WRONG_PASSWORD,
+        )
+
+    user = await users.get_by_login(DEFAULT_USERNAME)
+
+    assert user is not None
+    assert user.failed_login_count == 1
+
+
+@pytest.mark.asyncio
+async def test_repeated_failed_logins_lock_account() -> None:
+    service, _, users, _ = build_service()
+
+    for _ in range(5):
+        with pytest.raises(AuthenticationError):
+            await service.login(
+                login=DEFAULT_USERNAME,
+                password=WRONG_PASSWORD,
+            )
+
+    user = await users.get_by_login(DEFAULT_USERNAME)
+
+    assert user is not None
+    assert user.failed_login_count >= 5
+    assert user.is_locked is True
+
+
+@pytest.mark.asyncio
+async def test_locked_account_cannot_login_with_correct_password() -> None:
+    service, _, users, _ = build_service()
+
+    for _ in range(5):
+        with pytest.raises(AuthenticationError):
+            await service.login(
+                login=DEFAULT_USERNAME,
+                password=WRONG_PASSWORD,
+            )
+
+    user = await users.get_by_login(DEFAULT_USERNAME)
+
+    assert user is not None
+    assert user.is_locked is True
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        await service.login(
+            login=DEFAULT_USERNAME,
+            password=TEST_PASSWORD,
+        )
+
+    assert str(exc_info.value) == "Invalid credentials."
+
+
+@pytest.mark.asyncio
+async def test_successful_login_resets_failed_login_counter() -> None:
+    service, _, users, _ = build_service()
+
+    for _ in range(2):
+        with pytest.raises(AuthenticationError):
+            await service.login(
+                login=DEFAULT_USERNAME,
+                password=WRONG_PASSWORD,
+            )
+
+    before = await users.get_by_login(DEFAULT_USERNAME)
+
+    assert before is not None
+    assert before.failed_login_count == 2
+
+    await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    after = await users.get_by_login(DEFAULT_USERNAME)
+
+    assert after is not None
+    assert after.failed_login_count == 0
+    assert after.last_login_at is not None
+
+
+# ============================================================================
+# Authentication — Token Validation
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_valid_access_token_authenticates_user() -> None:
+    service, _, _, _ = build_service()
+
+    result = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
 
     principal = await service.authenticate_token(
         result.access_token,
     )
 
-    assert principal.username == "analyst"
     assert principal.user_id == result.principal.user_id
+    assert principal.username == DEFAULT_USERNAME
     assert principal.session_id == result.principal.session_id
 
-    revoked = await service.logout(
-        principal,
-    )
-
-    assert revoked is True
-
-    with pytest.raises(AuthenticationError):
-        await service.authenticate_token(
-            result.access_token,
-        )
-
-    assert audit.events
-
 
 @pytest.mark.asyncio
-async def test_login_by_username() -> None:
-    """Authenticate using username."""
-
-    service, _ = build_service()
-
-    result = await service.login(
-        login="analyst",
-        password="Correct-Horse-Battery-7!",
-    )
-
-    assert result.access_token
-    assert result.principal.username == "analyst"
-
-
-@pytest.mark.asyncio
-async def test_login_normalizes_username_and_email() -> None:
-    """Login should normalize case and surrounding whitespace."""
-
-    service, _ = build_service()
-
-    result = await service.login(
-        login="  ANALYST@EXAMPLE.TEST  ",
-        password="Correct-Horse-Battery-7!",
-    )
-
-    assert result.access_token
-    assert result.principal.username == "analyst"
-
-
-# ============================================================================
-# Invalid Credentials
-# ============================================================================
-
-
-@pytest.mark.asyncio
-async def test_invalid_password_is_generic_failure() -> None:
-    """Wrong passwords must produce generic authentication failure."""
-
-    service, audit = build_service()
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        await service.login(
-            login="analyst",
-            password="Wrong-Password-123!",
-        )
-
-    assert str(exc_info.value) == "Invalid credentials."
-
-    assert audit.events
-
-    record = audit.events[-1]
-
-    assert record.action == "authentication.login"
-    assert record.outcome == "failure"
-
-
-@pytest.mark.asyncio
-async def test_unknown_user_is_generic_failure() -> None:
-    """Unknown users must not reveal account existence."""
-
-    service, audit = build_service()
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        await service.login(
-            login="unknown@example.test",
-            password="Correct-Horse-Battery-7!",
-        )
-
-    assert str(exc_info.value) == "Invalid credentials."
-
-    assert audit.events
-
-    record = audit.events[-1]
-
-    assert record.action == "authentication.login"
-    assert record.outcome == "failure"
-
-
-@pytest.mark.asyncio
-async def test_empty_login_is_rejected() -> None:
-    """Whitespace-only login must fail."""
-
-    service, audit = build_service()
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        await service.login(
-            login="   ",
-            password="Correct-Horse-Battery-7!",
-        )
-
-    assert str(exc_info.value) == "Invalid credentials."
-
-    assert audit.events
-
-    record = audit.events[-1]
-
-    assert record.action == "authentication.login"
-    assert record.outcome == "failure"
-
-
-# ============================================================================
-# User State
-# ============================================================================
-
-
-@pytest.mark.asyncio
-async def test_inactive_user_is_rejected() -> None:
-    """Inactive accounts must not authenticate."""
-
-    password_hasher = PasswordHasher()
-
-    user = UserIdentity(
-        user_id=uuid4(),
-        username="inactive",
-        email="inactive@example.test",
-        password_hash=password_hasher.hash(
-            "Correct-Horse-Battery-7!",
-        ),
-        roles=frozenset({"SOC_ANALYST"}),
-        is_active=False,
-        is_locked=False,
-    )
-
-    users = FakeUserRepository([user])
-    sessions = FakeSessionRepository()
-    audit = RecordingAuditSink()
-
-    tokens = TokenService(
-        secret_key=(
-            "test-secret-key-with-at-least-32-characters"
-        ),
-        issuer="sentinelsiem",
-        audience="sentinelsiem-api",
-        ttl=timedelta(minutes=30),
-        algorithm="HS256",
-    )
-
-    service = AuthenticationService(
-        users=users,
-        tokens=tokens,
-        sessions=sessions,
-        password_hasher=password_hasher,
-        audit=audit,
-        roles=RoleRegistry(),
-    )
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        await service.login(
-            login="inactive",
-            password="Correct-Horse-Battery-7!",
-        )
-
-    assert str(exc_info.value) == "Invalid credentials."
-
-
-@pytest.mark.asyncio
-async def test_locked_user_is_rejected() -> None:
-    """Locked accounts must not authenticate."""
-
-    password_hasher = PasswordHasher()
-
-    user = UserIdentity(
-        user_id=uuid4(),
-        username="locked",
-        email="locked@example.test",
-        password_hash=password_hasher.hash(
-            "Correct-Horse-Battery-7!",
-        ),
-        roles=frozenset({"SOC_ANALYST"}),
-        is_active=True,
-        is_locked=True,
-    )
-
-    users = FakeUserRepository([user])
-    sessions = FakeSessionRepository()
-    audit = RecordingAuditSink()
-
-    tokens = TokenService(
-        secret_key=(
-            "test-secret-key-with-at-least-32-characters"
-        ),
-        issuer="sentinelsiem",
-        audience="sentinelsiem-api",
-        ttl=timedelta(minutes=30),
-        algorithm="HS256",
-    )
-
-    service = AuthenticationService(
-        users=users,
-        tokens=tokens,
-        sessions=sessions,
-        password_hasher=password_hasher,
-        audit=audit,
-        roles=RoleRegistry(),
-    )
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        await service.login(
-            login="locked",
-            password="Correct-Horse-Battery-7!",
-        )
-
-    assert str(exc_info.value) == "Invalid credentials."
-
-
-# ============================================================================
-# Token Validation
-# ============================================================================
-
-
-@pytest.mark.asyncio
-async def test_invalid_token_is_rejected() -> None:
-    """Malformed access tokens must be rejected."""
-
-    service, audit = build_service()
+async def test_invalid_access_token_is_rejected() -> None:
+    service, audit, _, _ = build_service()
 
     with pytest.raises(AuthenticationError):
         await service.authenticate_token(
@@ -519,19 +726,93 @@ async def test_invalid_token_is_rejected() -> None:
 
     record = audit.events[-1]
 
-    assert record.action == "authentication.token_validation"
-    assert record.outcome == "failure"
+    assert record.action == AuditAction.LOGIN_FAILURE
+    assert record.outcome == AuditOutcome.FAILURE
 
 
 @pytest.mark.asyncio
-async def test_logout_revokes_session() -> None:
-    """Logout must invalidate the associated session."""
+async def test_empty_access_token_is_rejected() -> None:
+    service, _, _, _ = build_service()
 
-    service, _ = build_service()
+    with pytest.raises(AuthenticationError):
+        await service.authenticate_token("")
+
+
+# ============================================================================
+# Authentication — Session Binding
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_successful_login_creates_authenticated_session() -> None:
+    service, _, _, sessions = build_service()
 
     result = await service.login(
-        login="analyst",
-        password="Correct-Horse-Battery-7!",
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    session = sessions.sessions.get(
+        result.principal.session_id,
+    )
+
+    assert session is not None
+    assert session.user_id == result.principal.user_id
+    assert session.session_id == result.principal.session_id
+    assert session.revoked_at is None
+    assert session.expires_at > datetime.now(UTC)
+    assert session.token_id
+
+
+@pytest.mark.asyncio
+async def test_authenticated_session_belongs_to_user() -> None:
+    service, _, _, sessions = build_service()
+
+    result = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    session = sessions.sessions[result.principal.session_id]
+
+    assert session.user_id == result.principal.user_id
+
+
+# ============================================================================
+# Authentication — Logout
+# ============================================================================
+
+
+@pytest.mark.asyncio
+async def test_logout_revokes_authenticated_session() -> None:
+    service, _, _, sessions = build_service()
+
+    result = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    principal = await service.authenticate_token(
+        result.access_token,
+    )
+
+    assert await service.logout(principal) is True
+
+    session = sessions.sessions.get(
+        principal.session_id,
+    )
+
+    assert session is not None
+    assert session.revoked_at is not None
+
+
+@pytest.mark.asyncio
+async def test_logout_invalidates_access_token() -> None:
+    service, _, _, _ = build_service()
+
+    result = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
     )
 
     principal = await service.authenticate_token(
@@ -546,29 +827,92 @@ async def test_logout_revokes_session() -> None:
         )
 
 
+@pytest.mark.asyncio
+async def test_logout_emits_success_audit_event() -> None:
+    service, audit, _, _ = build_service()
+
+    result = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    principal = await service.authenticate_token(
+        result.access_token,
+    )
+
+    await service.logout(principal)
+
+    logout_events = [event for event in audit.events if event.action == AuditAction.LOGOUT]
+
+    assert logout_events
+
+    record = logout_events[-1]
+
+    assert record.outcome == AuditOutcome.SUCCESS
+    assert record.actor_user_id == principal.user_id
+    assert record.session_id == principal.session_id
+
+
 # ============================================================================
-# Session Revocation
+# Authentication — Multiple Sessions
 # ============================================================================
 
 
 @pytest.mark.asyncio
-async def test_revoke_all_sessions() -> None:
-    """All active sessions for a user must be revoked."""
-
-    service, _ = build_service()
+async def test_multiple_successful_logins_create_distinct_sessions() -> None:
+    service, _, _, sessions = build_service()
 
     first = await service.login(
-        login="analyst",
-        password="Correct-Horse-Battery-7!",
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
     )
 
     second = await service.login(
-        login="analyst",
-        password="Correct-Horse-Battery-7!",
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
     )
 
-    assert first.principal.user_id == second.principal.user_id
     assert first.principal.session_id != second.principal.session_id
+    assert len(sessions.sessions) == 2
+
+
+@pytest.mark.asyncio
+async def test_revoke_all_sessions_invalidates_user_sessions() -> None:
+    service, _, _, sessions = build_service()
+
+    first = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    count = await service.revoke_all_sessions(
+        first.principal.user_id,
+    )
+
+    assert count == 2
+
+    for session in sessions.sessions.values():
+        assert session.revoked_at is not None
+
+
+@pytest.mark.asyncio
+async def test_revoke_all_sessions_invalidates_all_access_tokens() -> None:
+    service, _, _, _ = build_service()
+
+    first = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    second = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
 
     count = await service.revoke_all_sessions(
         first.principal.user_id,
@@ -585,3 +929,77 @@ async def test_revoke_all_sessions() -> None:
         await service.authenticate_token(
             second.access_token,
         )
+
+
+# ============================================================================
+# Authentication — Audit Security
+# ============================================================================
+
+
+def serialize_audit(record: AuditRecord) -> str:
+    """Serialize an audit record for secret-leak assertions."""
+    return repr(record)
+
+
+@pytest.mark.asyncio
+async def test_successful_login_audit_does_not_contain_password() -> None:
+    service, audit, _, _ = build_service()
+
+    await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    serialized = serialize_audit(audit.events[-1])
+
+    assert TEST_PASSWORD not in serialized
+    assert "password_hash" not in serialized.lower()
+
+
+@pytest.mark.asyncio
+async def test_failed_login_audit_does_not_contain_password() -> None:
+    service, audit, _, _ = build_service()
+
+    with pytest.raises(AuthenticationError):
+        await service.login(
+            login=DEFAULT_USERNAME,
+            password=WRONG_PASSWORD,
+        )
+
+    serialized = serialize_audit(audit.events[-1])
+
+    assert TEST_PASSWORD not in serialized
+    assert WRONG_PASSWORD not in serialized
+    assert "password_hash" not in serialized.lower()
+
+
+@pytest.mark.asyncio
+async def test_successful_login_audit_contains_identity() -> None:
+    service, audit, _, _ = build_service()
+
+    result = await service.login(
+        login=DEFAULT_USERNAME,
+        password=TEST_PASSWORD,
+    )
+
+    record = audit.events[-1]
+
+    assert record.action == AuditAction.LOGIN_SUCCESS
+    assert record.outcome == AuditOutcome.SUCCESS
+    assert record.actor_user_id == result.principal.user_id
+
+
+@pytest.mark.asyncio
+async def test_failed_login_audit_contains_failure_outcome() -> None:
+    service, audit, _, _ = build_service()
+
+    with pytest.raises(AuthenticationError):
+        await service.login(
+            login=DEFAULT_USERNAME,
+            password=WRONG_PASSWORD,
+        )
+
+    record = audit.events[-1]
+
+    assert record.action == AuditAction.LOGIN_FAILURE
+    assert record.outcome == AuditOutcome.FAILURE

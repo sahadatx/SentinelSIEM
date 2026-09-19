@@ -1,10 +1,16 @@
 from uuid import uuid4
+
 import pytest
+
 from app.auth.tokens import TokenError, TokenService
 
 
 def service() -> TokenService:
-    return TokenService(secret_key="development-only-secret-that-is-at-least-32-chars", issuer="sentinelsiem", audience="sentinelsiem-api")
+    return TokenService(
+        secret_key="development-only-secret-that-is-at-least-32-chars",
+        issuer="sentinelsiem",
+        audience="sentinelsiem-api",
+    )
 
 
 def test_issue_and_decode_round_trip() -> None:

@@ -12,7 +12,14 @@ from .permissions import Permission
 from .roles import Role
 
 __all__ = [
-    "AuthenticationError", "AuthenticationService", "AuthorizationService",
-    "LoginResult", "Permission", "PermissionDenied", "Role",
-    "require_authenticated_user", "require_permission", "require_role",
+    "AuthenticationError",
+    "AuthenticationService",
+    "AuthorizationService",
+    "LoginResult",
+    "Permission",
+    "PermissionDenied",
+    "Role",
+    "require_authenticated_user",
+    "require_permission",
+    "require_role",
 ]

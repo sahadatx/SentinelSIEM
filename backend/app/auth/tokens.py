@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import jwt
@@ -28,9 +28,15 @@ class TokenService:
 
     ALLOWED_ALGORITHMS = frozenset({"HS256"})
 
-    def __init__(self, *, secret_key: str, issuer: str = "sentinelsiem",
-                 audience: str = "sentinelsiem-api", ttl: timedelta = timedelta(minutes=30),
-                 algorithm: str = "HS256") -> None:
+    def __init__(
+        self,
+        *,
+        secret_key: str,
+        issuer: str = "sentinelsiem",
+        audience: str = "sentinelsiem-api",
+        ttl: timedelta = timedelta(minutes=30),
+        algorithm: str = "HS256",
+    ) -> None:
         if len(secret_key) < 32:
             raise ValueError("Authentication secret must contain at least 32 characters.")
         if algorithm not in self.ALLOWED_ALGORITHMS:
@@ -43,15 +49,25 @@ class TokenService:
         self._ttl = ttl
         self._algorithm = algorithm
 
-    def issue(self, user_id: UUID, session_id: UUID, *, token_id: str | None = None,
-              now: datetime | None = None) -> str:
-        issued = now or datetime.now(timezone.utc)
+    def issue(
+        self,
+        user_id: UUID,
+        session_id: UUID,
+        *,
+        token_id: str | None = None,
+        now: datetime | None = None,
+    ) -> str:
+        issued = now or datetime.now(UTC)
         expires = issued + self._ttl
         jti = token_id or uuid4().hex
         payload = {
-            "sub": str(user_id), "sid": str(session_id), "jti": jti,
-            "iss": self._issuer, "aud": self._audience,
-            "iat": int(issued.timestamp()), "exp": int(expires.timestamp()),
+            "sub": str(user_id),
+            "sid": str(session_id),
+            "jti": jti,
+            "iss": self._issuer,
+            "aud": self._audience,
+            "iat": int(issued.timestamp()),
+            "exp": int(expires.timestamp()),
         }
         return jwt.encode(payload, self._secret, algorithm=self._algorithm)
 
@@ -63,18 +79,29 @@ class TokenService:
             if header.get("alg") not in self.ALLOWED_ALGORITHMS:
                 raise TokenError("Invalid access token.")
             payload = jwt.decode(
-                token, self._secret,
-                algorithms=[self._algorithm], issuer=self._issuer,
-                audience=self._audience, options={"require": ["sub", "sid", "jti", "iss", "aud", "iat", "exp"]},
+                token,
+                self._secret,
+                algorithms=[self._algorithm],
+                issuer=self._issuer,
+                audience=self._audience,
+                options={"require": ["sub", "sid", "jti", "iss", "aud", "iat", "exp"]},
             )
             subject = UUID(str(payload["sub"]))
             session_id = UUID(str(payload["sid"]))
-            issued_at = datetime.fromtimestamp(int(payload["iat"]), tz=timezone.utc)
-            expires_at = datetime.fromtimestamp(int(payload["exp"]), tz=timezone.utc)
+            issued_at = datetime.fromtimestamp(int(payload["iat"]), tz=UTC)
+            expires_at = datetime.fromtimestamp(int(payload["exp"]), tz=UTC)
             token_id = str(payload["jti"])
             if not token_id or len(token_id) > 128 or expires_at <= issued_at:
                 raise TokenError("Invalid access token.")
-            return TokenClaims(subject, session_id, token_id, str(payload["iss"]), str(payload["aud"]), issued_at, expires_at)
+            return TokenClaims(
+                subject,
+                session_id,
+                token_id,
+                str(payload["iss"]),
+                str(payload["aud"]),
+                issued_at,
+                expires_at,
+            )
         except (InvalidTokenError, KeyError, TypeError, ValueError, OverflowError) as exc:
             if isinstance(exc, TokenError):
                 raise
