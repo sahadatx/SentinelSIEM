@@ -9,8 +9,7 @@ from app.alerts.models import Alert
 class AlertNotificationSink(Protocol):
     """Notification adapter contract; external channels belong behind this boundary."""
 
-    def notify(self, alert: Alert, event: str) -> None:
-        ...
+    def notify(self, alert: Alert, event: str) -> None: ...
 
 
 @dataclass(slots=True)

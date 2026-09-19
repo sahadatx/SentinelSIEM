@@ -10,9 +10,7 @@ class EscalationPolicy:
     """Configurable policy for high-impact alert escalation."""
 
     enabled: bool = True
-    severities: frozenset[AlertSeverity] = frozenset(
-        {AlertSeverity.HIGH, AlertSeverity.CRITICAL}
-    )
+    severities: frozenset[AlertSeverity] = frozenset({AlertSeverity.HIGH, AlertSeverity.CRITICAL})
     minimum_risk_score: float = 80.0
 
 

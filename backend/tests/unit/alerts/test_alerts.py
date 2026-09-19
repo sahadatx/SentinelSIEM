@@ -87,9 +87,7 @@ def test_invalid_lifecycle_transition_is_rejected() -> None:
     except ValueError as exc:
         assert "invalid alert transition" in str(exc)
     else:
-        raise AssertionError(
-            "invalid transition was accepted"
-        )
+        raise AssertionError("invalid transition was accepted")
 
 
 def test_duplicate_alerts_are_deduplicated() -> None:
@@ -103,13 +101,7 @@ def test_duplicate_alerts_are_deduplicated() -> None:
 
 
 def test_suppression_policy_suppresses_noisy_noncritical_alert() -> None:
-    manager = AlertManager(
-        suppression=AlertSuppression(
-            SuppressionPolicy(
-                minimum_occurrences=1
-            )
-        )
-    )
+    manager = AlertManager(suppression=AlertSuppression(SuppressionPolicy(minimum_occurrences=1)))
     alert = manager.create(_create())
 
     assert alert.status == AlertStatus.SUPPRESSED
@@ -118,9 +110,7 @@ def test_suppression_policy_suppresses_noisy_noncritical_alert() -> None:
 def test_critical_alert_is_escalated() -> None:
     sink = InMemoryNotificationSink()
 
-    manager = AlertManager(
-        notification_sink=sink
-    )
+    manager = AlertManager(notification_sink=sink)
 
     alert = manager.create(
         _create(
@@ -142,9 +132,7 @@ def test_critical_alert_is_escalated() -> None:
 def test_assignment_is_audited() -> None:
     manager = AlertManager()
 
-    alert = manager.create(
-        _create()
-    )
+    alert = manager.create(_create())
 
     updated = manager.assign(
         alert.alert_id,
@@ -155,12 +143,7 @@ def test_assignment_is_audited() -> None:
 
     assert updated.assigned_to == "analyst-01"
     assert updated.ownership_group == "soc-l2"
-    assert (
-        manager.audit_history(
-            alert.alert_id
-        )[-1].action
-        == "assignment_changed"
-    )
+    assert manager.audit_history(alert.alert_id)[-1].action == "assignment_changed"
 
 
 # ============================================================================
@@ -197,17 +180,13 @@ def test_alert_creation_publishes_realtime_payload() -> None:
             realtime_publisher=publisher,
         )
 
-        alert = manager.create(
-            _create()
-        )
+        alert = manager.create(_create())
 
         await _wait_for_realtime_tasks()
 
         assert len(published) == 1
         assert published[0]["event_type"] == "created"
-        assert published[0]["alert"]["alert_id"] == str(
-            alert.alert_id
-        )
+        assert published[0]["alert"]["alert_id"] == str(alert.alert_id)
         assert published[0]["alert"]["status"] == "new"
 
     _run(scenario())
@@ -227,15 +206,11 @@ def test_duplicate_alert_publishes_deduplicated_realtime_payload() -> None:
             realtime_publisher=publisher,
         )
 
-        first = manager.create(
-            _create()
-        )
+        first = manager.create(_create())
 
         await _wait_for_realtime_tasks()
 
-        second = manager.create(
-            _create()
-        )
+        second = manager.create(_create())
 
         await _wait_for_realtime_tasks()
 
@@ -245,14 +220,8 @@ def test_duplicate_alert_publishes_deduplicated_realtime_payload() -> None:
         assert published[0]["event_type"] == "created"
         assert published[1]["event_type"] == "deduplicated"
 
-        assert (
-            published[1]["alert"]["alert_id"]
-            == str(first.alert_id)
-        )
-        assert (
-            published[1]["alert"]["occurrence_count"]
-            == 2
-        )
+        assert published[1]["alert"]["alert_id"] == str(first.alert_id)
+        assert published[1]["alert"]["occurrence_count"] == 2
 
     _run(scenario())
 
@@ -271,9 +240,7 @@ def test_alert_transition_publishes_realtime_status_update() -> None:
             realtime_publisher=publisher,
         )
 
-        alert = manager.create(
-            _create()
-        )
+        alert = manager.create(_create())
 
         await _wait_for_realtime_tasks()
 
@@ -289,15 +256,9 @@ def test_alert_transition_publishes_realtime_status_update() -> None:
         assert len(published) == 2
 
         assert published[0]["event_type"] == "created"
-        assert (
-            published[1]["event_type"]
-            == "status:acknowledged"
-        )
+        assert published[1]["event_type"] == "status:acknowledged"
 
-        assert (
-            published[1]["alert"]["status"]
-            == "acknowledged"
-        )
+        assert published[1]["alert"]["status"] == "acknowledged"
 
     _run(scenario())
 
@@ -316,9 +277,7 @@ def test_alert_assignment_publishes_realtime_update() -> None:
             realtime_publisher=publisher,
         )
 
-        alert = manager.create(
-            _create()
-        )
+        alert = manager.create(_create())
 
         await _wait_for_realtime_tasks()
 
@@ -333,22 +292,10 @@ def test_alert_assignment_publishes_realtime_update() -> None:
 
         assert len(published) == 2
 
-        assert (
-            published[1]["event_type"]
-            == "assignment_changed"
-        )
-        assert (
-            published[1]["alert"]["alert_id"]
-            == str(updated.alert_id)
-        )
-        assert (
-            published[1]["alert"]["assigned_to"]
-            == "analyst-02"
-        )
-        assert (
-            published[1]["alert"]["ownership_group"]
-            == "soc-l2"
-        )
+        assert published[1]["event_type"] == "assignment_changed"
+        assert published[1]["alert"]["alert_id"] == str(updated.alert_id)
+        assert published[1]["alert"]["assigned_to"] == "analyst-02"
+        assert published[1]["alert"]["ownership_group"] == "soc-l2"
 
     _run(scenario())
 
@@ -358,24 +305,18 @@ def test_realtime_publish_failure_does_not_break_alert_creation() -> None:
         payload: dict[str, Any],
     ) -> int:
         del payload
-        raise RuntimeError(
-            "simulated realtime publisher failure"
-        )
+        raise RuntimeError("simulated realtime publisher failure")
 
     async def scenario() -> None:
         manager = AlertManager(
             realtime_publisher=failing_publisher,
         )
 
-        alert = manager.create(
-            _create()
-        )
+        alert = manager.create(_create())
 
         await _wait_for_realtime_tasks()
 
-        stored = manager.get(
-            alert.alert_id
-        )
+        stored = manager.get(alert.alert_id)
 
         assert stored.alert_id == alert.alert_id
         assert stored.status == AlertStatus.NEW

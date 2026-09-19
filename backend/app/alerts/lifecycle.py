@@ -79,8 +79,7 @@ class AlertLifecycle:
             target,
         ):
             raise AlertLifecycleError(
-                "invalid alert transition: "
-                f"{alert.status.value} -> {target.value}"
+                f"invalid alert transition: {alert.status.value} -> {target.value}"
             )
 
         timestamp = now or datetime.now(UTC)
