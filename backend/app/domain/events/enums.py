@@ -3,8 +3,27 @@ from __future__ import annotations
 from enum import StrEnum
 
 
+# ============================================================
+# Event Stage
+# ============================================================
+
+
 class EventStage(StrEnum):
-    """Processing lifecycle stage of a security event."""
+    """
+    Processing lifecycle stage of a security event.
+
+    Events move through the pipeline in the following order:
+
+        RAW
+         ↓
+        PARSED
+         ↓
+        NORMALIZED
+         ↓
+        CANONICAL
+         ↓
+        ENRICHED
+    """
 
     RAW = "raw"
     PARSED = "parsed"
@@ -13,8 +32,15 @@ class EventStage(StrEnum):
     ENRICHED = "enriched"
 
 
+# ============================================================
+# Event Source Type
+# ============================================================
+
+
 class EventSourceType(StrEnum):
-    """Origin or transport type of an incoming event."""
+    """
+    Origin or transport type of an incoming security event.
+    """
 
     SYSLOG = "syslog"
     HTTP = "http"
@@ -25,8 +51,18 @@ class EventSourceType(StrEnum):
     OTHER = "other"
 
 
+# ============================================================
+# Event Severity
+# ============================================================
+
+
 class EventSeverity(StrEnum):
-    """Severity assigned to a security event."""
+    """
+    Severity assigned to a security event.
+
+    Severity levels are ordered conceptually from informational
+    activity to the most serious security condition.
+    """
 
     INFO = "info"
     LOW = "low"
@@ -35,8 +71,18 @@ class EventSeverity(StrEnum):
     CRITICAL = "critical"
 
 
+# ============================================================
+# Event Category
+# ============================================================
+
+
 class EventCategory(StrEnum):
-    """Security category associated with an event."""
+    """
+    High-level security category associated with an event.
+
+    Categories describe the security domain of the activity,
+    while actions describe the specific operation performed.
+    """
 
     AUTHENTICATION = "authentication"
     AUTHORIZATION = "authorization"
@@ -50,9 +96,66 @@ class EventCategory(StrEnum):
     OTHER = "other"
 
 
+# ============================================================
+# Event Outcome
+# ============================================================
+
+
 class EventOutcome(StrEnum):
-    """Outcome of the activity represented by an event."""
+    """
+    Outcome of the activity represented by a security event.
+
+    The taxonomy supports authentication, authorization,
+    enforcement, operational-error, and unknown outcomes.
+    """
+
+    # --------------------------------------------------------
+    # Successful activity
+    # --------------------------------------------------------
 
     SUCCESS = "success"
+
+    # --------------------------------------------------------
+    # Failed activity
+    # --------------------------------------------------------
+
     FAILURE = "failure"
+
+    # --------------------------------------------------------
+    # Authorization / policy decision
+    # --------------------------------------------------------
+
+    ALLOWED = "allowed"
+    DENIED = "denied"
+
+    # --------------------------------------------------------
+    # Security enforcement
+    # --------------------------------------------------------
+
+    BLOCKED = "blocked"
+
+    # --------------------------------------------------------
+    # Processing / operational error
+    # --------------------------------------------------------
+
+    ERROR = "error"
+
+    # --------------------------------------------------------
+    # Unknown or indeterminate result
+    # --------------------------------------------------------
+
     UNKNOWN = "unknown"
+
+
+# ============================================================
+# Public API
+# ============================================================
+
+
+__all__ = [
+    "EventCategory",
+    "EventOutcome",
+    "EventSeverity",
+    "EventSourceType",
+    "EventStage",
+]

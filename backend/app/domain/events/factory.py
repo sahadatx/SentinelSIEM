@@ -4,8 +4,13 @@ from datetime import UTC, datetime
 from typing import Any
 
 from .enums import EventSourceType
-from .models import CanonicalSecurityEvent, RawEvent
+from .models import RawEvent
 from .schema import RawEventInput
+
+
+# =========================================================
+# Raw Event Factory
+# =========================================================
 
 
 def create_raw_event(
@@ -16,19 +21,74 @@ def create_raw_event(
     timestamp: datetime | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> RawEvent:
-    """Build the first domain representation at the ingestion boundary."""
-    event_time = timestamp or datetime.now(UTC)
+    """
+    Create a RawEvent at the ingestion boundary.
+
+    Responsibilities:
+        - Assign the event timestamp when one is not supplied.
+        - Assign the ingestion timestamp.
+        - Preserve the original source information.
+        - Preserve the original raw payload.
+        - Preserve optional ingestion metadata.
+
+    Canonicalization is intentionally NOT performed here.
+
+    Production event flow:
+
+        Raw payload
+            ↓
+        RawEvent
+            ↓
+        ParsingRouter
+            ↓
+        ParsingPipeline
+            ↓
+        ParsedEvent
+            ↓
+        NormalizedEvent
+            ↓
+        CanonicalSecurityEvent
+    """
+
+    event_time = (
+        timestamp
+        if timestamp is not None
+        else datetime.now(UTC)
+    )
+
     return RawEvent(
         timestamp=event_time,
         ingestion_timestamp=datetime.now(UTC),
         source=source,
         source_type=source_type,
         raw_event=raw_event,
-        metadata=metadata or {},
+        metadata=(
+            dict(metadata)
+            if metadata is not None
+            else {}
+        ),
     )
 
 
-def create_raw_event_from_schema(payload: RawEventInput) -> RawEvent:
+# =========================================================
+# Schema → Domain Factory
+# =========================================================
+
+
+def create_raw_event_from_schema(
+    payload: RawEventInput,
+) -> RawEvent:
+    """
+    Create a RawEvent from the validated ingestion schema.
+
+    The schema remains responsible for input validation.
+    This factory remains responsible for constructing the
+    domain RawEvent.
+
+    No parsing, normalization, enrichment, or canonicalization
+    is performed here.
+    """
+
     return create_raw_event(
         source=payload.source,
         source_type=payload.source_type,
@@ -38,12 +98,12 @@ def create_raw_event_from_schema(payload: RawEventInput) -> RawEvent:
     )
 
 
-def to_canonical_event(event: RawEvent, **fields: Any) -> CanonicalSecurityEvent:
-    """Create a canonical event while preserving source/raw/metadata context."""
-    data = event.model_dump()
-    data.pop("stage", None)
+# =========================================================
+# Public API
+# =========================================================
 
-    return CanonicalSecurityEvent(
-        **data,
-        **fields,
-    )
+
+__all__ = [
+    "create_raw_event",
+    "create_raw_event_from_schema",
+]
