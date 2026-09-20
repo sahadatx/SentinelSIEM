@@ -14,8 +14,7 @@ def test_phase12_real_incident_workflow() -> None:
         IncidentCreate(
             title="SSH account compromise investigation",
             description=(
-                "Five failed SSH logins followed by a successful login "
-                "on a production asset."
+                "Five failed SSH logins followed by a successful login on a production asset."
             ),
             severity=IncidentSeverity.CRITICAL,
             alert_ids=(alert_id,),

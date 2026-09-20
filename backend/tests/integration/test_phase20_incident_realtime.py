@@ -24,9 +24,7 @@ class FakePubSub:
     ) -> None:
         self._owner = owner
         self._channels: tuple[str, ...] = ()
-        self._queue: asyncio.Queue[
-            dict[str, Any]
-        ] = asyncio.Queue()
+        self._queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
 
     async def subscribe(
         self,
@@ -63,7 +61,7 @@ class FakePubSub:
                 self._queue.get(),
                 timeout=timeout,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return None
 
     async def publish(
@@ -198,9 +196,7 @@ class FakeWebSocket:
 def _create_incident() -> IncidentCreate:
     return IncidentCreate(
         title="Phase20 Incident Realtime Test",
-        description=(
-            "Integration test incident for realtime delivery."
-        ),
+        description=("Integration test incident for realtime delivery."),
         severity=IncidentSeverity.HIGH,
         alert_ids=(
             UUID(
@@ -279,9 +275,7 @@ def test_phase20_incident_realtime_end_to_end() -> None:
             assert subscribed_channels == ("incidents",)
 
             incident_manager = IncidentManager(
-                realtime_publisher=(
-                    publisher.publish_incident
-                ),
+                realtime_publisher=(publisher.publish_incident),
             )
 
             incident = incident_manager.create(
@@ -311,30 +305,15 @@ def test_phase20_incident_realtime_end_to_end() -> None:
 
             incident_payload = payload["incident"]
 
-            assert (
-                incident_payload["incident_id"]
-                == str(incident.incident_id)
-            )
+            assert incident_payload["incident_id"] == str(incident.incident_id)
 
-            assert (
-                incident_payload["title"]
-                == "Phase20 Incident Realtime Test"
-            )
+            assert incident_payload["title"] == "Phase20 Incident Realtime Test"
 
-            assert (
-                incident_payload["status"]
-                == "new"
-            )
+            assert incident_payload["status"] == "new"
 
-            assert (
-                incident_payload["severity"]
-                == "high"
-            )
+            assert incident_payload["severity"] == "high"
 
-            assert (
-                incident_payload["ownership_group"]
-                == "SOC-TIER-1"
-            )
+            assert incident_payload["ownership_group"] == "SOC-TIER-1"
 
         finally:
             await bridge.stop()
