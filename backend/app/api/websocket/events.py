@@ -10,11 +10,8 @@ from app.api.dependencies import (
 from app.auth.authentication import (
     AuthenticationError,
 )
-from app.auth.authorization import (
-    PermissionDenied,
-)
-from .manager import ConnectionManager
 
+from .manager import ConnectionManager
 
 router = APIRouter(
     tags=["websocket"],
@@ -151,18 +148,14 @@ async def websocket_stream(
                 )
 
                 async with container.postgres_session_manager.session() as session:
-                    authentication = (
-                        _build_authentication_service(
-                            session=session,
-                            container=container,
-                        )
+                    authentication = _build_authentication_service(
+                        session=session,
+                        container=container,
                     )
 
                     try:
-                        principal = (
-                            await authentication.authenticate_token(
-                                token,
-                            )
+                        principal = await authentication.authenticate_token(
+                            token,
                         )
 
                     except AuthenticationError:
@@ -238,12 +231,8 @@ async def websocket_stream(
                     [],
                 )
 
-                if (
-                    not isinstance(channels, list)
-                    or not all(
-                        isinstance(channel, str)
-                        for channel in channels
-                    )
+                if not isinstance(channels, list) or not all(
+                    isinstance(channel, str) for channel in channels
                 ):
                     await websocket.send_json(
                         {
@@ -254,11 +243,9 @@ async def websocket_stream(
                     continue
 
                 try:
-                    active_channels = (
-                        await manager.update_channels(
-                            connection_id,
-                            set(channels),
-                        )
+                    active_channels = await manager.update_channels(
+                        connection_id,
+                        set(channels),
                     )
 
                 except PermissionError:

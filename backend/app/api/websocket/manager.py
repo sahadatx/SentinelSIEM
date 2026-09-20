@@ -149,8 +149,7 @@ class ConnectionManager:
             denied = {
                 channel
                 for channel in requested
-                if self.CHANNEL_PERMISSIONS[channel]
-                not in connection.permissions
+                if self.CHANNEL_PERMISSIONS[channel] not in connection.permissions
             }
 
             if denied:

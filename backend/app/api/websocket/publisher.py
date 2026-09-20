@@ -42,15 +42,10 @@ class WebSocketPublisher:
         normalized_channel = channel.strip()
 
         if not normalized_channel:
-            raise ValueError(
-                "channel must not be empty"
-            )
+            raise ValueError("channel must not be empty")
 
         if normalized_channel not in WEBSOCKET_CHANNELS:
-            raise ValueError(
-                f"Unsupported WebSocket Redis channel: "
-                f"{normalized_channel}"
-            )
+            raise ValueError(f"Unsupported WebSocket Redis channel: {normalized_channel}")
 
         return await self._redis.publish_json(
             normalized_channel,

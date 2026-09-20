@@ -47,9 +47,7 @@ class RedisWebSocketBridge:
     async def start(self) -> None:
         """Start the Redis Pub/Sub bridge."""
         if self._started:
-            raise RuntimeError(
-                "Redis WebSocket bridge is already running."
-            )
+            raise RuntimeError("Redis WebSocket bridge is already running.")
 
         self._started = True
         self._stop_event.clear()
@@ -60,11 +58,8 @@ class RedisWebSocketBridge:
         )
 
         logger.info(
-            "Redis WebSocket bridge started "
-            "(channels=%s).",
-            tuple(
-                REDIS_TO_WEBSOCKET_CHANNELS.keys()
-            ),
+            "Redis WebSocket bridge started (channels=%s).",
+            tuple(REDIS_TO_WEBSOCKET_CHANNELS.keys()),
         )
 
     async def stop(self) -> None:
@@ -86,17 +81,13 @@ class RedisWebSocketBridge:
                 return_exceptions=True,
             )
 
-        logger.info(
-            "Redis WebSocket bridge stopped."
-        )
+        logger.info("Redis WebSocket bridge stopped.")
 
     async def _run(self) -> None:
         """Consume Redis messages and forward them to WebSockets."""
         pubsub = self.redis.create_pubsub()
 
-        redis_channels = tuple(
-            REDIS_TO_WEBSOCKET_CHANNELS.keys()
-        )
+        redis_channels = tuple(REDIS_TO_WEBSOCKET_CHANNELS.keys())
 
         try:
             await pubsub.subscribe(
@@ -104,8 +95,7 @@ class RedisWebSocketBridge:
             )
 
             logger.info(
-                "Redis WebSocket bridge subscribed "
-                "(channels=%s).",
+                "Redis WebSocket bridge subscribed (channels=%s).",
                 redis_channels,
             )
 
@@ -118,9 +108,7 @@ class RedisWebSocketBridge:
                 if not message:
                     continue
 
-                redis_channel = message.get(
-                    "channel"
-                )
+                redis_channel = message.get("channel")
 
                 if isinstance(redis_channel, bytes):
                     redis_channel = redis_channel.decode(
@@ -129,16 +117,10 @@ class RedisWebSocketBridge:
                     )
 
                 if not isinstance(redis_channel, str):
-                    logger.warning(
-                        "Ignoring Redis message with invalid channel."
-                    )
+                    logger.warning("Ignoring Redis message with invalid channel.")
                     continue
 
-                websocket_channel = (
-                    REDIS_TO_WEBSOCKET_CHANNELS.get(
-                        redis_channel
-                    )
-                )
+                websocket_channel = REDIS_TO_WEBSOCKET_CHANNELS.get(redis_channel)
 
                 if websocket_channel is None:
                     logger.warning(
@@ -157,8 +139,7 @@ class RedisWebSocketBridge:
 
                 if not isinstance(raw_data, str):
                     logger.warning(
-                        "Ignoring non-string Redis payload "
-                        "(channel=%s).",
+                        "Ignoring non-string Redis payload (channel=%s).",
                         redis_channel,
                     )
                     continue
@@ -169,8 +150,7 @@ class RedisWebSocketBridge:
                     )
                 except json.JSONDecodeError:
                     logger.warning(
-                        "Ignoring invalid JSON Redis payload "
-                        "(channel=%s).",
+                        "Ignoring invalid JSON Redis payload (channel=%s).",
                         redis_channel,
                         exc_info=True,
                     )
@@ -178,8 +158,7 @@ class RedisWebSocketBridge:
 
                 if not isinstance(payload, dict):
                     logger.warning(
-                        "Ignoring non-object Redis payload "
-                        "(channel=%s).",
+                        "Ignoring non-object Redis payload (channel=%s).",
                         redis_channel,
                     )
                     continue
@@ -211,9 +190,7 @@ class RedisWebSocketBridge:
             raise
 
         except Exception:
-            logger.exception(
-                "Redis WebSocket bridge terminated unexpectedly."
-            )
+            logger.exception("Redis WebSocket bridge terminated unexpectedly.")
 
         finally:
             try:
