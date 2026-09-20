@@ -24,14 +24,10 @@ class RiskCalculator:
         if any(factor.weight < 0 for factor in factors):
             raise ValueError("risk factor weights cannot be negative")
 
-        total_weight = sum(
-            factor.weight for factor in factors
-        )
+        total_weight = sum(factor.weight for factor in factors)
 
         if total_weight <= 0:
-            raise ValueError(
-                "risk factor weights must have a positive total"
-            )
+            raise ValueError("risk factor weights must have a positive total")
 
         self._factors = factors
         self._total_weight = total_weight
@@ -46,14 +42,9 @@ class RiskCalculator:
             self._factors,
         )
 
-        weighted_score = sum(
-            values[factor.name] * factor.weight
-            for factor in self._factors
-        )
+        weighted_score = sum(values[factor.name] * factor.weight for factor in self._factors)
 
-        score = (
-            weighted_score / self._total_weight
-        ) * 100.0
+        score = (weighted_score / self._total_weight) * 100.0
 
         score = round(
             max(0.0, min(100.0, score)),
@@ -94,10 +85,7 @@ class RiskCalculator:
         """
         normalized_severity = severity.lower()
 
-        if (
-            normalized_severity == "critical"
-            and score >= cls.CRITICAL_SEVERITY_MIN_SCORE
-        ):
+        if normalized_severity == "critical" and score >= cls.CRITICAL_SEVERITY_MIN_SCORE:
             return "critical"
 
         if score >= 80:

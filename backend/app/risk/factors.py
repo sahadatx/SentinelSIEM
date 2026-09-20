@@ -56,7 +56,4 @@ def normalized_factors(
         "historical_context": risk_input.historical_context,
     }
 
-    return {
-        factor.name: values[factor.name]
-        for factor in factors
-    }
+    return {factor.name: values[factor.name] for factor in factors}
