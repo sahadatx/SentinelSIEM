@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import urlparse
 
 from pydantic import AliasChoices, Field, field_validator
@@ -16,11 +17,17 @@ from app.core.constants import (
 from app.core.exceptions import ConfigurationError
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+ENV_FILE = PROJECT_ROOT / ".env"
+
+
 class Settings(BaseSettings):
     """Validated SentinelSIEM runtime configuration."""
 
     model_config = SettingsConfigDict(
         env_prefix="SIEM_",
+        env_file=ENV_FILE,
+        env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
     )
@@ -33,40 +40,78 @@ class Settings(BaseSettings):
         default=DEFAULT_APP_NAME,
         min_length=1,
         max_length=100,
+        validation_alias=AliasChoices(
+            "SIEM_APP_NAME",
+            "APP_NAME",
+        ),
     )
 
     environment: str = Field(
         default=DEFAULT_ENVIRONMENT,
         min_length=1,
         max_length=32,
+        validation_alias=AliasChoices(
+            "SIEM_ENVIRONMENT",
+            "ENVIRONMENT",
+        ),
     )
 
-    debug: bool = False
+    debug: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "SIEM_DEBUG",
+            "DEBUG",
+        ),
+    )
 
-    log_level: str = DEFAULT_LOG_LEVEL
+    log_level: str = Field(
+        default=DEFAULT_LOG_LEVEL,
+        validation_alias=AliasChoices(
+            "SIEM_LOG_LEVEL",
+            "LOG_LEVEL",
+        ),
+    )
 
     # ------------------------------------------------------------------
     # API
     # ------------------------------------------------------------------
 
-    api_host: str = "127.0.0.1"
+    api_host: str = Field(
+        default="127.0.0.1",
+        validation_alias=AliasChoices(
+            "SIEM_API_HOST",
+            "API_HOST",
+        ),
+    )
 
     api_port: int = Field(
         default=8000,
         ge=1,
         le=65535,
+        validation_alias=AliasChoices(
+            "SIEM_API_PORT",
+            "API_PORT",
+        ),
     )
 
     max_request_bytes: int = Field(
         default=DEFAULT_MAX_REQUEST_BYTES,
         ge=1,
         le=100_000_000,
+        validation_alias=AliasChoices(
+            "SIEM_MAX_REQUEST_BYTES",
+            "MAX_REQUEST_BYTES",
+        ),
     )
 
     shutdown_timeout_seconds: int = Field(
         default=DEFAULT_SHUTDOWN_TIMEOUT_SECONDS,
         ge=1,
         le=300,
+        validation_alias=AliasChoices(
+            "SIEM_SHUTDOWN_TIMEOUT_SECONDS",
+            "SHUTDOWN_TIMEOUT_SECONDS",
+        ),
     )
 
     # ------------------------------------------------------------------
@@ -76,6 +121,10 @@ class Settings(BaseSettings):
     database_url: str | None = Field(
         default=None,
         min_length=1,
+        validation_alias=AliasChoices(
+            "SIEM_DATABASE_URL",
+            "DATABASE_URL",
+        ),
     )
 
     # ------------------------------------------------------------------
@@ -93,6 +142,20 @@ class Settings(BaseSettings):
 
     # ------------------------------------------------------------------
     # OpenSearch
+    #
+    # Runtime credential:
+    #
+    #   OPENSEARCH_ADMIN_PASSWORD
+    #          ↓
+    #   OPENSEARCH_PASSWORD
+    #          ↓
+    #   settings.opensearch_password
+    #
+    # OPENSEARCH_INITIAL_ADMIN_PASSWORD is intentionally NOT accepted
+    # by the SentinelSIEM application.
+    #
+    # OPENSEARCH_INITIAL_ADMIN_PASSWORD belongs to the OpenSearch
+    # bootstrap process only.
     # ------------------------------------------------------------------
 
     opensearch_url: str | None = Field(
@@ -119,7 +182,8 @@ class Settings(BaseSettings):
         min_length=1,
         validation_alias=AliasChoices(
             "SIEM_OPENSEARCH_PASSWORD",
-            "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
+            "OPENSEARCH_PASSWORD",
+            "OPENSEARCH_ADMIN_PASSWORD",
         ),
     )
 
@@ -137,6 +201,16 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices(
             "SIEM_OPENSEARCH_CA_CERTS",
             "OPENSEARCH_CA_CERTS",
+        ),
+    )
+
+    opensearch_event_index: str = Field(
+        default="siem-events-v3",
+        min_length=1,
+        max_length=255,
+        validation_alias=AliasChoices(
+            "SIEM_OPENSEARCH_EVENT_INDEX",
+            "OPENSEARCH_EVENT_INDEX",
         ),
     )
 
@@ -169,7 +243,7 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
 
     collector_host: str = Field(
-        default="0.0.0.0",
+        default="0.0.0.0",  # nosec B104
         min_length=1,
         max_length=255,
         validation_alias=AliasChoices(
@@ -232,19 +306,47 @@ class Settings(BaseSettings):
     # Authentication
     # ------------------------------------------------------------------
 
-    auth_secret_key: str | None = None
+    auth_secret_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "SIEM_AUTH_SECRET_KEY",
+            "AUTH_SECRET_KEY",
+        ),
+    )
 
-    auth_algorithm: str = "HS256"
+    auth_algorithm: str = Field(
+        default="HS256",
+        validation_alias=AliasChoices(
+            "SIEM_AUTH_ALGORITHM",
+            "AUTH_ALGORITHM",
+        ),
+    )
 
     auth_access_token_expire_minutes: int = Field(
         default=30,
         ge=1,
         le=1440,
+        validation_alias=AliasChoices(
+            "SIEM_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES",
+            "AUTH_ACCESS_TOKEN_EXPIRE_MINUTES",
+        ),
     )
 
-    auth_issuer: str = "sentinelsiem"
+    auth_issuer: str = Field(
+        default="sentinelsiem",
+        validation_alias=AliasChoices(
+            "SIEM_AUTH_ISSUER",
+            "AUTH_ISSUER",
+        ),
+    )
 
-    auth_audience: str = "sentinelsiem-api"
+    auth_audience: str = Field(
+        default="sentinelsiem-api",
+        validation_alias=AliasChoices(
+            "SIEM_AUTH_AUDIENCE",
+            "AUTH_AUDIENCE",
+        ),
+    )
 
     # ------------------------------------------------------------------
     # Validators
@@ -253,7 +355,7 @@ class Settings(BaseSettings):
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, value: str) -> str:
-        normalized = value.upper()
+        normalized = value.strip().upper()
 
         allowed = {
             "CRITICAL",
@@ -264,16 +366,14 @@ class Settings(BaseSettings):
         }
 
         if normalized not in allowed:
-            raise ValueError(
-                f"Unsupported log level: {value}"
-            )
+            raise ValueError(f"Unsupported log level: {value}")
 
         return normalized
 
     @field_validator("environment")
     @classmethod
     def validate_environment(cls, value: str) -> str:
-        normalized = value.lower()
+        normalized = value.strip().lower()
 
         allowed = {
             "development",
@@ -283,21 +383,17 @@ class Settings(BaseSettings):
         }
 
         if normalized not in allowed:
-            raise ValueError(
-                f"Unsupported environment: {value}"
-            )
+            raise ValueError(f"Unsupported environment: {value}")
 
         return normalized
 
     @field_validator("auth_algorithm")
     @classmethod
     def validate_auth_algorithm(cls, value: str) -> str:
-        normalized = value.upper()
+        normalized = value.strip().upper()
 
         if normalized not in {"HS256"}:
-            raise ValueError(
-                f"Unsupported authentication algorithm: {value}"
-            )
+            raise ValueError(f"Unsupported authentication algorithm: {value}")
 
         return normalized
 
@@ -428,6 +524,21 @@ class Settings(BaseSettings):
 
         return normalized
 
+    @field_validator("opensearch_event_index")
+    @classmethod
+    def validate_opensearch_event_index(
+        cls,
+        value: str,
+    ) -> str:
+        normalized = value.strip()
+
+        if not normalized:
+            raise ValueError(
+                "OpenSearch event index must not be empty."
+            )
+
+        return normalized
+
     @field_validator("event_queue_name")
     @classmethod
     def validate_event_queue_name(
@@ -452,7 +563,9 @@ class Settings(BaseSettings):
         Validate mandatory security configuration.
 
         Staging and production require authentication and PostgreSQL.
-        Ingestion dependencies are validated separately by the worker.
+
+        OpenSearch TLS configuration is validated whenever HTTPS
+        certificate verification is enabled.
         """
 
         if self.environment in {"staging", "production"}:
@@ -474,17 +587,17 @@ class Settings(BaseSettings):
                     "in staging or production."
                 )
 
-            if (
-                self.opensearch_url
-                and self.opensearch_url.startswith("https://")
-                and self.opensearch_verify_certs
-                and not self.opensearch_ca_certs
-            ):
-                raise ValueError(
-                    "SIEM_OPENSEARCH_CA_CERTS must be configured "
-                    "when OpenSearch TLS certificate verification "
-                    "is enabled."
-                )
+        if (
+            self.opensearch_url
+            and self.opensearch_url.startswith("https://")
+            and self.opensearch_verify_certs
+            and not self.opensearch_ca_certs
+        ):
+            raise ValueError(
+                "SIEM_OPENSEARCH_CA_CERTS must be configured "
+                "when OpenSearch TLS certificate verification "
+                "is enabled."
+            )
 
     # ------------------------------------------------------------------
     # Runtime dependency helpers
@@ -493,34 +606,30 @@ class Settings(BaseSettings):
     @property
     def database_configured(self) -> bool:
         """Return whether PostgreSQL is configured."""
-
         return self.database_url is not None
 
     @property
     def authentication_configured(self) -> bool:
         """Return whether authentication is configured."""
-
         return bool(self.auth_secret_key)
 
     @property
     def redis_configured(self) -> bool:
         """Return whether Redis is configured."""
-
         return self.redis_url is not None
 
     @property
     def opensearch_configured(self) -> bool:
         """Return whether OpenSearch is fully configured."""
-
         return (
             self.opensearch_url is not None
+            and self.opensearch_username is not None
             and self.opensearch_password is not None
         )
 
     @property
     def opensearch_ca_configured(self) -> bool:
         """Return whether an OpenSearch CA bundle is configured."""
-
         return self.opensearch_ca_certs is not None
 
     def validate_ingestion_configuration(self) -> None:
@@ -551,6 +660,10 @@ class Settings(BaseSettings):
                 "when HTTPS certificate verification is enabled."
             )
 
+    # ------------------------------------------------------------------
+    # Runtime summary
+    # ------------------------------------------------------------------
+
     def runtime_summary(self) -> dict[str, object]:
         """
         Return a non-sensitive runtime configuration summary.
@@ -570,6 +683,7 @@ class Settings(BaseSettings):
             "opensearch_username": self.opensearch_username,
             "opensearch_verify_certs": self.opensearch_verify_certs,
             "opensearch_ca_configured": self.opensearch_ca_configured,
+            "opensearch_event_index": self.opensearch_event_index,
             "event_queue_name": self.event_queue_name,
             "worker_retry_delay_seconds": (
                 self.worker_retry_delay_seconds
@@ -581,9 +695,7 @@ class Settings(BaseSettings):
             "collector_max_line_bytes": (
                 self.collector_max_line_bytes
             ),
-            "collector_queue_size": (
-                self.collector_queue_size
-            ),
+            "collector_queue_size": self.collector_queue_size,
         }
 
 

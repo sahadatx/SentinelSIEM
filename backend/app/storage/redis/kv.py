@@ -45,9 +45,7 @@ class RedisKeyValueRepository:
     ) -> None:
         """Store a value with an optional positive TTL."""
         if ttl is not None and ttl <= 0:
-            raise ValueError(
-                "ttl must be greater than zero"
-            )
+            raise ValueError("ttl must be greater than zero")
 
         await self.client.set(
             key,

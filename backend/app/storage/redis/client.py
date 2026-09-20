@@ -8,15 +8,9 @@ from redis.asyncio.client import PubSub
 
 from app.core.metrics import REGISTRY, Timer
 
-_REDIS_CLIENT_LATENCY_HELP = (
-    "Redis client operation latency in seconds."
-)
-_REDIS_FAILURES_HELP = (
-    "Total Redis operation failures."
-)
-_REDIS_HEALTH_HELP = (
-    "Redis health status (1=healthy, 0=unhealthy)."
-)
+_REDIS_CLIENT_LATENCY_HELP = "Redis client operation latency in seconds."
+_REDIS_FAILURES_HELP = "Total Redis operation failures."
+_REDIS_HEALTH_HELP = "Redis health status (1=healthy, 0=unhealthy)."
 
 # Cross-process Redis Pub/Sub channel used to deliver
 # persisted security events to the backend WebSocket layer.

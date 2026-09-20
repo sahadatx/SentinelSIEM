@@ -77,10 +77,7 @@ class MetricsRegistry:
         if not (name[0].isalpha() or name[0] == "_"):
             raise ValueError(f"invalid metric name: {name!r}")
 
-        if not all(
-            character.isalnum() or character == "_"
-            for character in name
-        ):
+        if not all(character.isalnum() or character == "_" for character in name):
             raise ValueError(f"invalid metric name: {name!r}")
 
     @staticmethod
@@ -89,17 +86,10 @@ class MetricsRegistry:
             raise ValueError("metric label name cannot be empty")
 
         if not (name[0].isalpha() or name[0] == "_"):
-            raise ValueError(
-                f"invalid metric label name: {name!r}"
-            )
+            raise ValueError(f"invalid metric label name: {name!r}")
 
-        if not all(
-            character.isalnum() or character == "_"
-            for character in name
-        ):
-            raise ValueError(
-                f"invalid metric label name: {name!r}"
-            )
+        if not all(character.isalnum() or character == "_" for character in name):
+            raise ValueError(f"invalid metric label name: {name!r}")
 
     @classmethod
     def _normalize_labels(
@@ -110,9 +100,7 @@ class MetricsRegistry:
             return ()
 
         if len(labels) > _MAX_LABELS:
-            raise ValueError(
-                f"metrics support at most {_MAX_LABELS} labels"
-            )
+            raise ValueError(f"metrics support at most {_MAX_LABELS} labels")
 
         normalized: list[tuple[str, str]] = []
 
@@ -123,8 +111,7 @@ class MetricsRegistry:
 
             if len(value_string) > _MAX_LABEL_VALUE_LENGTH:
                 raise ValueError(
-                    "metric label values must be "
-                    f"<= {_MAX_LABEL_VALUE_LENGTH} characters"
+                    f"metric label values must be <= {_MAX_LABEL_VALUE_LENGTH} characters"
                 )
 
             normalized.append((key, value_string))
@@ -133,12 +120,7 @@ class MetricsRegistry:
 
     @staticmethod
     def _escape_label_value(value: str) -> str:
-        return (
-            value
-            .replace("\\", "\\\\")
-            .replace("\n", "\\n")
-            .replace('"', '\\"')
-        )
+        return value.replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
 
     @classmethod
     def _format_labels(
@@ -148,10 +130,7 @@ class MetricsRegistry:
         if not labels:
             return ""
 
-        rendered = ",".join(
-            f'{name}="{cls._escape_label_value(value)}"'
-            for name, value in labels
-        )
+        rendered = ",".join(f'{name}="{cls._escape_label_value(value)}"' for name, value in labels)
 
         return f"{{{rendered}}}"
 
@@ -171,10 +150,7 @@ class MetricsRegistry:
             return
 
         if existing != (help_text, metric_type):
-            raise ValueError(
-                f"metric {name!r} was registered "
-                "with conflicting metadata"
-            )
+            raise ValueError(f"metric {name!r} was registered with conflicting metadata")
 
     def inc_counter(
         self,
@@ -185,9 +161,7 @@ class MetricsRegistry:
         labels: dict[str, str] | None = None,
     ) -> None:
         if value < 0:
-            raise ValueError(
-                "counter increments must be non-negative"
-            )
+            raise ValueError("counter increments must be non-negative")
 
         self._validate_name(name)
 
@@ -266,26 +240,15 @@ class MetricsRegistry:
         configured_buckets = tuple(
             sorted(
                 float(bucket)
-                for bucket in (
-                    buckets
-                    if buckets is not None
-                    else _DEFAULT_HISTOGRAM_BUCKETS
-                )
+                for bucket in (buckets if buckets is not None else _DEFAULT_HISTOGRAM_BUCKETS)
             )
         )
 
         if not configured_buckets:
-            raise ValueError(
-                "histogram requires at least one bucket"
-            )
+            raise ValueError("histogram requires at least one bucket")
 
-        if any(
-            bucket < 0
-            for bucket in configured_buckets
-        ):
-            raise ValueError(
-                "histogram buckets must be non-negative"
-            )
+        if any(bucket < 0 for bucket in configured_buckets):
+            raise ValueError("histogram buckets must be non-negative")
 
         with self._lock:
             self._register_metadata(
@@ -304,14 +267,9 @@ class MetricsRegistry:
                 self._histograms[key] = state
 
             elif state.buckets != configured_buckets:
-                raise ValueError(
-                    f"histogram {name!r} uses "
-                    "conflicting bucket definitions"
-                )
+                raise ValueError(f"histogram {name!r} uses conflicting bucket definitions")
 
-            for index, upper_bound in enumerate(
-                state.buckets
-            ):
+            for index, upper_bound in enumerate(state.buckets):
                 if value <= upper_bound:
                     state.counts[index] += 1
 
@@ -387,10 +345,7 @@ class MetricsRegistry:
 
         for sample in self.snapshot():
             root_name = (
-                sample.name
-                .removesuffix("_bucket")
-                .removesuffix("_count")
-                .removesuffix("_sum")
+                sample.name.removesuffix("_bucket").removesuffix("_count").removesuffix("_sum")
             )
 
             metadata = (
@@ -401,29 +356,17 @@ class MetricsRegistry:
             if metadata not in metadata_seen:
                 help_text = sample.help_text or root_name
 
-                lines.append(
-                    f"# HELP {root_name} {help_text}"
-                )
+                lines.append(f"# HELP {root_name} {help_text}")
 
-                lines.append(
-                    f"# TYPE {root_name} {sample.metric_type}"
-                )
+                lines.append(f"# TYPE {root_name} {sample.metric_type}")
 
                 metadata_seen.add(metadata)
 
-            labels = self._format_labels(
-                sample.labels
-            )
+            labels = self._format_labels(sample.labels)
 
-            lines.append(
-                f"{sample.name}{labels} "
-                f"{sample.value:g}"
-            )
+            lines.append(f"{sample.name}{labels} {sample.value:g}")
 
-        return (
-            "\n".join(lines)
-            + ("\n" if lines else "")
-        )
+        return "\n".join(lines) + ("\n" if lines else "")
 
 
 class Timer:

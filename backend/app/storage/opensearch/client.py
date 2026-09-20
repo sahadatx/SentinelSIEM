@@ -7,15 +7,9 @@ from opensearchpy import AsyncOpenSearch
 
 from app.core.metrics import REGISTRY, Timer
 
-_OPENSEARCH_CLIENT_LATENCY_HELP = (
-    "OpenSearch client operation latency in seconds."
-)
-_OPENSEARCH_FAILURES_HELP = (
-    "Total OpenSearch operation failures."
-)
-_OPENSEARCH_HEALTH_HELP = (
-    "OpenSearch health status (1=healthy, 0=unhealthy)."
-)
+_OPENSEARCH_CLIENT_LATENCY_HELP = "OpenSearch client operation latency in seconds."
+_OPENSEARCH_FAILURES_HELP = "Total OpenSearch operation failures."
+_OPENSEARCH_HEALTH_HELP = "OpenSearch health status (1=healthy, 0=unhealthy)."
 
 
 class OpenSearchClient:
@@ -44,14 +38,11 @@ class OpenSearchClient:
         """
         if verify_certs and use_ssl and not ca_certs:
             raise ValueError(
-                "ca_certs must be provided when TLS certificate "
-                "verification is enabled."
+                "ca_certs must be provided when TLS certificate verification is enabled."
             )
 
         if ca_certs and not use_ssl:
-            raise ValueError(
-                "ca_certs cannot be configured when SSL is disabled."
-            )
+            raise ValueError("ca_certs cannot be configured when SSL is disabled.")
 
         kwargs: dict[str, Any] = {
             "hosts": hosts,

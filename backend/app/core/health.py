@@ -6,7 +6,6 @@ from typing import Protocol
 
 from app.core.metrics import REGISTRY
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -59,9 +58,7 @@ async def readiness_status(
         try:
             ready = await postgres.ping()
         except Exception:  # noqa: BLE001
-            logger.exception(
-                "PostgreSQL readiness check failed."
-            )
+            logger.exception("PostgreSQL readiness check failed.")
             ready = False
 
         checks["postgres"] = "ok" if ready else "failed"
@@ -69,10 +66,7 @@ async def readiness_status(
         REGISTRY.set_gauge(
             "siem_postgres_health",
             1.0 if ready else 0.0,
-            help_text=(
-                "PostgreSQL dependency health "
-                "(1=healthy, 0=unhealthy)."
-            ),
+            help_text=("PostgreSQL dependency health (1=healthy, 0=unhealthy)."),
         )
 
         if not ready:
@@ -81,10 +75,7 @@ async def readiness_status(
     REGISTRY.set_gauge(
         "siem_application_ready",
         1.0 if status == "ready" else 0.0,
-        help_text=(
-            "Application readiness state "
-            "(1=ready, 0=not ready)."
-        ),
+        help_text=("Application readiness state (1=ready, 0=not ready)."),
     )
 
     return HealthStatus(
