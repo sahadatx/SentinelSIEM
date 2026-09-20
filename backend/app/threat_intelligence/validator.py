@@ -19,17 +19,11 @@ class IOCValidator:
             raise ValueError("normalized IOC value cannot be empty")
 
         if expiration is not None:
-            if (
-                expiration.tzinfo is None
-                or expiration.utcoffset() is None
-            ):
+            if expiration.tzinfo is None or expiration.utcoffset() is None:
                 raise ValueError("expiration must be timezone-aware")
 
             if expiration <= datetime.now(UTC):
                 raise ValueError("expiration must be in the future")
 
-        if (
-            ioc_type in {IOCType.DOMAIN, IOCType.HOSTNAME}
-            and "." not in normalized_value
-        ):
+        if ioc_type in {IOCType.DOMAIN, IOCType.HOSTNAME} and "." not in normalized_value:
             raise ValueError("domain/hostname must contain a dot")

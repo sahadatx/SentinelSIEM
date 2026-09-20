@@ -17,12 +17,8 @@ class IOCNormalizer:
 
         if ioc_type in {IOCType.IPV4, IOCType.IPV6}:
             address = ipaddress.ip_address(candidate)
-            if (
-                ioc_type == IOCType.IPV4
-                and address.version != 4
-            ) or (
-                ioc_type == IOCType.IPV6
-                and address.version != 6
+            if (ioc_type == IOCType.IPV4 and address.version != 4) or (
+                ioc_type == IOCType.IPV6 and address.version != 6
             ):
                 raise ValueError("IP address does not match IOC type")
             return str(address)
