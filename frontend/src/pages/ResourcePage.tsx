@@ -1,14 +1,99 @@
-import type { CSSProperties, ReactNode } from "react";
+/* ==========================================================================
+ * SentinelSIEM Resource Pages
+ * Shared application-level resource views
+ * ========================================================================== */
 
-import { useDashboardStore } from "../store/dashboard";
+import {
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+
 import { Panel } from "../components/ui/Panel";
-import { SeverityBadge } from "../components/ui/SeverityBadge";
+import { api } from "../services/api";
 
+import type {
+  HealthResponse,
+  PaginatedResponse,
+  SecurityEvent,
+  SystemResponse,
+} from "../types/api";
+
+/* ==========================================================================
+ * Security Events
+ * ========================================================================== */
+
+/**
+ * Shared application-level Security Events resource page.
+ *
+ * Dashboard state is intentionally not used here.
+ *
+ * Data ownership:
+ *
+ *   ResourcePage
+ *        ↓
+ *   services/api.ts
+ *        ↓
+ *   backend Events API
+ *
+ * Dashboard-specific state remains inside:
+ *
+ *   modules/dashboard/
+ */
 export function EventsPage() {
-  const events = useDashboardStore((s) => s.events);
+  const [events, setEvents] =
+    useState<
+      PaginatedResponse<SecurityEvent> | null
+    >(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadEvents() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await api.events();
+
+        if (!mounted) {
+          return;
+        }
+
+        setEvents(response);
+      } catch {
+        if (!mounted) {
+          return;
+        }
+
+        setEvents(null);
+        setError(
+          "Security event data is currently unavailable.",
+        );
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadEvents();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const items = events?.items ?? [];
-  const total = events?.pagination.total ?? 0;
+
+  const total =
+    events?.pagination.total ?? 0;
 
   return (
     <Page
@@ -18,377 +103,274 @@ export function EventsPage() {
       <Panel
         title="Event stream"
         subtitle={
-          events
-            ? `${total} records available`
-            : "Event repository is unavailable"
+          loading
+            ? "Loading security events..."
+            : events
+              ? `${total} records available`
+              : "Event repository is unavailable"
         }
       >
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Source</th>
-                <th>Source IP</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Outcome</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {items.map((event) => (
-                <tr key={event.event_id}>
-                  <td>
-                    {new Date(event.timestamp).toLocaleTimeString()}
-                  </td>
-
-                  <td>{event.source}</td>
-
-                  <td>{event.source_ip ?? "—"}</td>
-
-                  <td>{event.username ?? "—"}</td>
-
-                  <td>{event.action ?? "—"}</td>
-
-                  <td>{event.outcome ?? "—"}</td>
-                </tr>
-              ))}
-
-              {items.length === 0 && (
-                <Empty
-                  cols={6}
-                  message={
-                    events
-                      ? "No security events available."
-                      : "Security event data is currently unavailable."
-                  }
-                />
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-    </Page>
-  );
-}
-
-export function AlertsPage() {
-  const alerts = useDashboardStore((s) => s.alerts);
-
-  const items = alerts?.items ?? [];
-  const total = alerts?.pagination.total ?? 0;
-
-  return (
-    <Page
-      title="Alert Management"
-      subtitle="Detection and correlation alerts exposed by the backend"
-    >
-      <Panel
-        title="Alert queue"
-        subtitle={
-          alerts
-            ? `${total} alerts available`
-            : "Alert data is currently unavailable"
-        }
-      >
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Alert</th>
-                <th>Severity</th>
-                <th>Risk</th>
-                <th>Priority</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {items.map((alert) => (
-                <tr key={alert.alert_id}>
-                  <td>
-                    <strong>{alert.title}</strong>
-                    <small>{alert.source_id}</small>
-                  </td>
-
-                  <td>
-                    <SeverityBadge severity={alert.severity} />
-                  </td>
-
-                  <td>{alert.risk_score}</td>
-
-                  <td>{alert.priority}</td>
-
-                  <td>{alert.status}</td>
-                </tr>
-              ))}
-
-              {items.length === 0 && (
-                <Empty
-                  cols={5}
-                  message={
-                    alerts
-                      ? "No alerts available."
-                      : "Alert data is currently unavailable."
-                  }
-                />
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-    </Page>
-  );
-}
-
-export function IncidentsPage() {
-  const incidents = useDashboardStore((s) => s.incidents);
-
-  const items = incidents?.items ?? [];
-  const total = incidents?.pagination.total ?? 0;
-
-  return (
-    <Page
-      title="Incident Management"
-      subtitle="Investigation state from the incident service"
-    >
-      <Panel
-        title="Active incidents"
-        subtitle={
-          incidents
-            ? `${total} incidents available`
-            : "Incident data is currently unavailable"
-        }
-      >
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Incident</th>
-                <th>Severity</th>
-                <th>Status</th>
-                <th>Assignee</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {items.map((incident) => (
-                <tr key={incident.incident_id}>
-                  <td>
-                    <strong>{incident.title}</strong>
-                  </td>
-
-                  <td>
-                    <SeverityBadge severity={incident.severity} />
-                  </td>
-
-                  <td>{incident.status}</td>
-
-                  <td>
-                    {incident.assigned_to ?? "Unassigned"}
-                  </td>
-
-                  <td>
-                    {new Date(
-                      incident.created_at,
-                    ).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-
-              {items.length === 0 && (
-                <Empty
-                  cols={5}
-                  message={
-                    incidents
-                      ? "No incidents available."
-                      : "Incident data is currently unavailable."
-                  }
-                />
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-    </Page>
-  );
-}
-
-export function ThreatIntelPage() {
-  const iocs = useDashboardStore((s) => s.iocs);
-
-  const items = iocs?.items ?? [];
-  const total = iocs?.pagination.total ?? 0;
-
-  return (
-    <Page
-      title="Threat Intelligence"
-      subtitle="IOC intelligence returned by the Phase 13 service"
-    >
-      <Panel
-        title="IOC inventory"
-        subtitle={
-          iocs
-            ? `${total} indicators available`
-            : "IOC data is currently unavailable"
-        }
-      >
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Indicator</th>
-                <th>Reputation</th>
-                <th>Confidence</th>
-                <th>Source</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {items.map((ioc) => (
-                <tr key={ioc.ioc_id}>
-                  <td>{ioc.type}</td>
-
-                  <td>
-                    <code>{ioc.value}</code>
-                  </td>
-
-                  <td>
-                    <span
-                      className={`health-pill ${ioc.reputation.toLowerCase()}`}
-                    >
-                      {ioc.reputation}
-                    </span>
-                  </td>
-
-                  <td>{ioc.confidence}%</td>
-
-                  <td>{ioc.source}</td>
-                </tr>
-              ))}
-
-              {items.length === 0 && (
-                <Empty
-                  cols={5}
-                  message={
-                    iocs
-                      ? "No indicators available."
-                      : "Threat intelligence data is currently unavailable."
-                  }
-                />
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-    </Page>
-  );
-}
-
-export function MitrePage() {
-  const mitre = useDashboardStore((s) => s.mitre);
-
-  return (
-    <Page
-      title="MITRE ATT&CK Coverage"
-      subtitle="Coverage data supplied by Phase 14"
-    >
-      <Panel title="Detection coverage">
-        {mitre ? (
-          <div className="coverage">
-            <div
-              className="coverage-ring"
-              style={
-                {
-                  "--coverage": `${mitre.coverage_percent}%`,
-                } as CSSProperties
-              }
-            >
-              <strong>
-                {mitre.coverage_percent.toFixed(0)}%
-              </strong>
-            </div>
-
-            <div>
-              <h3>
-                {mitre.mapped_techniques} of {mitre.total_techniques} techniques covered
-              </h3>
-
-              <p>
-                Navigator-compatible coverage data is consumed
-                from the backend; no ATT&amp;CK business logic is
-                duplicated in the frontend.
-              </p>
-            </div>
-          </div>
-        ) : (
+        {error && (
           <Unavailable
-            message="MITRE coverage data is currently unavailable."
+            message={error}
           />
+        )}
+
+        {!error && (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Source</th>
+                  <th>Source IP</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Outcome</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {items.map((event) => (
+                  <tr
+                    key={event.event_id}
+                  >
+                    <td>
+                      {formatDateTime(
+                        event.timestamp,
+                      )}
+                    </td>
+
+                    <td>
+                      {event.source}
+                    </td>
+
+                    <td>
+                      {event.source_ip ?? "—"}
+                    </td>
+
+                    <td>
+                      {event.username ?? "—"}
+                    </td>
+
+                    <td>
+                      {event.action ?? "—"}
+                    </td>
+
+                    <td>
+                      {event.outcome ?? "—"}
+                    </td>
+                  </tr>
+                ))}
+
+                {!loading &&
+                  items.length === 0 && (
+                    <Empty
+                      cols={6}
+                      message="No security events available."
+                    />
+                  )}
+
+                {loading && (
+                  <Empty
+                    cols={6}
+                    message="Loading security events..."
+                  />
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </Panel>
     </Page>
   );
 }
 
-export function SystemPage() {
-  const health = useDashboardStore((s) => s.health);
-  const system = useDashboardStore((s) => s.system);
+/* ==========================================================================
+ * System Health
+ * ========================================================================== */
 
-  const apiStatus = health?.status ?? "offline";
+/**
+ * Shared application-level system health page.
+ *
+ * This page intentionally does not depend on:
+ *
+ *   store/dashboard.ts
+ *
+ * Health and system information are loaded directly
+ * from the shared API transport.
+ */
+export function SystemPage() {
+  const [health, setHealth] =
+    useState<HealthResponse | null>(
+      null,
+    );
+
+  const [system, setSystem] =
+    useState<SystemResponse | null>(
+      null,
+    );
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSystemHealth() {
+      setLoading(true);
+      setError(null);
+
+      const results =
+        await Promise.allSettled([
+          api.health(),
+          api.system(),
+        ]);
+
+      if (!mounted) {
+        return;
+      }
+
+      const [
+        healthResult,
+        systemResult,
+      ] = results;
+
+      if (
+        healthResult.status ===
+        "fulfilled"
+      ) {
+        setHealth(
+          healthResult.value,
+        );
+      } else {
+        setHealth(null);
+      }
+
+      if (
+        systemResult.status ===
+        "fulfilled"
+      ) {
+        setSystem(
+          systemResult.value,
+        );
+      } else {
+        setSystem(null);
+      }
+
+      const failedEndpoints =
+        results.filter(
+          (result) =>
+            result.status ===
+            "rejected",
+        ).length;
+
+      if (failedEndpoints > 0) {
+        setError(
+          `${failedEndpoints} system endpoint(s) unavailable.`,
+        );
+      }
+
+      setLoading(false);
+    }
+
+    void loadSystemHealth();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const apiStatus =
+    health?.status ?? "offline";
 
   return (
     <Page
       title="System Health"
       subtitle="Operational status from the Phase 15 system API"
     >
-      <Panel title="Platform Status">
-        <div className="health-list">
-          <HealthRow
-            name="API"
-            status={apiStatus}
-          />
-
-          <HealthRow
-            name="Service"
-            status={health?.service ?? "unavailable"}
-          />
-
-          <HealthRow
-            name="Version"
-            status={health?.version ?? "—"}
-          />
-
-          <HealthRow
-            name="Environment"
-            status={system?.environment ?? "—"}
-          />
-
-          <HealthRow
-            name="System Service"
-            status={system?.service ?? "—"}
+      {error && (
+        <div
+          role="alert"
+          className="mb-4"
+        >
+          <Unavailable
+            message={`${error} Available information is still displayed.`}
           />
         </div>
+      )}
+
+      <Panel title="Platform Status">
+        {loading ? (
+          <Unavailable
+            message="Loading platform status..."
+          />
+        ) : (
+          <div className="health-list">
+            <HealthRow
+              name="API"
+              status={apiStatus}
+            />
+
+            <HealthRow
+              name="Service"
+              status={
+                health?.service ??
+                "unavailable"
+              }
+            />
+
+            <HealthRow
+              name="Version"
+              status={
+                health?.version ??
+                "—"
+              }
+            />
+
+            <HealthRow
+              name="Environment"
+              status={
+                system?.environment ??
+                "—"
+              }
+            />
+
+            <HealthRow
+              name="System Service"
+              status={
+                system?.service ??
+                "—"
+              }
+            />
+          </div>
+        )}
       </Panel>
 
       <Panel title="Capabilities">
         {system?.capabilities?.length ? (
           <div className="capability-list">
-            {system.capabilities.map((capability) => (
-              <span
-                className="health-pill healthy"
-                key={capability}
-              >
-                {capability}
-              </span>
-            ))}
+            {system.capabilities.map(
+              (capability) => (
+                <span
+                  className="health-pill healthy"
+                  key={capability}
+                >
+                  {capability}
+                </span>
+              ),
+            )}
           </div>
         ) : (
           <Unavailable
-            message="System capability information is currently unavailable."
+            message={
+              loading
+                ? "Loading system capabilities..."
+                : "System capability information is currently unavailable."
+            }
           />
         )}
       </Panel>
@@ -396,6 +378,14 @@ export function SystemPage() {
   );
 }
 
+/* ==========================================================================
+ * Generic Resource Page
+ * ========================================================================== */
+
+/**
+ * Generic fallback page for resources whose dedicated
+ * feature module has not yet been implemented.
+ */
 export function GenericPage({
   title,
 }: {
@@ -409,15 +399,21 @@ export function GenericPage({
       <Panel title="Service-backed view">
         <div className="empty-state">
           <p>
-            No frontend business logic is implemented here.
-            Connect this page to the existing Phase 15 API
-            contract when the backend endpoint is available.
+            No frontend business logic is
+            implemented here. Connect this
+            page to the existing Phase 15 API
+            contract when the backend endpoint
+            is available.
           </p>
         </div>
       </Panel>
     </Page>
   );
 }
+
+/* ==========================================================================
+ * Shared Page Layout
+ * ========================================================================== */
 
 function Page({
   title,
@@ -442,6 +438,10 @@ function Page({
   );
 }
 
+/* ==========================================================================
+ * Shared Empty Table State
+ * ========================================================================== */
+
 function Empty({
   cols,
   message = "No data available.",
@@ -461,6 +461,10 @@ function Empty({
   );
 }
 
+/* ==========================================================================
+ * Shared Unavailable State
+ * ========================================================================== */
+
 function Unavailable({
   message,
 }: {
@@ -473,6 +477,10 @@ function Unavailable({
   );
 }
 
+/* ==========================================================================
+ * Shared Health Row
+ * ========================================================================== */
+
 function HealthRow({
   name,
   status,
@@ -480,7 +488,8 @@ function HealthRow({
   name: string;
   status: string;
 }) {
-  const normalized = status.toLowerCase();
+  const normalized =
+    status.toLowerCase();
 
   const healthClass =
     normalized === "ok" ||
@@ -498,9 +507,31 @@ function HealthRow({
     <div className="health-row">
       <span>{name}</span>
 
-      <span className={`health-pill ${healthClass}`}>
+      <span
+        className={`health-pill ${healthClass}`}
+      >
         {status}
       </span>
     </div>
   );
+}
+
+/* ==========================================================================
+ * Shared Date Formatter
+ * ========================================================================== */
+
+function formatDateTime(
+  value: string,
+): string {
+  const date = new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime(),
+    )
+  ) {
+    return value;
+  }
+
+  return date.toLocaleString();
 }

@@ -1,29 +1,50 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const BACKEND_URL = "http://127.0.0.1:8001";
+
 export default defineConfig({
   plugins: [react()],
 
   server: {
-    port: 5173,
+    host: "127.0.0.1",
+    port: 8000,
     strictPort: true,
 
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8000",
+        target: BACKEND_URL,
         changeOrigin: true,
       },
+
+      "/ws": {
+        target: BACKEND_URL,
+        changeOrigin: true,
+        ws: true,
+      },
+    },
+
+    hmr: {
+      host: "localhost",
+      port: 8000,
     },
   },
 
   preview: {
-    port: 4173,
+    host: "127.0.0.1",
+    port: 8000,
     strictPort: true,
 
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8000",
+        target: BACKEND_URL,
         changeOrigin: true,
+      },
+
+      "/ws": {
+        target: BACKEND_URL,
+        changeOrigin: true,
+        ws: true,
       },
     },
   },

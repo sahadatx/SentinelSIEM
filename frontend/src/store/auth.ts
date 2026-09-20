@@ -12,6 +12,8 @@ interface AuthState {
   accessToken: string | null;
   user: AuthUser | null;
   authenticated: boolean;
+  authReady: boolean;
+  authInitializing: boolean;
 
   setAuthentication: (
     accessToken: string,
@@ -19,6 +21,12 @@ interface AuthState {
   ) => void;
 
   clearAuthentication: () => void;
+
+  initializeAuthentication: (
+    validateToken: (
+      accessToken: string,
+    ) => Promise<AuthUser>,
+  ) => Promise<void>;
 
   hasPermission: (
     permission: string,
@@ -32,21 +40,25 @@ interface AuthState {
 const TOKEN_KEY = "sentinelsiem.access_token";
 const USER_KEY = "sentinelsiem.user";
 
-function loadInitialState(): {
+interface StoredAuthentication {
   accessToken: string | null;
   user: AuthUser | null;
-} {
-  try {
-    const accessToken = window.localStorage.getItem(
-      TOKEN_KEY,
-    );
+}
 
-    const rawUser = window.localStorage.getItem(
-      USER_KEY,
-    );
+function loadInitialState(): StoredAuthentication {
+  try {
+    const accessToken =
+      window.localStorage.getItem(
+        TOKEN_KEY,
+      );
+
+    const rawUser =
+      window.localStorage.getItem(
+        USER_KEY,
+      );
 
     const user = rawUser
-      ? JSON.parse(rawUser) as AuthUser
+      ? (JSON.parse(rawUser) as AuthUser)
       : null;
 
     if (!accessToken || !user) {
@@ -74,8 +86,19 @@ export const useAuthStore = create<AuthState>(
   (set, get) => ({
     accessToken: initial.accessToken,
     user: initial.user,
-    authenticated:
-      Boolean(initial.accessToken && initial.user),
+
+    /*
+     * Do not trust cached localStorage state as proof of a
+     * valid authenticated session until /auth/me succeeds.
+     */
+    authenticated: false,
+
+    /*
+     * Prevent protected routes from making an authentication
+     * decision before the bootstrap check has completed.
+     */
+    authReady: false,
+    authInitializing: false,
 
     setAuthentication: (
       accessToken,
@@ -95,6 +118,8 @@ export const useAuthStore = create<AuthState>(
         accessToken,
         user,
         authenticated: true,
+        authReady: true,
+        authInitializing: false,
       });
     },
 
@@ -111,7 +136,74 @@ export const useAuthStore = create<AuthState>(
         accessToken: null,
         user: null,
         authenticated: false,
+        authReady: true,
+        authInitializing: false,
       });
+    },
+
+    initializeAuthentication: async (
+      validateToken,
+    ) => {
+      const current = get();
+
+      if (current.authInitializing) {
+        return;
+      }
+
+      /*
+       * No stored token means there is nothing to validate.
+       */
+      if (!current.accessToken) {
+        set({
+          authReady: true,
+          authenticated: false,
+          authInitializing: false,
+        });
+
+        return;
+      }
+
+      set({
+        authInitializing: true,
+      });
+
+      try {
+        const user = await validateToken(
+          current.accessToken,
+        );
+
+        /*
+         * Keep the backend's current user/session data as
+         * the source of truth instead of trusting cached data.
+         */
+        window.localStorage.setItem(
+          USER_KEY,
+          JSON.stringify(user),
+        );
+
+        set({
+          user,
+          authenticated: true,
+          authReady: true,
+          authInitializing: false,
+        });
+      } catch {
+        window.localStorage.removeItem(
+          TOKEN_KEY,
+        );
+
+        window.localStorage.removeItem(
+          USER_KEY,
+        );
+
+        set({
+          accessToken: null,
+          user: null,
+          authenticated: false,
+          authReady: true,
+          authInitializing: false,
+        });
+      }
     },
 
     hasPermission: (

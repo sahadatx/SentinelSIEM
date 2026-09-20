@@ -1,138 +1,755 @@
-import { NavLink, Outlet } from "react-router-dom";
+/**
+ * ============================================================================
+ * SentinelSIEM — Application Shell
+ * ============================================================================
+ *
+ * Authenticated application shell.
+ *
+ * Responsibilities:
+ * - Global application layout
+ * - Sidebar navigation
+ * - Operations navigation
+ * - Administration navigation
+ * - Authenticated user presentation
+ * - Environment presentation
+ * - Notification presentation
+ * - Logout handling
+ * - Routed application content
+ *
+ * Architecture:
+ *
+ *   AppShell
+ *      ├── Sidebar
+ *      │    ├── Brand
+ *      │    ├── Operations
+ *      │    ├── Administration
+ *      │    └── Status Footer
+ *      │
+ *      ├── Topbar
+ *      │    ├── Application Identity
+ *      │    ├── Environment
+ *      │    ├── Notifications
+ *      │    └── User Profile
+ *      │
+ *      └── Routed Content
+ *
+ * Navigation remains owned by:
+ *
+ *   frontend/src/app/navigation.ts
+ *
+ * Backend authorization remains the final security boundary.
+ *
+ * Dashboard-specific Zustand state is intentionally NOT used here.
+ *
+ * ============================================================================
+ */
+
 import {
-  Activity,
-  AlertTriangle,
+  useEffect,
+  useState,
+} from "react";
+
+import {
   Bell,
-  BrainCircuit,
   CircleGauge,
-  Database,
-  FileSearch,
-  Gauge,
-  LayoutDashboard,
+  LogOut,
   Radio,
-  Server,
-  Shield,
-  Siren,
+  UserCircle,
 } from "lucide-react";
 
-import { useDashboardStore } from "../../store/dashboard";
+import {
+  NavLink,
+  Outlet,
+  useNavigate,
+} from "react-router-dom";
 
-const navigation = [
-  ["/", "Overview", LayoutDashboard],
-  ["/events", "Events", Activity],
-  ["/alerts", "Alerts", AlertTriangle],
-  ["/incidents", "Incidents", Siren],
-  ["/threat-intelligence", "Threat Intelligence", Shield],
-  ["/detections", "Detection", FileSearch],
-  ["/mitre", "MITRE Coverage", BrainCircuit],
-  ["/assets", "Assets", Database],
-  ["/risk", "Risk", Gauge],
-  ["/system", "System Health", Server],
-] as const;
+import { getNavigation } from "../../app/navigation";
+import { api } from "../../services/api";
+import { useAuthStore } from "../../store/auth";
 
-function formatEnvironment(environment?: string | null): string {
+import type { SystemResponse } from "../../types/api";
+
+
+/**
+ * ============================================================================
+ * Helpers
+ * ============================================================================
+ */
+
+/**
+ * Format environment name for human-readable presentation.
+ */
+function formatEnvironment(
+  environment?: string | null,
+): string {
   if (!environment) {
     return "Unavailable";
   }
 
   return environment
     .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (character) => character.toUpperCase());
+    .replace(
+      /\b\w/g,
+      (character) =>
+        character.toUpperCase(),
+    );
 }
 
-export function AppShell() {
-  const live = useDashboardStore((state) => state.live);
-  const system = useDashboardStore((state) => state.system);
 
-  const environment = formatEnvironment(system?.environment);
+/**
+ * Format the primary authenticated role.
+ */
+function formatRole(
+  roles?: string[],
+): string {
+  const role =
+    roles?.[0] ??
+    "Authenticated User";
+
+  return role
+    .replace(/[-_]+/g, " ")
+    .replace(
+      /\b\w/g,
+      (character) =>
+        character.toUpperCase(),
+    );
+}
+
+
+/**
+ * Generate safe user initials.
+ *
+ * AuthUser currently exposes username as the authenticated identity.
+ * display_name is intentionally NOT referenced here because it is not part
+ * of the frontend AuthUser contract.
+ */
+function getUserInitials(
+  username: string | null | undefined,
+): string {
+  const source =
+    username?.trim() ||
+    "User";
+
+  const parts =
+    source
+      .split(/\s+/)
+      .filter(Boolean);
+
+  if (parts.length >= 2) {
+    const first =
+      parts[0]?.charAt(0) ?? "";
+
+    const last =
+      parts[parts.length - 1]?.charAt(0) ?? "";
+
+    return (
+      `${first}${last}`
+    ).toUpperCase();
+  }
+
+  return source
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+
+/**
+ * ============================================================================
+ * Navigation Item
+ * ============================================================================
+ *
+ * Shared renderer keeps Operations and Administration navigation visually and
+ * behaviorally consistent.
+ */
+
+function NavigationLink({
+  to,
+  label,
+  icon: Icon,
+  end,
+}: {
+  to: string;
+  label: string;
+  icon: typeof CircleGauge;
+  end?: boolean;
+}) {
+  return (
+    <NavLink
+      to={to}
+      end={
+        end ??
+        to === "/"
+      }
+      className={({ isActive }) =>
+        isActive
+          ? "nav-item active"
+          : "nav-item"
+      }
+    >
+      <Icon
+        size={18}
+        aria-hidden="true"
+      />
+
+      <span>
+        {label}
+      </span>
+    </NavLink>
+  );
+}
+
+
+/**
+ * ============================================================================
+ * App Shell
+ * ============================================================================
+ */
+
+export function AppShell() {
+  const navigate =
+    useNavigate();
+
+
+  /**
+   * ==========================================================================
+   * Authentication
+   * ==========================================================================
+   */
+
+  const user =
+    useAuthStore(
+      (state) => state.user,
+    );
+
+  const hasPermission =
+    useAuthStore(
+      (state) =>
+        state.hasPermission,
+    );
+
+
+  /**
+   * ==========================================================================
+   * System Information
+   * ==========================================================================
+   */
+
+  const [system, setSystem] =
+    useState<SystemResponse | null>(
+      null,
+    );
+
+  const [loggingOut, setLoggingOut] =
+    useState(false);
+
+
+  /**
+   * ==========================================================================
+   * Load System Information
+   * ==========================================================================
+   */
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSystem() {
+      try {
+        const response =
+          await api.system();
+
+        if (!mounted) {
+          return;
+        }
+
+        setSystem(response);
+      } catch {
+        if (!mounted) {
+          return;
+        }
+
+        setSystem(null);
+      }
+    }
+
+    void loadSystem();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+
+  /**
+   * ==========================================================================
+   * Derived Application State
+   * ==========================================================================
+   */
+
+  const environment =
+    formatEnvironment(
+      system?.environment,
+    );
+
+  const role =
+    formatRole(
+      user?.roles,
+    );
+
+  /**
+   * AuthUser exposes username.
+   *
+   * Do not reference display_name here because it does not exist on the
+   * frontend AuthUser type.
+   */
+  const username =
+    user?.username?.trim() ||
+    "Unknown user";
+
+  const initials =
+    getUserInitials(
+      user?.username,
+    );
+
+
+  /**
+   * ==========================================================================
+   * Realtime State
+   * ==========================================================================
+   *
+   * Realtime WebSocket lifecycle remains intentionally outside AppShell.
+   *
+   * Until a dedicated realtime lifecycle owner is introduced,
+   * the application operates in API/polling mode.
+   */
+
+  const live = false;
+
+
+  /**
+   * ==========================================================================
+   * Navigation
+   * ==========================================================================
+   *
+   * Navigation remains owned by:
+   *
+   *   frontend/src/app/navigation.ts
+   *
+   * AppShell only renders the permission-filtered registry.
+   */
+
+  const visibleNavigation =
+    getNavigation(
+      hasPermission,
+    );
+
+
+  /**
+   * ==========================================================================
+   * Navigation Grouping
+   * ==========================================================================
+   *
+   * navigation.ts provides the section metadata.
+   *
+   * Operations:
+   *   Main SOC operational modules.
+   *
+   * Administration:
+   *   Administrative/system modules.
+   */
+
+  const operationsNavigation =
+    visibleNavigation.filter(
+      (item) =>
+        !("section" in item) ||
+        item.section !==
+          "administration",
+    );
+
+  const administrationNavigation =
+    visibleNavigation.filter(
+      (item) =>
+        "section" in item &&
+        item.section ===
+          "administration",
+    );
+
+
+  /**
+   * ==========================================================================
+   * Logout
+   * ==========================================================================
+   */
+
+  async function handleLogout() {
+    if (loggingOut) {
+      return;
+    }
+
+    setLoggingOut(true);
+
+    try {
+      await api.logout();
+    } finally {
+      navigate(
+        "/login",
+        {
+          replace: true,
+        },
+      );
+    }
+  }
+
+
+  /**
+   * ==========================================================================
+   * Render
+   * ==========================================================================
+   */
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-mark">
-            <CircleGauge size={22} />
+
+      {/* ================================================================== */}
+      {/* Sidebar                                                            */}
+      {/* ================================================================== */}
+
+      <aside
+        className="sidebar"
+        aria-label="Application sidebar"
+      >
+
+        {/* ================================================================ */}
+        {/* Brand                                                            */}
+        {/* ================================================================ */}
+
+        <div className="sidebar-brand">
+
+          <div
+            className="brand"
+          >
+
+            <div
+              className="brand-mark"
+              aria-hidden="true"
+            >
+              <CircleGauge
+                size={24}
+              />
+            </div>
+
+            <div className="brand-copy">
+
+              <strong>
+                SentinelSIEM
+              </strong>
+
+              <span>
+                SOC Platform
+              </span>
+
+            </div>
+
           </div>
 
-          <div>
-            <strong>SentinelSIEM</strong>
-            <span>SOC Platform</span>
-          </div>
         </div>
 
-        <div className="nav-label">OPERATIONS</div>
 
-        <nav aria-label="Primary navigation">
-          {navigation.map(([to, label, Icon]) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === "/"}
-              className={({ isActive }) =>
-                isActive ? "nav-item active" : "nav-item"
-              }
+        {/* ================================================================ */}
+        {/* Navigation                                                       */}
+        {/* ================================================================ */}
+
+        <div className="sidebar-navigation">
+
+          {/* ============================================================ */}
+          {/* Operations                                                    */}
+          {/* ============================================================ */}
+
+          {operationsNavigation.length > 0 && (
+            <section
+              className="sidebar-section"
+              aria-labelledby="operations-navigation-label"
             >
-              <Icon size={17} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
+
+              <div
+                id="operations-navigation-label"
+                className="nav-label"
+              >
+                OPERATIONS
+              </div>
+
+              <nav
+                className="primary-navigation"
+                aria-label="Operations navigation"
+              >
+                {operationsNavigation.map(
+                  (item) => (
+                    <NavigationLink
+                      key={item.to}
+                      to={item.to}
+                      label={item.label}
+                      icon={item.icon}
+                      end={item.end}
+                    />
+                  ),
+                )}
+              </nav>
+
+            </section>
+          )}
+
+
+          {/* ============================================================ */}
+          {/* Administration                                                */}
+          {/* ============================================================ */}
+
+          {administrationNavigation.length > 0 && (
+            <section
+              className="sidebar-section"
+              aria-labelledby="administration-navigation-label"
+            >
+
+              <div
+                id="administration-navigation-label"
+                className="nav-label nav-label-administration"
+              >
+                ADMINISTRATION
+              </div>
+
+              <nav
+                className="primary-navigation"
+                aria-label="Administration navigation"
+              >
+                {administrationNavigation.map(
+                  (item) => (
+                    <NavigationLink
+                      key={item.to}
+                      to={item.to}
+                      label={item.label}
+                      icon={item.icon}
+                      end={item.end}
+                    />
+                  ),
+                )}
+              </nav>
+
+            </section>
+          )}
+
+        </div>
+
+
+        {/* ================================================================ */}
+        {/* Sidebar Footer                                                  */}
+        {/* ================================================================ */}
 
         <div className="sidebar-footer">
+
           <div
-            className={live ? "live-dot online" : "live-dot"}
+            className={
+              live
+                ? "live-dot online"
+                : "live-dot"
+            }
             aria-hidden="true"
           />
 
           <span>
-            {live ? "Real-time connected" : "Polling/API mode"}
+            {live
+              ? "Real-time connected"
+              : "Polling/API mode"}
           </span>
+
         </div>
+
       </aside>
 
-      <main className="main">
+
+      {/* ================================================================== */}
+      {/* Main Application                                                   */}
+      {/* ================================================================== */}
+
+      <main className="app-main">
+
+        {/* ================================================================ */}
+        {/* Topbar                                                           */}
+        {/* ================================================================ */}
+
         <header className="topbar">
-          <div>
+
+          {/* ============================================================ */}
+          {/* Application Identity                                          */}
+          {/* ============================================================ */}
+
+          <div className="topbar-title">
+
             <span className="eyebrow">
               SECURITY OPERATIONS CENTER
             </span>
 
-            <h1>SentinelSIEM</h1>
+            <h1>
+              SentinelSIEM
+            </h1>
+
           </div>
 
+
+          {/* ============================================================ */}
+          {/* Topbar Actions                                                 */}
+          {/* ============================================================ */}
+
           <div className="topbar-actions">
-            <span
-              className={`env-badge ${
-                system?.environment
-                  ? `env-${system.environment.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
-                  : "env-unavailable"
-              }`}
+
+            {/* ========================================================== */}
+            {/* Environment                                                 */}
+            {/* ========================================================== */}
+
+            <div
+              className={
+                `environment-indicator ${
+                  system?.environment
+                    ? `environment-${system.environment
+                        .toLowerCase()
+                        .replace(
+                          /[^a-z0-9]+/g,
+                          "-",
+                        )}`
+                    : "environment-unavailable"
+                }`
+              }
               title={
                 system?.environment
                   ? `Environment: ${system.environment}`
                   : "Environment unavailable"
               }
             >
-              <Radio size={14} />
 
-              {environment}
-            </span>
+              <span
+                className="environment-dot"
+                aria-hidden="true"
+              />
+
+              <Radio
+                size={14}
+                aria-hidden="true"
+              />
+
+              <span>
+                {environment}
+              </span>
+
+            </div>
+
+
+            {/* ========================================================== */}
+            {/* Notifications                                               */}
+            {/* ========================================================== */}
 
             <button
-              className="icon-button"
+              className="icon-button notification-button"
               type="button"
               aria-label="Notifications"
               title="Notifications"
             >
-              <Bell size={18} />
+
+              <Bell
+                size={18}
+                aria-hidden="true"
+              />
+
+              <span
+                className="notification-indicator"
+                aria-hidden="true"
+              />
+
             </button>
+
+
+            {/* ========================================================== */}
+            {/* User Profile                                                */}
+            {/* ========================================================== */}
+
+            <div className="user-menu">
+
+              <div className="user-summary">
+
+                <div
+                  className="user-summary-avatar"
+                  aria-hidden="true"
+                >
+                  {initials}
+                </div>
+
+                <div className="user-summary-content">
+
+                  <strong>
+                    {username}
+                  </strong>
+
+                  <span>
+                    {role}
+                  </span>
+
+                </div>
+
+                <UserCircle
+                  size={17}
+                  aria-hidden="true"
+                  className="user-summary-icon"
+                />
+
+              </div>
+
+
+              {/* ======================================================== */}
+              {/* Logout                                                    */}
+              {/* ======================================================== */}
+
+              <button
+                className="logout-button"
+                type="button"
+                onClick={
+                  handleLogout
+                }
+                disabled={
+                  loggingOut
+                }
+                aria-label="Sign out"
+                title="Sign out"
+              >
+
+                <LogOut
+                  size={15}
+                  aria-hidden="true"
+                />
+
+                <span>
+                  {loggingOut
+                    ? "Signing out..."
+                    : "Sign out"}
+                </span>
+
+              </button>
+
+            </div>
+
           </div>
+
         </header>
 
-        <section className="content">
+
+        {/* ================================================================ */}
+        {/* Routed Application Content                                       */}
+        {/* ================================================================ */}
+
+        <section
+          className="content"
+          aria-label="Application content"
+        >
           <Outlet />
         </section>
+
       </main>
+
     </div>
   );
 }
