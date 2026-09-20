@@ -21,3 +21,7 @@ def worker() -> None:
             err=True,
         )
         raise typer.Exit(code=1) from exc
+
+
+if __name__ == "__main__":
+    worker()
