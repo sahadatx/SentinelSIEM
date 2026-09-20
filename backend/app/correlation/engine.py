@@ -4,11 +4,19 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from app.core.metrics import REGISTRY, Timer
-from app.correlation.context import CorrelationEvent, group_key
-from app.correlation.evaluator import evaluate_sequence, evaluate_threshold
+from app.correlation.context import (
+    CorrelationEvent,
+    get_field,
+    group_key,
+    matches,
+)
+from app.correlation.evaluator import (
+    evaluate_sequence,
+    evaluate_threshold,
+)
 from app.correlation.registry import CorrelationRuleRegistry
 from app.correlation.result import CorrelationResult
-from app.correlation.schema import CorrelationMode
+from app.correlation.schema import CorrelationMode, CorrelationRule
 from app.correlation.state import CorrelationState
 from app.correlation.window import within_window
 
@@ -22,6 +30,32 @@ class CorrelationEngine:
             tuple[str, tuple[object, ...]],
             CorrelationState,
         ] = {}
+
+    @staticmethod
+    def _event_matches_rule(
+        event: CorrelationEvent,
+        rule: CorrelationRule,
+    ) -> bool:
+        """Return True when an event satisfies all rule conditions."""
+
+        if not rule.conditions:
+            return True
+
+        for condition in rule.conditions:
+            if condition.equals is not None:
+                if not matches(
+                    event,
+                    condition.field,
+                    condition.equals,
+                ):
+                    return False
+
+            if condition.exists is not None:
+                exists = get_field(event, condition.field) is not None
+                if exists != condition.exists:
+                    return False
+
+        return True
 
     def evaluate(
         self,
@@ -37,9 +71,7 @@ class CorrelationEngine:
         with Timer(
             REGISTRY,
             "siem_correlation_latency_seconds",
-            help_text=(
-                "Correlation engine evaluation latency in seconds."
-            ),
+            help_text="Correlation engine evaluation latency in seconds.",
         ):
             try:
                 event_time = event.timestamp
@@ -49,6 +81,7 @@ class CorrelationEngine:
                         rule.id,
                         group_key(event, rule.group_by),
                     )
+
                     state = self._state.get(key)
 
                     if state is None or not within_window(
@@ -61,19 +94,24 @@ class CorrelationEngine:
                         )
                         self._state[key] = state
 
-                    state.add(event)
+                    if rule.mode is CorrelationMode.THRESHOLD:
+                        if not self._event_matches_rule(event, rule):
+                            continue
 
-                    matched = (
-                        evaluate_threshold(
+                        state.add(event)
+
+                        matched = evaluate_threshold(
                             state.events,
                             rule,
                         )
-                        if rule.mode is CorrelationMode.THRESHOLD
-                        else evaluate_sequence(
+
+                    else:
+                        state.add(event)
+
+                        matched = evaluate_sequence(
                             state.events,
                             rule,
                         )
-                    )
 
                     if not matched:
                         continue

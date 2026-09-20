@@ -25,8 +25,7 @@ def make_event(timestamp: datetime, outcome: EventOutcome) -> CanonicalSecurityE
         source="sshd",
         source_type=EventSourceType.SYSLOG,
         raw_event=(
-            "Aug 15 10:15:32 sentinel-host sshd[4242]: "
-            "authentication event from 192.168.10.55"
+            "Aug 15 10:15:32 sentinel-host sshd[4242]: authentication event from 192.168.10.55"
         ),
         metadata={"hostname": "sentinel-host", "facility": "auth"},
         parsed_data={"username": "admin", "source_ip": "192.168.10.55"},
