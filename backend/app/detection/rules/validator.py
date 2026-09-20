@@ -13,10 +13,6 @@ class DetectionRuleValidator:
         for condition in rule.conditions:
             if condition.operator in {"in", "not_in"}:
                 if not isinstance(condition.value, list):
-                    raise ValueError(
-                        f"rule {rule.id}: {condition.operator} requires a list value"
-                    )
+                    raise ValueError(f"rule {rule.id}: {condition.operator} requires a list value")
             elif condition.operator == "exists" and condition.value is not None:
-                raise ValueError(
-                    f"rule {rule.id}: exists must not define value"
-                )
+                raise ValueError(f"rule {rule.id}: exists must not define value")

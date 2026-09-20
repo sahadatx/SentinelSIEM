@@ -82,8 +82,7 @@ def test_discovery_rejects_invalid_factory(tmp_path: Path) -> None:
     plugin_dir.mkdir()
 
     (plugin_dir / "plugin.py").write_text(
-        "def create_plugin():\n"
-        "    return object()\n",
+        "def create_plugin():\n    return object()\n",
         encoding="utf-8",
     )
 
