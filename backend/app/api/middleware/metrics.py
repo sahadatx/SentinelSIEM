@@ -31,9 +31,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             )
             REGISTRY.inc_counter(
                 "siem_http_errors_total",
-                help_text=(
-                    "Total HTTP requests that terminated with an exception."
-                ),
+                help_text=("Total HTTP requests that terminated with an exception."),
                 labels={"method": method},
             )
             REGISTRY.observe(
