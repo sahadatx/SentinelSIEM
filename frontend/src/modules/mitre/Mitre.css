@@ -1,0 +1,3925 @@
+/* ==========================================================================
+ * SentinelSIEM — MITRE ATT&CK
+ * Step 1 — Main Page + Statistics Cards
+ *
+ * CSS-only implementation for:
+ * - pages/MitrePage.tsx
+ * - components/MitreStatsCards.tsx
+ *
+ * Design principles:
+ * - Read-only SOC/SIEM workspace
+ * - Dark security-console visual language
+ * - Existing MITRE class names only
+ * - No JSX changes required
+ * - Responsive layout
+ * - Accessible focus states
+ * - Loading/error states included
+ * ========================================================================== */
+
+
+/* ==========================================================================
+ * MITRE PAGE
+ * ========================================================================== */
+
+.mitre-page {
+  width: 100%;
+  min-width: 0;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+
+/* ==========================================================================
+ * PAGE HEADER
+ * ========================================================================== */
+
+.mitre-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.mitre-page__header-content {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mitre-page__header h1 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #f1f5f9;
+}
+
+.mitre-page .page__description {
+  margin: 7px 0 0;
+  max-width: 720px;
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+/* ==========================================================================
+ * REFRESH BUTTON
+ * ========================================================================== */
+
+.mitre-page__refresh {
+  flex: 0 0 auto;
+  min-width: 92px;
+  height: 38px;
+  padding: 0 15px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #334155;
+  border-radius: 7px;
+
+  background: #111827;
+  color: #e2e8f0;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.mitre-page__refresh:hover:not(:disabled) {
+  background: #1e293b;
+  border-color: #475569;
+  color: #ffffff;
+}
+
+.mitre-page__refresh:focus-visible {
+  outline: none;
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgb(100 116 139 / 18%);
+}
+
+.mitre-page__refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+
+/* ==========================================================================
+ * WORKSPACE ERROR
+ * ========================================================================== */
+
+.mitre-page__error {
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+
+  border: 1px solid #7f1d1d;
+  border-radius: 8px;
+
+  background: #2a1215;
+  color: #fecaca;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+
+/* ==========================================================================
+ * STATISTICS SECTION
+ * ========================================================================== */
+
+.mitre-page__statistics {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+
+/* ==========================================================================
+ * STATISTICS GRID
+ * ========================================================================== */
+
+.mitre-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+
+/* ==========================================================================
+ * STAT CARD
+ * ========================================================================== */
+
+.mitre-stats-card {
+  position: relative;
+  min-width: 0;
+
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+
+  background: #0f172a;
+
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 20%);
+
+  overflow: hidden;
+
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.mitre-stats-card:hover {
+  border-color: #334155;
+  background: #111c2f;
+  box-shadow:
+    0 4px 14px rgb(0 0 0 / 20%);
+}
+
+.mitre-stats-card__content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  min-height: 126px;
+  padding: 18px;
+
+  box-sizing: border-box;
+}
+
+.mitre-stats-card__text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mitre-stats-card__label {
+  margin: 0;
+
+  color: #94a3b8;
+
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 600;
+
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.mitre-stats-card__value {
+  margin: 8px 0 0;
+
+  color: #f8fafc;
+
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 700;
+
+  letter-spacing: -0.025em;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.mitre-stats-card__description {
+  margin: 7px 0 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.mitre-stats-card__icon {
+  flex: 0 0 auto;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+
+  background: #172033;
+  color: #94a3b8;
+}
+
+.mitre-stats-card__icon-svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+
+/* ==========================================================================
+ * STATISTICS LOADING SKELETON
+ * ========================================================================== */
+
+.mitre-stats-card__skeleton {
+  width: 92px;
+  height: 32px;
+  margin-top: 7px;
+
+  border-radius: 5px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #1e293b 0%,
+      #334155 50%,
+      #1e293b 100%
+    );
+
+  background-size: 200% 100%;
+
+  animation: mitre-stats-skeleton-loading 1.4s ease-in-out infinite;
+}
+
+@keyframes mitre-stats-skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+/* ==========================================================================
+ * STATISTICS ERROR
+ * ========================================================================== */
+
+.mitre-stats-error {
+  width: 100%;
+  min-height: 86px;
+  padding: 16px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #7f1d1d;
+  border-radius: 10px;
+
+  background: #2a1215;
+}
+
+.mitre-stats-error__title {
+  color: #fca5a5;
+
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.mitre-stats-error__message {
+  color: #fecaca;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+
+/* ==========================================================================
+ * TECHNIQUE WORKSPACE — SECTION CONTAINER
+ *
+ * These declarations establish the Step 1 page boundary.
+ * Technique-specific styling will be added in Step 2.
+ * ========================================================================== */
+
+.mitre-page__techniques {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — LARGE TABLET
+ * ========================================================================== */
+
+@media (max-width: 1100px) {
+  .mitre-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — TABLET
+ * ========================================================================== */
+
+@media (max-width: 768px) {
+  .mitre-page {
+    padding: 20px;
+  }
+
+  .mitre-page__header {
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .mitre-page__header h1 {
+    font-size: 23px;
+  }
+
+  .mitre-page .page__description {
+    font-size: 13px;
+  }
+
+  .mitre-page__refresh {
+    height: 36px;
+    padding: 0 13px;
+  }
+
+  .mitre-page__statistics {
+    margin-bottom: 20px;
+  }
+
+  .mitre-stats {
+    gap: 12px;
+  }
+
+  .mitre-stats-card__content {
+    min-height: 116px;
+    padding: 16px;
+  }
+
+  .mitre-stats-card__value {
+    font-size: 25px;
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — MOBILE
+ * ========================================================================== */
+
+@media (max-width: 560px) {
+  .mitre-page {
+    padding: 16px;
+  }
+
+  .mitre-page__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .mitre-page__header h1 {
+    font-size: 21px;
+  }
+
+  .mitre-page .page__description {
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  .mitre-page__refresh {
+    width: 100%;
+  }
+
+  .mitre-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .mitre-stats-card__content {
+    min-height: 104px;
+    padding: 15px;
+  }
+
+  .mitre-stats-card__value {
+    font-size: 24px;
+  }
+
+  .mitre-stats-card__icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — VERY SMALL MOBILE
+ * ========================================================================== */
+
+@media (max-width: 380px) {
+  .mitre-page {
+    padding: 12px;
+  }
+
+  .mitre-stats-card__content {
+    padding: 14px;
+  }
+
+  .mitre-stats-card__value {
+    font-size: 22px;
+  }
+
+  .mitre-stats-card__description {
+    font-size: 11px;
+  }
+}
+
+
+/* ==========================================================================
+ * REDUCED MOTION
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .mitre-page__refresh,
+  .mitre-stats-card {
+    transition: none;
+  }
+
+  .mitre-stats-card__skeleton {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+ * MITRE — TECHNIQUE WORKSPACE
+ * ========================================================================== */
+
+
+/* ==========================================================================
+ * TECHNIQUE TABLE
+ * ========================================================================== */
+
+.mitre-technique-table {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+
+  background: #0f172a;
+
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 20%);
+}
+
+
+/* ==========================================================================
+ * TECHNIQUE TABLE HEADER
+ * ========================================================================== */
+
+.mitre-technique-table-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 18px 20px;
+
+  border-bottom: 1px solid #1e293b;
+}
+
+.mitre-technique-table-header > div:first-child {
+  min-width: 0;
+}
+
+.mitre-technique-table-header h2 {
+  margin: 0;
+
+  color: #f8fafc;
+
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.mitre-technique-table-header p {
+  margin: 5px 0 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+
+/* ==========================================================================
+ * CURRENT PAGE COUNT
+ * ========================================================================== */
+
+.mitre-technique-counts {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: 6px 10px;
+
+  border: 1px solid #334155;
+  border-radius: 6px;
+
+  background: #111827;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.mitre-technique-counts strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+
+/* ==========================================================================
+ * TECHNIQUE FILTERS
+ * ========================================================================== */
+
+.mitre-technique-filters {
+  display: grid;
+
+  grid-template-columns:
+    minmax(220px, 2fr)
+    repeat(4, minmax(130px, 1fr))
+    auto;
+
+  gap: 12px;
+
+  padding: 16px 20px;
+
+  border-bottom: 1px solid #1e293b;
+
+  background: #0b1220;
+}
+
+.mitre-filter-field {
+  min-width: 0;
+}
+
+.mitre-filter-field label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 600;
+
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.mitre-filter-field input,
+.mitre-filter-field select {
+  width: 100%;
+  height: 36px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #334155;
+  border-radius: 6px;
+
+  background: #111827;
+  color: #e2e8f0;
+
+  font: inherit;
+  font-size: 12px;
+
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.mitre-filter-field input {
+  padding: 0 11px;
+}
+
+.mitre-filter-field select {
+  padding: 0 30px 0 10px;
+
+  cursor: pointer;
+}
+
+.mitre-filter-field input::placeholder {
+  color: #64748b;
+}
+
+.mitre-filter-field input:hover,
+.mitre-filter-field select:hover {
+  border-color: #475569;
+}
+
+.mitre-filter-field input:focus,
+.mitre-filter-field select:focus {
+  outline: none;
+
+  border-color: #64748b;
+
+  background: #172033;
+
+  box-shadow:
+    0 0 0 3px rgb(100 116 139 / 14%);
+}
+
+.mitre-filter-field input:disabled,
+.mitre-filter-field select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+
+/* ==========================================================================
+ * SEARCH FIELD
+ * ========================================================================== */
+
+.mitre-filter-search {
+  min-width: 0;
+}
+
+
+/* ==========================================================================
+ * FILTER RESET
+ * ========================================================================== */
+
+.mitre-filter-reset {
+  align-self: end;
+
+  height: 36px;
+
+  padding: 0 13px;
+
+  border: 1px solid #334155;
+  border-radius: 6px;
+
+  background: #111827;
+  color: #cbd5e1;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.mitre-filter-reset:hover:not(:disabled) {
+  border-color: #475569;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.mitre-filter-reset:focus-visible {
+  outline: none;
+
+  border-color: #64748b;
+
+  box-shadow:
+    0 0 0 3px rgb(100 116 139 / 14%);
+}
+
+.mitre-filter-reset:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+
+/* ==========================================================================
+ * TABLE STATE
+ * ========================================================================== */
+
+.mitre-table-state {
+  min-height: 180px;
+
+  padding: 32px 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  text-align: center;
+
+  color: #64748b;
+}
+
+.mitre-table-state strong {
+  color: #cbd5e1;
+
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.mitre-table-state span {
+  max-width: 520px;
+
+  color: #64748b;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.mitre-table-error {
+  min-height: 150px;
+
+  border-top: 1px solid #7f1d1d;
+
+  background: #2a1215;
+}
+
+.mitre-table-error strong {
+  color: #fca5a5;
+}
+
+.mitre-table-error span {
+  color: #fecaca;
+}
+
+
+/* ==========================================================================
+ * TABLE LOADING SPINNER
+ * ========================================================================== */
+
+.mitre-table-spinner {
+  width: 24px;
+  height: 24px;
+
+  margin-bottom: 5px;
+
+  border: 2px solid #334155;
+  border-top-color: #94a3b8;
+
+  border-radius: 50%;
+
+  animation: mitre-table-spin 700ms linear infinite;
+}
+
+@keyframes mitre-table-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ==========================================================================
+ * TABLE WRAPPER
+ * ========================================================================== */
+
+.mitre-table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+.mitre-table-wrapper::-webkit-scrollbar {
+  height: 7px;
+}
+
+.mitre-table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mitre-table-wrapper::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #334155;
+}
+
+.mitre-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+
+/* ==========================================================================
+ * TECHNIQUE TABLE GRID
+ * ========================================================================== */
+
+.mitre-technique-table-grid {
+  width: 100%;
+  min-width: 1080px;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  color: #cbd5e1;
+
+  font-size: 12px;
+}
+
+.mitre-technique-table-grid thead {
+  background: #111827;
+}
+
+.mitre-technique-table-grid th {
+  height: 42px;
+
+  padding: 0 14px;
+
+  border-bottom: 1px solid #334155;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 700;
+
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.mitre-technique-table-grid td {
+  padding: 13px 14px;
+
+  border-bottom: 1px solid #1e293b;
+
+  vertical-align: middle;
+
+  color: #cbd5e1;
+
+  line-height: 1.45;
+}
+
+.mitre-technique-table-grid tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.mitre-technique-row {
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease;
+}
+
+.mitre-technique-row:hover {
+  background: #111c2f;
+}
+
+.mitre-technique-row:focus-within {
+  background: #111c2f;
+}
+
+
+/* ==========================================================================
+ * TECHNIQUE NAME BUTTON
+ * ========================================================================== */
+
+.mitre-technique-name-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  min-width: 190px;
+  max-width: 290px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: inherit;
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.mitre-technique-name-button:focus-visible {
+  outline: none;
+
+  border-radius: 5px;
+
+  box-shadow:
+    0 0 0 3px rgb(100 116 139 / 18%);
+}
+
+.mitre-technique-id {
+  color: #94a3b8;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.mitre-technique-name {
+  margin-top: 2px;
+
+  color: #e2e8f0;
+
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 600;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  max-width: 100%;
+}
+
+.mitre-technique-name-button:hover .mitre-technique-name {
+  color: #ffffff;
+}
+
+
+/* ==========================================================================
+ * TECHNIQUE TYPE
+ * ========================================================================== */
+
+.mitre-technique-type {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 4px 8px;
+
+  border: 1px solid #334155;
+  border-radius: 999px;
+
+  background: #172033;
+  color: #cbd5e1;
+
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.mitre-technique-type-technique {
+  border-color: #334155;
+  background: #172033;
+  color: #cbd5e1;
+}
+
+.mitre-technique-type-sub_technique {
+  border-color: #475569;
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+
+/* ==========================================================================
+ * TACTIC / PLATFORM CONTAINERS
+ * ========================================================================== */
+
+.mitre-technique-tactics,
+.mitre-technique-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  gap: 4px;
+
+  max-width: 220px;
+}
+
+.mitre-tactic-chip,
+.mitre-platform-chip {
+  display: inline-flex;
+  align-items: center;
+
+  max-width: 180px;
+
+  padding: 4px 7px;
+
+  border: 1px solid #334155;
+  border-radius: 5px;
+
+  background: #111827;
+  color: #94a3b8;
+
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 500;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mitre-tactic-chip {
+  color: #a5b4fc;
+}
+
+.mitre-platform-chip {
+  color: #94a3b8;
+}
+
+
+/* ==========================================================================
+ * MUTED VALUE
+ * ========================================================================== */
+
+.mitre-muted {
+  color: #475569;
+
+  font-size: 12px;
+}
+
+
+/* ==========================================================================
+ * DESCRIPTION CELL
+ * ========================================================================== */
+
+.mitre-technique-description-cell {
+  width: 300px;
+  max-width: 300px;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+  line-height: 1.55;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ==========================================================================
+ * VIEW BUTTON
+ * ========================================================================== */
+
+.mitre-view-button {
+  min-width: 54px;
+  height: 30px;
+
+  padding: 0 10px;
+
+  border: 1px solid #334155;
+  border-radius: 5px;
+
+  background: #111827;
+  color: #cbd5e1;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.mitre-view-button:hover {
+  border-color: #475569;
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.mitre-view-button:focus-visible {
+  outline: none;
+
+  border-color: #64748b;
+
+  box-shadow:
+    0 0 0 3px rgb(100 116 139 / 16%);
+}
+
+
+/* ==========================================================================
+ * MITRE MATRIX
+ *
+ * The matrix component currently contains Tailwind utility classes for most
+ * layout primitives. These centralized rules only supplement the custom
+ * MITRE workspace behavior.
+ * ========================================================================== */
+
+.mitre-matrix {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* ==========================================================================
+ * COVERAGE CARD
+ * ========================================================================== */
+
+.mitre-coverage-card {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+}
+
+
+/* ==========================================================================
+ * RESOURCE CARD
+ * ========================================================================== */
+
+.resource-card {
+  width: 100%;
+  min-width: 0;
+
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+
+  background: #0f172a;
+
+  color: #cbd5e1;
+
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 20%);
+}
+
+.resource-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 18px 20px;
+
+  border-bottom: 1px solid #1e293b;
+}
+
+.resource-card__header > div:first-child {
+  min-width: 0;
+}
+
+.resource-card__title {
+  margin: 0;
+
+  color: #f8fafc;
+
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.resource-card__description {
+  margin: 5px 0 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.resource-card__metric {
+  flex: 0 0 auto;
+
+  color: #e2e8f0;
+
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.resource-card__body {
+  padding: 18px 20px;
+}
+
+
+/* ==========================================================================
+ * RESOURCE CARD STATES
+ * ========================================================================== */
+
+.resource-card__loading {
+  min-height: 70px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+
+  font-size: 12px;
+}
+
+.resource-card__error {
+  margin: 0;
+
+  padding: 12px 14px;
+
+  border: 1px solid #7f1d1d;
+  border-radius: 7px;
+
+  background: #2a1215;
+  color: #fecaca;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.resource-card__empty {
+  margin: 0;
+
+  min-height: 70px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #64748b;
+
+  font-size: 12px;
+  text-align: center;
+}
+
+
+/* ==========================================================================
+ * COVERAGE PROGRESS
+ * ========================================================================== */
+
+.mitre-coverage-card__progress {
+  width: 100%;
+}
+
+.mitre-coverage-card__progress-track {
+  width: 100%;
+  height: 8px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #1e293b;
+}
+
+.mitre-coverage-card__progress-fill {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #64748b;
+
+  transition: width 300ms ease;
+}
+
+
+/* ==========================================================================
+ * COVERAGE STATISTICS
+ * ========================================================================== */
+
+.mitre-coverage-card__statistics {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+.mitre-coverage-card__stat {
+  min-width: 0;
+
+  padding: 12px;
+
+  border: 1px solid #1e293b;
+  border-radius: 7px;
+
+  background: #111827;
+}
+
+.mitre-coverage-card__stat-label {
+  display: block;
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mitre-coverage-card__stat-value {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #e2e8f0;
+
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.mitre-coverage-card__stat--full {
+  border-color: #14532d;
+}
+
+.mitre-coverage-card__stat--full
+  .mitre-coverage-card__stat-label {
+  color: #86efac;
+}
+
+.mitre-coverage-card__stat--full
+  .mitre-coverage-card__stat-value {
+  color: #bbf7d0;
+}
+
+.mitre-coverage-card__stat--partial {
+  border-color: #78350f;
+}
+
+.mitre-coverage-card__stat--partial
+  .mitre-coverage-card__stat-label {
+  color: #fcd34d;
+}
+
+.mitre-coverage-card__stat--partial
+  .mitre-coverage-card__stat-value {
+  color: #fde68a;
+}
+
+.mitre-coverage-card__stat--unmapped {
+  border-color: #334155;
+}
+
+
+/* ==========================================================================
+ * COVERAGE SUMMARY
+ * ========================================================================== */
+
+.mitre-coverage-card__summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-top: 12px;
+
+  padding-top: 14px;
+
+  border-top: 1px solid #1e293b;
+}
+
+.mitre-coverage-card__summary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.mitre-coverage-card__summary span {
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.mitre-coverage-card__summary strong {
+  color: #cbd5e1;
+
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==========================================================================
+ * COVERAGE SUMMARY TEXT
+ * ========================================================================== */
+
+.mitre-coverage-card__summary-text {
+  margin: 14px 0 0;
+
+  color: #94a3b8;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.mitre-coverage-card__summary-text strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.mitre-coverage-card__muted {
+  margin: 8px 0 0;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.mitre-coverage-card__muted strong {
+  color: #94a3b8;
+}
+
+
+/* ==========================================================================
+ * ANALYTICS UNAVAILABLE
+ * ========================================================================== */
+
+.mitre-coverage-card__analytics-unavailable {
+  padding-top: 2px;
+}
+
+
+/* ==========================================================================
+ * MATRIX-SPECIFIC CENTRALIZED STATES
+ *
+ * Most Matrix layout remains controlled by the existing Tailwind classes in
+ * MitreMatrix.tsx. These selectors provide stable dark-SIEM behavior for
+ * state containers where custom classes are not otherwise supplied.
+ * ========================================================================== */
+
+.mitre-matrix-loading {
+  width: 100%;
+}
+
+.mitre-matrix-error {
+  width: 100%;
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — LARGE TABLET
+ * ========================================================================== */
+
+@media (max-width: 1180px) {
+  .mitre-technique-filters {
+    grid-template-columns:
+      minmax(220px, 2fr)
+      repeat(2, minmax(150px, 1fr))
+      auto;
+  }
+
+  .mitre-filter-search {
+    grid-column: span 2;
+  }
+
+  .mitre-filter-reset {
+    align-self: end;
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — TABLET
+ * ========================================================================== */
+
+@media (max-width: 900px) {
+  .mitre-technique-table-header {
+    padding: 16px;
+  }
+
+  .mitre-technique-filters {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    padding: 14px 16px;
+  }
+
+  .mitre-filter-search {
+    grid-column: 1 / -1;
+  }
+
+  .mitre-filter-reset {
+    width: 100%;
+  }
+
+  .mitre-coverage-card__statistics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .mitre-coverage-card__summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — MOBILE
+ * ========================================================================== */
+
+@media (max-width: 640px) {
+  .mitre-technique-table {
+    border-radius: 8px;
+  }
+
+  .mitre-technique-table-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mitre-technique-counts {
+    align-self: flex-start;
+  }
+
+  .mitre-technique-filters {
+    grid-template-columns: 1fr;
+
+    gap: 10px;
+
+    padding: 14px;
+  }
+
+  .mitre-filter-search {
+    grid-column: auto;
+  }
+
+  .mitre-filter-reset {
+    width: 100%;
+  }
+
+  .mitre-table-state {
+    min-height: 160px;
+
+    padding: 28px 16px;
+  }
+
+  .resource-card__header {
+    flex-direction: column;
+    gap: 10px;
+
+    padding: 16px;
+  }
+
+  .resource-card__metric {
+    align-self: flex-start;
+  }
+
+  .resource-card__body {
+    padding: 16px;
+  }
+
+  .mitre-coverage-card__statistics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mitre-coverage-card__summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — VERY SMALL MOBILE
+ * ========================================================================== */
+
+@media (max-width: 380px) {
+  .mitre-coverage-card__statistics {
+    grid-template-columns: 1fr;
+  }
+
+  .mitre-coverage-card__stat-value {
+    font-size: 17px;
+  }
+
+  .mitre-coverage-card__summary > div {
+    padding: 2px 0;
+  }
+}
+
+
+/* ==========================================================================
+ * REDUCED MOTION
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .mitre-filter-field input,
+  .mitre-filter-field select,
+  .mitre-filter-reset,
+  .mitre-technique-row,
+  .mitre-view-button,
+  .mitre-technique-name-button,
+  .mitre-coverage-card__progress-fill {
+    transition: none;
+  }
+
+  .mitre-table-spinner {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+ * MITRE — TECHNIQUE DETAILS
+ * ========================================================================== */
+
+
+/* ==========================================================================
+ * TECHNIQUE DETAIL PAGE
+ * ========================================================================== */
+
+.mitre-technique-page {
+  width: 100%;
+  min-width: 0;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.mitre-technique-page .page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.mitre-technique-page .page__header > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mitre-technique-page .page__header h1 {
+  margin: 0;
+
+  color: #f1f5f9;
+
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 700;
+
+  letter-spacing: -0.02em;
+}
+
+.mitre-technique-page .page__description {
+  margin: 7px 0 0;
+
+  max-width: 820px;
+
+  color: #94a3b8;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mitre-technique-page__refresh {
+  flex: 0 0 auto;
+
+  min-width: 92px;
+  height: 38px;
+
+  padding: 0 15px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #334155;
+  border-radius: 7px;
+
+  background: #111827;
+  color: #e2e8f0;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.mitre-technique-page__refresh:hover:not(:disabled) {
+  background: #1e293b;
+  border-color: #475569;
+  color: #ffffff;
+}
+
+.mitre-technique-page__refresh:focus-visible {
+  outline: none;
+
+  border-color: #64748b;
+
+  box-shadow:
+    0 0 0 3px rgb(100 116 139 / 18%);
+}
+
+.mitre-technique-page__refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.mitre-technique-page__details {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* ==========================================================================
+ * TECHNIQUE DETAILS ROOT
+ * ========================================================================== */
+
+.mitre-technique-details {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+}
+
+
+/* ==========================================================================
+ * TECHNIQUE DETAILS TITLE ROW
+ * ========================================================================== */
+
+.mitre-technique-details__title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-top: 10px;
+}
+
+.mitre-technique-details__title-row > div {
+  min-width: 0;
+}
+
+.mitre-technique-details__id {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: 6px 9px;
+
+  border: 1px solid #334155;
+  border-radius: 6px;
+
+  background: #111827;
+  color: #cbd5e1;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+
+/* ==========================================================================
+ * BACK BUTTON
+ * ========================================================================== */
+
+.mitre-technique-details__back {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 30px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+  color: #94a3b8;
+
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    color 120ms ease;
+}
+
+.mitre-technique-details__back:hover {
+  color: #e2e8f0;
+}
+
+.mitre-technique-details__back:focus-visible {
+  outline: none;
+
+  border-radius: 4px;
+
+  box-shadow:
+    0 0 0 3px rgb(100 116 139 / 16%);
+}
+
+
+/* ==========================================================================
+ * COVERAGE STATUS
+ * ========================================================================== */
+
+.mitre-technique-details__status,
+.mitre-technique-details__coverage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: fit-content;
+
+  padding: 5px 9px;
+
+  border: 1px solid #334155;
+  border-radius: 999px;
+
+  background: #172033;
+  color: #cbd5e1;
+
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.mitre-technique-details__coverage--full {
+  border-color: #14532d;
+
+  background: #0b2a1a;
+  color: #86efac;
+}
+
+.mitre-technique-details__coverage--partial {
+  border-color: #78350f;
+
+  background: #2a1c08;
+  color: #fcd34d;
+}
+
+.mitre-technique-details__coverage--unmapped {
+  border-color: #334155;
+
+  background: #172033;
+  color: #94a3b8;
+}
+
+.mitre-technique-details__coverage--unknown {
+  border-color: #334155;
+
+  background: #111827;
+  color: #64748b;
+}
+
+
+/* ==========================================================================
+ * COVERAGE BADGE
+ * ========================================================================== */
+
+.mitre-technique-details__coverage-badge {
+  display: inline-flex;
+  align-items: center;
+
+  width: fit-content;
+
+  padding: 4px 8px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* ==========================================================================
+ * DETAIL SECTION
+ * ========================================================================== */
+
+.mitre-technique-details__section {
+  padding: 20px 0;
+
+  border-bottom: 1px solid #1e293b;
+}
+
+.mitre-technique-details__section:first-child {
+  padding-top: 0;
+}
+
+.mitre-technique-details__section:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.mitre-technique-details__heading {
+  margin: 0 0 13px;
+
+  color: #e2e8f0;
+
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+
+  letter-spacing: -0.005em;
+}
+
+
+/* ==========================================================================
+ * OVERVIEW
+ * ========================================================================== */
+
+.mitre-technique-details__overview {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+
+/* ==========================================================================
+ * DETAIL FIELD
+ * ========================================================================== */
+
+.mitre-technique-details__field {
+  min-width: 0;
+
+  padding: 11px 12px;
+
+  border: 1px solid #1e293b;
+  border-radius: 7px;
+
+  background: #111827;
+}
+
+.mitre-technique-details__label {
+  display: block;
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 600;
+
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.mitre-technique-details__value {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #cbd5e1;
+
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-details__value code {
+  color: #e2e8f0;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 11px;
+}
+
+
+/* ==========================================================================
+ * DESCRIPTION
+ * ========================================================================== */
+
+.mitre-technique-details__description {
+  margin: 14px 0 0;
+
+  padding: 14px;
+
+  border: 1px solid #1e293b;
+  border-radius: 7px;
+
+  background: #0b1220;
+
+  color: #94a3b8;
+
+  font-size: 12px;
+  line-height: 1.7;
+
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-details__muted {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+
+/* ==========================================================================
+ * TACTICS
+ * ========================================================================== */
+
+.mitre-technique-details__tactic-ids {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+}
+
+.mitre-technique-details__tactic-id {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 5px 8px;
+
+  border: 1px solid #334155;
+  border-radius: 5px;
+
+  background: #111827;
+  color: #a5b4fc;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+
+/* ==========================================================================
+ * PLATFORMS
+ * ========================================================================== */
+
+.mitre-technique-details__platforms {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+}
+
+.mitre-technique-details__platform-id {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 5px 8px;
+
+  border: 1px solid #334155;
+  border-radius: 5px;
+
+  background: #111827;
+  color: #94a3b8;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+
+/* ==========================================================================
+ * COVERAGE PANEL
+ * ========================================================================== */
+
+.mitre-technique-details__coverage-panel {
+  width: 100%;
+
+  padding: 14px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+
+  background: #0b1220;
+}
+
+.mitre-technique-details__coverage-summary {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 0;
+}
+
+.mitre-technique-details__coverage-summary-text {
+  min-width: 0;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.mitre-technique-details__metrics {
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-top: 14px;
+}
+
+
+/* ==========================================================================
+ * DETAIL METRIC
+ * ========================================================================== */
+
+.mitre-technique-details__metric {
+  min-width: 0;
+
+  padding: 11px 12px;
+
+  border: 1px solid #1e293b;
+  border-radius: 7px;
+
+  background: #111827;
+}
+
+.mitre-technique-details__metric-label {
+  display: block;
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 600;
+
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.mitre-technique-details__metric-value {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #e2e8f0;
+
+  font-size: 17px;
+  line-height: 1.25;
+  font-weight: 700;
+
+  font-variant-numeric: tabular-nums;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ==========================================================================
+ * SUB-TECHNIQUES
+ * ========================================================================== */
+
+.mitre-technique-details__subtechniques {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.mitre-technique-details__subtechnique {
+  min-width: 0;
+
+  padding: 13px;
+
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+
+  background: #111827;
+}
+
+.mitre-technique-details__subtechnique-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.mitre-technique-details__subtechnique-header > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mitre-technique-details__subtechnique-header code {
+  color: #94a3b8;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.mitre-technique-details__subtechnique-header strong {
+  color: #e2e8f0;
+
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 600;
+
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-details__subtechnique-description {
+  margin: 10px 0 0;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 1.6;
+
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-details__subtechnique-tactics {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 5px;
+
+  margin-top: 10px;
+}
+
+.mitre-technique-details__subtechnique-tactics code {
+  display: inline-flex;
+
+  padding: 3px 6px;
+
+  border: 1px solid #334155;
+  border-radius: 4px;
+
+  background: #0f172a;
+  color: #94a3b8;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 9px;
+}
+
+
+/* ==========================================================================
+ * REFERENCE LIST
+ * ========================================================================== */
+
+.mitre-technique-details__reference-list {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+}
+
+.mitre-technique-details__reference {
+  display: inline-flex;
+  align-items: center;
+
+  max-width: 100%;
+
+  padding: 5px 8px;
+
+  border: 1px solid #334155;
+  border-radius: 5px;
+
+  background: #111827;
+  color: #94a3b8;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 10px;
+  line-height: 1.35;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ==========================================================================
+ * DETECTION MAPPINGS
+ * ========================================================================== */
+
+.mitre-technique-details__mapping-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.mitre-technique-details__mapping {
+  padding: 13px;
+
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+
+  background: #111827;
+}
+
+.mitre-technique-details__mapping-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding-bottom: 10px;
+
+  border-bottom: 1px solid #1e293b;
+}
+
+.mitre-technique-details__mapping-header code {
+  min-width: 0;
+
+  color: #cbd5e1;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 600;
+
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-details__mapping-header span {
+  flex: 0 0 auto;
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1.4;
+
+  white-space: nowrap;
+}
+
+.mitre-technique-details__mapping-field {
+  display: grid;
+
+  grid-template-columns: 130px minmax(0, 1fr);
+
+  gap: 12px;
+
+  padding: 8px 0;
+
+  border-bottom: 1px solid #172033;
+}
+
+.mitre-technique-details__mapping-field:last-of-type {
+  border-bottom: 0;
+}
+
+.mitre-technique-details__mapping-field > span:first-child {
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1.45;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.mitre-technique-details__mapping-field > span:not(:first-child),
+.mitre-technique-details__mapping-field time {
+  min-width: 0;
+
+  color: #cbd5e1;
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-details__mapping-field code {
+  min-width: 0;
+
+  color: #cbd5e1;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 10px;
+  line-height: 1.45;
+
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-details__mapping-description {
+  margin: 10px 0 0;
+
+  padding-top: 10px;
+
+  border-top: 1px solid #1e293b;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 1.6;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ==========================================================================
+ * RELATIONSHIP / REFERENCE DATA
+ * ========================================================================== */
+
+.mitre-technique-details__reference-list:empty {
+  display: none;
+}
+
+
+/* ==========================================================================
+ * RESOURCE CARD COMPATIBILITY
+ *
+ * Step 1/2 already define these shared resource-card styles. These rules
+ * ensure the technique detail page uses the same internal spacing hierarchy.
+ * ========================================================================== */
+
+.mitre-technique-details .resource-card__body {
+  min-width: 0;
+}
+
+
+/* ==========================================================================
+ * PAGE-LEVEL ERROR
+ * ========================================================================== */
+
+.mitre-technique-page > .resource-card__error {
+  margin-bottom: 18px;
+
+  padding: 12px 14px;
+
+  border: 1px solid #7f1d1d;
+  border-radius: 8px;
+
+  background: #2a1215;
+  color: #fecaca;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — LARGE TABLET
+ * ========================================================================== */
+
+@media (max-width: 1100px) {
+  .mitre-technique-details__overview {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .mitre-technique-details__metrics {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .mitre-technique-details__subtechniques {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — TABLET
+ * ========================================================================== */
+
+@media (max-width: 768px) {
+  .mitre-technique-page {
+    padding: 20px;
+  }
+
+  .mitre-technique-page .page__header {
+    gap: 16px;
+  }
+
+  .mitre-technique-page .page__header h1 {
+    font-size: 23px;
+  }
+
+  .mitre-technique-page .page__description {
+    font-size: 13px;
+  }
+
+  .mitre-technique-page__refresh {
+    height: 36px;
+  }
+
+  .resource-card__header {
+    padding: 16px;
+  }
+
+  .mitre-technique-details__overview {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .mitre-technique-details__metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .mitre-technique-details__subtechniques {
+    grid-template-columns: 1fr;
+  }
+
+  .mitre-technique-details__mapping-field {
+    grid-template-columns:
+      110px minmax(0, 1fr);
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — MOBILE
+ * ========================================================================== */
+
+@media (max-width: 560px) {
+  .mitre-technique-page {
+    padding: 16px;
+  }
+
+  .mitre-technique-page .page__header {
+    flex-direction: column;
+    align-items: stretch;
+
+    gap: 14px;
+  }
+
+  .mitre-technique-page .page__header h1 {
+    font-size: 21px;
+  }
+
+  .mitre-technique-page .page__description {
+    font-size: 12px;
+  }
+
+  .mitre-technique-page__refresh {
+    width: 100%;
+  }
+
+  .resource-card__header {
+    padding: 15px;
+  }
+
+  .mitre-technique-details__title-row {
+    flex-direction: column;
+
+    gap: 9px;
+  }
+
+  .mitre-technique-details__id {
+    align-self: flex-start;
+  }
+
+  .mitre-technique-details__overview {
+    grid-template-columns: 1fr;
+  }
+
+  .mitre-technique-details__metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .mitre-technique-details__coverage-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mitre-technique-details__mapping-field {
+    grid-template-columns: 1fr;
+
+    gap: 4px;
+  }
+
+  .mitre-technique-details__mapping-field > span:first-child {
+    font-size: 9px;
+  }
+
+  .mitre-technique-details__mapping-header {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 5px;
+  }
+}
+
+
+/* ==========================================================================
+ * RESPONSIVE — VERY SMALL MOBILE
+ * ========================================================================== */
+
+@media (max-width: 380px) {
+  .mitre-technique-page {
+    padding: 12px;
+  }
+
+  .mitre-technique-details__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .mitre-technique-details__metric-value {
+    font-size: 16px;
+  }
+
+  .mitre-technique-details__section {
+    padding: 16px 0;
+  }
+
+  .mitre-technique-details__coverage-panel {
+    padding: 12px;
+  }
+}
+
+
+/* ==========================================================================
+ * REDUCED MOTION
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .mitre-technique-page__refresh,
+  .mitre-technique-details__back {
+    transition: none;
+  }
+}
+
+
+/* ==========================================================================
+ * END — MITRE TECHNIQUE DETAILS
+ * ========================================================================== */
+
+
+/* ==========================================================================
+ * MITRE — PAGE PAGINATION
+ * ========================================================================== */
+
+.mitre-technique-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #0f172a;
+}
+
+.mitre-technique-pagination__summary {
+  min-width: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mitre-technique-pagination__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.mitre-technique-pagination__button {
+  min-width: 78px;
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #111827;
+  color: #cbd5e1;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
+.mitre-technique-pagination__button:hover:not(:disabled) {
+  border-color: #475569;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.mitre-technique-pagination__button:focus-visible {
+  outline: none;
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgb(100 116 139 / 14%);
+}
+
+.mitre-technique-pagination__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.mitre-technique-pagination__empty {
+  width: 100%;
+  padding: 12px 0;
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+}
+
+
+/* ==========================================================================
+ * MITRE — TECHNIQUE DETAILS DRAWER
+ *
+ * These classes belong to MitrePage.tsx. They are intentionally kept here
+ * because Mitre.css is the single centralized stylesheet for the module.
+ * ========================================================================== */
+
+.mitre-technique-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  display: flex;
+  justify-content: flex-end;
+  background: rgb(2 6 23 / 62%);
+  cursor: default;
+}
+
+.mitre-technique-drawer {
+  position: relative;
+  z-index: 1100;
+  width: min(760px, 92vw);
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-left: 1px solid #334155;
+  background: #0b1220;
+  color: #cbd5e1;
+  box-shadow: -18px 0 45px rgb(0 0 0 / 32%);
+  overflow: hidden;
+}
+
+.mitre-technique-drawer__header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #1e293b;
+  background: #0f172a;
+}
+
+.mitre-technique-drawer__eyebrow {
+  margin: 0 0 5px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mitre-technique-drawer__title {
+  min-width: 0;
+  margin: 0;
+  color: #f8fafc;
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-drawer__close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #111827;
+  color: #94a3b8;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.mitre-technique-drawer__close:hover {
+  border-color: #475569;
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.mitre-technique-drawer__close:focus-visible {
+  outline: none;
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgb(100 116 139 / 14%);
+}
+
+.mitre-technique-drawer__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+
+/* ==========================================================================
+ * MITRE — TABLE INTERACTION
+ *
+ * Interactive controls remain normal browser buttons. No pointer-events:none,
+ * pseudo-element overlays, or row-level stacking tricks are used.
+ * ========================================================================== */
+
+.mitre-technique-table-grid .mitre-technique-name-button,
+.mitre-technique-table-grid .mitre-view-button {
+  position: relative;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.mitre-technique-table-grid .mitre-view-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.mitre-technique-table-grid td:last-child {
+  white-space: nowrap;
+}
+
+.mitre-technique-table-grid button {
+  pointer-events: auto;
+}
+
+
+/* ==========================================================================
+ * MITRE — RESPONSIVE PAGINATION / DRAWER
+ * ========================================================================== */
+
+@media (max-width: 640px) {
+  .mitre-technique-pagination {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mitre-technique-pagination__controls {
+    width: 100%;
+  }
+
+  .mitre-technique-pagination__button {
+    flex: 1 1 0;
+  }
+
+  .mitre-technique-drawer {
+    width: 100%;
+    border-left: 0;
+  }
+
+  .mitre-technique-drawer__header {
+    padding: 15px 16px;
+  }
+
+  .mitre-technique-drawer__body {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mitre-technique-pagination__button,
+  .mitre-technique-drawer__close {
+    transition: none;
+  }
+}
+/* ==========================================================================
+ * MITRE — TECHNIQUE DETAILS RIGHT SIDEBAR
+ * ========================================================================== */
+
+.mitre-technique-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  background: rgb(2 6 23 / 62%);
+  cursor: default;
+}
+
+.mitre-technique-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+
+  width: min(760px, 92vw);
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+
+  z-index: 1100;
+
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+
+  border-left: 1px solid #334155;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+
+  border-radius: 0;
+
+  background: #0b1220;
+  color: #cbd5e1;
+
+  box-shadow: -18px 0 45px rgb(0 0 0 / 32%);
+
+  overflow: hidden;
+
+  margin: 0;
+  transform: none;
+}
+
+/* Header */
+
+.mitre-technique-drawer__header {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 18px 20px;
+
+  border-bottom: 1px solid #1e293b;
+
+  background: #0f172a;
+}
+
+.mitre-technique-drawer__eyebrow {
+  margin: 0 0 5px;
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 700;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mitre-technique-drawer__title {
+  min-width: 0;
+
+  margin: 0;
+
+  color: #f8fafc;
+
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 700;
+
+  overflow-wrap: anywhere;
+}
+
+.mitre-technique-drawer__close {
+  flex: 0 0 auto;
+
+  width: 32px;
+  height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid #334155;
+  border-radius: 6px;
+
+  background: #111827;
+  color: #94a3b8;
+
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.mitre-technique-drawer__close:hover {
+  border-color: #475569;
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.mitre-technique-drawer__close:focus-visible {
+  outline: none;
+
+  border-color: #64748b;
+
+  box-shadow: 0 0 0 3px rgb(100 116 139 / 14%);
+}
+
+/* Body */
+
+.mitre-technique-drawer__body {
+  flex: 1 1 auto;
+
+  min-height: 0;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+}
+
+/* ==========================================================================
+ * Responsive
+ * ========================================================================== */
+
+@media (max-width: 900px) {
+  .mitre-technique-drawer {
+    width: min(680px, 94vw);
+  }
+}
+
+@media (max-width: 640px) {
+  .mitre-technique-drawer {
+    width: 100vw;
+    max-width: 100vw;
+
+    border-left: 0;
+  }
+
+  .mitre-technique-drawer__header {
+    padding: 16px;
+  }
+
+  .mitre-technique-drawer__body {
+    padding: 16px;
+  }
+}
+
+/* ============================================================================
+ * MITRE Filter Reset — RIGHT SIDE / BOTTOM LINE
+ * ========================================================================== */
+
+.mitre-filter-reset-row {
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  margin-top: 10px;
+}
+
+
+/* ============================================================================
+ * MITRE Reset Button
+ * ========================================================================== */
+
+.mitre-filter-reset {
+  flex: 0 0 auto;
+
+  min-width: 118px;
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  box-sizing: border-box;
+
+  padding: 0 14px;
+
+  border: 1px solid rgba(100, 116, 139, 0.42);
+  border-radius: 8px;
+
+  background: rgba(17, 28, 46, 0.95);
+
+  color: #aebbd0;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+
+  cursor: pointer;
+
+  opacity: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 2px 8px rgba(0, 0, 0, 0.16);
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.mitre-filter-reset:hover:not(:disabled) {
+  background: rgba(30, 47, 71, 0.98);
+
+  border-color: rgba(34, 211, 238, 0.38);
+
+  color: #e2e8f0;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 4px 12px rgba(0, 0, 0, 0.20);
+
+  transform: translateY(-1px);
+}
+
+.mitre-filter-reset:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mitre-filter-reset:focus-visible {
+  outline: none;
+
+  border-color: rgba(34, 211, 238, 0.55);
+
+  box-shadow:
+    0 0 0 2px rgba(34, 211, 238, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.mitre-filter-reset:disabled {
+  background: rgba(15, 25, 41, 0.82);
+
+  border-color: rgba(100, 116, 139, 0.28);
+
+  color: #718096;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.015),
+    0 1px 5px rgba(0, 0, 0, 0.10);
+}
+
+
+/* ============================================================================
+ * MITRE Reset — SVG
+ * ========================================================================== */
+
+.mitre-filter-reset svg {
+  flex: 0 0 auto;
+
+  transition: transform 160ms ease;
+}
+
+.mitre-filter-reset:hover:not(:disabled) svg {
+  transform: rotate(-35deg);
+}
+
+/* ============================================================================
+ * MITRE Technique Pagination
+ * ========================================================================== */
+
+.mitre-technique-pagination {
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin-top: 12px;
+  padding: 10px 14px;
+
+  border: 1px solid rgba(30, 58, 85, 0.55);
+  border-radius: 10px;
+
+  background: rgba(7, 20, 34, 0.82);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.018),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+
+/* ============================================================================
+ * Pagination Content Layout
+ * ========================================================================== */
+
+.mitre-technique-pagination__summary {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  margin-right: 18px;
+
+  white-space: nowrap;
+
+  color: #8293aa;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.mitre-technique-pagination__summary strong {
+  color: #d5deea;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* ============================================================================
+ * Pagination Controls
+ * ========================================================================== */
+
+.mitre-technique-pagination__controls {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+/* ============================================================================
+ * Pagination Button
+ * ========================================================================== */
+
+.mitre-technique-pagination__button {
+  min-width: 78px;
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(51, 78, 106, 0.62);
+  border-radius: 8px;
+
+  background: rgba(12, 28, 45, 0.92);
+
+  color: #a7b6c9;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+
+  cursor: pointer;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+
+/* ============================================================================
+ * Pagination Button — Hover
+ * ========================================================================== */
+
+.mitre-technique-pagination__button:hover:not(:disabled) {
+  background: rgba(20, 42, 64, 0.96);
+
+  border-color: rgba(34, 211, 238, 0.34);
+
+  color: #dbe7f3;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 4px 10px rgba(0, 0, 0, 0.18);
+
+  transform: translateY(-1px);
+}
+
+
+/* ============================================================================
+ * Pagination Button — Active
+ * ========================================================================== */
+
+.mitre-technique-pagination__button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+
+/* ============================================================================
+ * Pagination Button — Focus
+ * ========================================================================== */
+
+.mitre-technique-pagination__button:focus-visible {
+  outline: none;
+
+  border-color: rgba(34, 211, 238, 0.55);
+
+  box-shadow:
+    0 0 0 2px rgba(34, 211, 238, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+
+/* ============================================================================
+ * Pagination Button — Disabled
+ * ========================================================================== */
+
+.mitre-technique-pagination__button:disabled {
+  background: rgba(10, 24, 39, 0.72);
+
+  border-color: rgba(51, 78, 106, 0.32);
+
+  color: #526176;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.012),
+    0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ============================================================================
+ * Pagination — Empty State
+ * ========================================================================== */
+
+.mitre-technique-pagination__empty {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+}
+
+
+/* ============================================================================
+ * MITRE Pagination Responsive
+ * ========================================================================== */
+
+@media (max-width: 760px) {
+  .mitre-technique-pagination {
+    padding: 10px 12px;
+  }
+
+  .mitre-technique-pagination__summary {
+    margin-right: 14px;
+
+    gap: 5px;
+
+    font-size: 11px;
+  }
+
+  .mitre-technique-pagination__summary strong {
+    font-size: 11px;
+  }
+
+  .mitre-technique-pagination__button {
+    min-width: 70px;
+    height: 34px;
+
+    padding: 0 11px;
+  }
+}
+
+
+@media (max-width: 560px) {
+  .mitre-technique-pagination {
+    padding: 9px 10px;
+  }
+
+  .mitre-technique-pagination__summary {
+    margin-right: 0;
+
+    white-space: normal;
+
+    text-align: center;
+  }
+
+  .mitre-technique-pagination__controls {
+    gap: 7px;
+  }
+
+  .mitre-technique-pagination__button {
+    min-width: 82px;
+  }
+}
+
+/* ============================================================================
+ * MITRE Technique Pagination
+ * ========================================================================== */
+
+.mitre-technique-pagination {
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin-top: 12px;
+  padding: 10px 14px;
+
+  border: 1px solid rgba(30, 58, 85, 0.55);
+  border-radius: 10px;
+
+  background: rgba(7, 20, 34, 0.82);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.018),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+
+/* ============================================================================
+ * Pagination Content Layout
+ * ========================================================================== */
+
+.mitre-technique-pagination__summary {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  margin-right: 18px;
+
+  white-space: nowrap;
+
+  color: #8293aa;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.mitre-technique-pagination__summary strong {
+  color: #d5deea;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* ============================================================================
+ * Pagination Controls
+ * ========================================================================== */
+
+.mitre-technique-pagination__controls {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+/* ============================================================================
+ * Pagination Button
+ * ========================================================================== */
+
+.mitre-technique-pagination__button {
+  min-width: 78px;
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(51, 78, 106, 0.62);
+  border-radius: 8px;
+
+  background: rgba(12, 28, 45, 0.92);
+
+  color: #a7b6c9;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+
+  cursor: pointer;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+
+/* ============================================================================
+ * Pagination Button — Hover
+ * ========================================================================== */
+
+.mitre-technique-pagination__button:hover:not(:disabled) {
+  background: rgba(20, 42, 64, 0.96);
+
+  border-color: rgba(34, 211, 238, 0.34);
+
+  color: #dbe7f3;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 4px 10px rgba(0, 0, 0, 0.18);
+
+  transform: translateY(-1px);
+}
+
+
+/* ============================================================================
+ * Pagination Button — Active
+ * ========================================================================== */
+
+.mitre-technique-pagination__button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+
+/* ============================================================================
+ * Pagination Button — Focus
+ * ========================================================================== */
+
+.mitre-technique-pagination__button:focus-visible {
+  outline: none;
+
+  border-color: rgba(34, 211, 238, 0.55);
+
+  box-shadow:
+    0 0 0 2px rgba(34, 211, 238, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+
+/* ============================================================================
+ * Pagination Button — Disabled
+ * ========================================================================== */
+
+.mitre-technique-pagination__button:disabled {
+  background: rgba(10, 24, 39, 0.72);
+
+  border-color: rgba(51, 78, 106, 0.32);
+
+  color: #526176;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.012),
+    0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ============================================================================
+ * Pagination — Empty State
+ * ========================================================================== */
+
+.mitre-technique-pagination__empty {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+}
+
+
+/* ============================================================================
+ * MITRE Pagination Responsive
+ * ========================================================================== */
+
+@media (max-width: 760px) {
+  .mitre-technique-pagination {
+    padding: 10px 12px;
+  }
+
+  .mitre-technique-pagination__summary {
+    margin-right: 14px;
+
+    gap: 5px;
+
+    font-size: 11px;
+  }
+
+  .mitre-technique-pagination__summary strong {
+    font-size: 11px;
+  }
+
+  .mitre-technique-pagination__button {
+    min-width: 70px;
+    height: 34px;
+
+    padding: 0 11px;
+  }
+}
+
+
+@media (max-width: 560px) {
+  .mitre-technique-pagination {
+    padding: 9px 10px;
+  }
+
+  .mitre-technique-pagination__summary {
+    margin-right: 0;
+
+    white-space: normal;
+
+    text-align: center;
+  }
+
+  .mitre-technique-pagination__controls {
+    gap: 7px;
+  }
+
+  .mitre-technique-pagination__button {
+    min-width: 82px;
+  }
+}
+/* ============================================================================
+ * MITRE Filters — RESET ON SEPARATE BOTTOM ROW
+ * ========================================================================== */
+
+.mitre-technique-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  column-gap: 12px;
+  row-gap: 10px;
+}
+
+
+/* Filter fields stay on the first row */
+
+.mitre-technique-filters .mitre-filter-field,
+.mitre-technique-filters .mitre-filter-search {
+  flex: 1 1 180px;
+}
+
+
+/* Reset moves to a completely new row */
+
+.mitre-technique-filters .mitre-filter-reset {
+  flex: 0 0 auto;
+
+  width: 118px;
+
+  margin-left: auto;
+
+  margin-top: 0;
+
+  order: 999;
+
+  align-self: flex-end;
+}
+
+
+/* Force reset to start after previous row */
+
+.mitre-technique-filters::after {
+  content: "";
+
+  flex-basis: 100%;
+
+  width: 0;
+
+  height: 0;
+
+  order: 998;
+}
