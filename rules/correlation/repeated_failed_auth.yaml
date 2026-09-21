@@ -6,5 +6,12 @@ window_seconds: 300
 group_by:
   - source_ip
 threshold: 5
+conditions:
+  - field: action
+    equals: login
+  - field: outcome
+    equals: failure
+  - field: category
+    equals: authentication
 severity: high
 enabled: true
