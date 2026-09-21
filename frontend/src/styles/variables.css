@@ -1,0 +1,49 @@
+:root {
+  --bg-page: #07111f;
+  --bg-sidebar: #081421;
+  --bg-topbar: #091624;
+  --bg-panel: #0b1a29;
+  --bg-panel-soft: #0a1928;
+  --bg-input: #091624;
+  --bg-hover: #0e2234;
+  --bg-active: #10283c;
+
+  --border-subtle: #14283b;
+  --border: #182d42;
+  --border-strong: #294158;
+  --border-focus: #3d9ed7;
+
+  --text-primary: #dce7f4;
+  --text-secondary: #a9b8c7;
+  --text-muted: #71869a;
+  --text-dim: #597087;
+  --text-faint: #4f657a;
+
+  --accent: #55b8ff;
+  --accent-soft: #10273a;
+  --accent-strong: #3d9ed7;
+
+  --success: #52d796;
+  --success-bg: #102a22;
+  --warning: #e6b760;
+  --warning-bg: #2c2416;
+  --danger: #ff7180;
+  --danger-bg: #301a23;
+  --info: #58c7e8;
+  --info-bg: #11283a;
+
+  --radius-xs: 4px;
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 9px;
+  --radius-xl: 11px;
+
+  --shadow-panel: 0 12px 30px rgba(0, 0, 0, 0.18);
+  --shadow-drawer: -22px 0 60px rgba(0, 0, 0, 0.46);
+
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-mono:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
