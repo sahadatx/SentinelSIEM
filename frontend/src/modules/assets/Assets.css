@@ -1,0 +1,8464 @@
+/*
+ * ============================================================================
+ * SentinelSIEM — Assets
+ * Step 1 — Asset Inventory Workspace
+ * Alerts-style SOC Dashboard Layout
+ * ============================================================================
+ *
+ * Applies to:
+ *   - Assets.tsx
+ *   - AssetStatistics.tsx
+ *   - AssetFilters.tsx
+ *
+ * Step 1 scope:
+ *   - Page header
+ *   - Refresh / Add Asset actions
+ *   - Statistics cards
+ *   - Critical risk information
+ *   - Asset filter workspace
+ *   - Filter labels
+ *   - Search field
+ *   - Select fields
+ *   - Reset action
+ *   - Main workspace containers
+ *   - Pagination container
+ *   - Responsive behavior
+ *
+ * Important:
+ *   - No JSX changes required
+ *   - Search icon is intentionally hidden
+ *   - Desktop filters remain on ONE ROW
+ *   - Reset remains on a separate bottom row
+ *   - Table/Form/Details styling belongs to later steps
+ * ============================================================================
+ */
+
+
+/* ============================================================================
+   01. ROOT
+   ============================================================================ */
+
+.assets-page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+
+  color: #e2e8f0;
+}
+
+.assets-page *,
+.assets-page *::before,
+.assets-page *::after {
+  box-sizing: border-box;
+}
+
+
+/* ============================================================================
+   02. MAIN WORKSPACE
+   ============================================================================ */
+
+.assets-page > .mx-auto {
+  width: min(100%, 1600px);
+  max-width: 1600px;
+  min-width: 0;
+
+  margin-left: auto;
+  margin-right: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+/* ============================================================================
+   03. PAGE HEADER
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:first-child {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 18px 24px;
+
+  border: 1px solid rgb(30 41 59 / 0.85);
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(15 23 42 / 0.58),
+      rgb(2 6 23 / 0.42)
+    );
+}
+
+
+/* ============================================================================
+   04. HEADER TITLE AREA
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:first-child {
+  min-width: 0;
+}
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:first-child
+> div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 0;
+}
+
+
+/* ============================================================================
+   05. HEADER ICON
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:first-child
+> div
+> div:first-child {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgb(34 211 238 / 0.2);
+  border-radius: 8px;
+
+  background: rgb(6 182 212 / 0.1);
+}
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:first-child
+> div
+> div:first-child
+span {
+  color: #22d3ee;
+  font-size: 18px;
+}
+
+
+/* ============================================================================
+   06. HEADER TITLE
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:first-child
+h1 {
+  margin: 0;
+
+  color: #f1f5f9;
+
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 600;
+
+  letter-spacing: -0.025em;
+}
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:first-child
+p {
+  margin: 2px 0 0;
+
+  color: #94a3b8;
+
+  font-size: 14px;
+  line-height: 20px;
+}
+
+
+/* ============================================================================
+   07. HEADER ACTIONS
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:last-child {
+  margin-left: auto;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+
+/* ============================================================================
+   08. REFRESH BUTTON
+   ============================================================================ */
+
+.assets-page
+button[aria-label="Refresh assets"] {
+  height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 0 14px;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+
+  background: rgb(15 23 42 / 0.7);
+  color: #cbd5e1;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.assets-page
+button[aria-label="Refresh assets"]:hover:not(:disabled) {
+  border-color: #475569;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.assets-page
+button[aria-label="Refresh assets"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+/* ============================================================================
+   09. ADD ASSET BUTTON
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:last-child
+> button:last-child {
+  height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 0 16px;
+
+  border: 1px solid rgb(34 211 238 / 0.3);
+  border-radius: 8px;
+
+  background: rgb(6 182 212 / 0.1);
+  color: #67e8f9;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:last-child
+> button:last-child:hover:not(:disabled) {
+  border-color: rgb(34 211 238 / 0.5);
+  background: rgb(6 182 212 / 0.2);
+  color: #a5f3fc;
+}
+
+.assets-page
+> .mx-auto
+> section:first-child
+> div:last-child
+> button:last-child:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+/* ============================================================================
+   10. STATISTICS SECTION
+   ============================================================================ */
+
+.assets-page
+section[aria-label="Asset statistics"] {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+/* ============================================================================
+   11. STATISTICS GRID
+   ============================================================================ */
+
+.assets-page
+section[aria-label="Asset statistics"]
+> div.grid {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+
+/* ============================================================================
+   12. STATISTICS CARD
+   ============================================================================ */
+
+.assets-page
+section[aria-label="Asset statistics"]
+article {
+  width: 100%;
+  min-width: 0;
+  min-height: 108px;
+
+  padding: 14px 16px;
+
+  border: 1px solid rgb(14 116 144 / 0.25);
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgb(8 47 73 / 0.38),
+      rgb(15 23 42 / 0.65)
+    );
+
+  overflow: hidden;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.assets-page
+section[aria-label="Asset statistics"]
+article:hover {
+  border-color: rgb(34 211 238 / 0.32);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgb(8 47 73 / 0.48),
+      rgb(15 23 42 / 0.72)
+    );
+}
+
+
+/* ============================================================================
+   13. STATISTICS CARD CONTENT
+   ============================================================================ */
+
+.assets-page
+section[aria-label="Asset statistics"]
+article
+> div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.assets-page
+section[aria-label="Asset statistics"]
+article
+p {
+  margin: 0;
+}
+
+.assets-page
+section[aria-label="Asset statistics"]
+article
+p:first-child {
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.assets-page
+section[aria-label="Asset statistics"]
+article
+p:nth-child(2) {
+  margin-top: 4px;
+
+  color: #e2e8f0;
+
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.assets-page
+section[aria-label="Asset statistics"]
+article
+p:nth-child(3) {
+  margin-top: 2px;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 16px;
+}
+
+
+/* ============================================================================
+   14. STATISTICS ICON
+   ============================================================================ */
+
+.assets-page
+section[aria-label="Asset statistics"]
+article
+> div
+> div:last-child {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+}
+
+
+/* ============================================================================
+   15. CRITICAL RISK INFORMATION
+   ============================================================================ */
+
+.assets-page
+section[aria-label="Asset statistics"]
+> div.flex.items-center.gap-3 {
+  width: 100%;
+  min-width: 0;
+  min-height: 72px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 16px;
+
+  border: 1px solid rgb(239 68 68 / 0.2);
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgb(69 10 10 / 0.22),
+      rgb(15 23 42 / 0.45)
+    );
+}
+
+
+/* ============================================================================
+   16. FILTER PANEL
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:has(
+  [aria-label="Asset filters"]
+) {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgb(30 41 59 / 0.85);
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(8 47 73 / 0.22),
+      rgb(2 6 23 / 0.4)
+    );
+}
+
+
+/* ============================================================================
+   17. FILTER HEADER
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:has(
+  [aria-label="Asset filters"]
+)
+> div:first-child {
+  min-height: 58px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 12px 18px;
+
+  border-bottom: 1px solid rgb(30 41 59 / 0.85);
+}
+
+.assets-page
+> .mx-auto
+> section:has(
+  [aria-label="Asset filters"]
+)
+> div:first-child
+> div {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+.assets-page
+> .mx-auto
+> section:has(
+  [aria-label="Asset filters"]
+)
+h2 {
+  margin: 0;
+
+  color: #cbd5e1;
+
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.assets-page
+> .mx-auto
+> section:has(
+  [aria-label="Asset filters"]
+)
+h2 + p {
+  margin: 1px 0 0;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 16px;
+}
+
+
+/* ============================================================================
+   18. MATCHING COUNT
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:has(
+  [aria-label="Asset filters"]
+)
+> div:first-child
+span {
+  flex-shrink: 0;
+
+  color: #cbd5e1;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+/* ============================================================================
+   19. FILTER CONTENT
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:has(
+  [aria-label="Asset filters"]
+)
+> div:last-child {
+  width: 100%;
+  min-width: 0;
+
+  padding: 14px 18px 12px;
+}
+
+
+/* ============================================================================
+   20. FILTER ROOT
+   ============================================================================ */
+
+.assets-page
+[aria-label="Asset filters"] {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* ============================================================================
+   21. DESKTOP FILTER GRID — EXACTLY ONE ROW
+   ============================================================================ */
+
+@media (min-width: 1024px) {
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid {
+    width: 100%;
+    min-width: 0;
+
+    display: grid;
+
+    /*
+     * EXACT ORDER:
+     *
+     * 1. Search
+     * 2. Asset Type
+     * 3. Status
+     * 4. Risk
+     * 5. OS
+     * 6. Environment
+     *
+     * Search receives more width.
+     * All six fields stay on one row.
+     */
+
+    grid-template-columns:
+      minmax(220px, 1.8fr)
+      repeat(5, minmax(0, 1fr));
+
+    gap: 10px;
+
+    align-items: end;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div {
+    width: 100%;
+    min-width: 0;
+
+    grid-column: auto;
+  }
+}
+
+
+/* ============================================================================
+   22. FILTER FIELD LABELS
+   ============================================================================ */
+
+@media (min-width: 1024px) {
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div {
+    position: relative;
+
+    padding-top: 22px;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div::before {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    color: #64748b;
+
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+
+    pointer-events: none;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div:nth-child(1)::before {
+    content: "SEARCH";
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div:nth-child(2)::before {
+    content: "ASSET TYPE";
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div:nth-child(3)::before {
+    content: "STATUS";
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div:nth-child(4)::before {
+    content: "RISK";
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div:nth-child(5)::before {
+    content: "OS";
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div:nth-child(6)::before {
+    content: "ENVIRONMENT";
+  }
+}
+
+
+/* ============================================================================
+   23. SEARCH ICON — HIDDEN
+   ============================================================================ */
+
+/*
+ * AssetFilters.tsx contains the search icon as:
+ *
+ * <span ...>🔍</span>
+ *
+ * It is intentionally hidden.
+ */
+
+.assets-page
+[aria-label="Asset filters"]
+> .grid
+> div:first-child
+> .relative
+> span {
+  display: none !important;
+}
+
+
+/* ============================================================================
+   24. SEARCH INPUT
+   ============================================================================ */
+
+.assets-page
+#asset-filter-search {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 40px;
+
+  /*
+   * Icon removed.
+   * Therefore search text starts normally from the left.
+   */
+
+  padding: 0 12px;
+
+  border: 1px solid rgb(14 116 144 / 0.35);
+  border-radius: 8px;
+
+  background:
+    rgb(2 20 32 / 0.72);
+
+  color: #e2e8f0;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  outline: none;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.assets-page
+#asset-filter-search::placeholder {
+  color: #475569;
+}
+
+.assets-page
+#asset-filter-search:hover:not(:disabled) {
+  border-color: rgb(34 211 238 / 0.35);
+}
+
+.assets-page
+#asset-filter-search:focus {
+  border-color: rgb(34 211 238 / 0.55);
+
+  background:
+    rgb(2 20 32 / 0.9);
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.08);
+}
+
+.assets-page
+#asset-filter-search:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+/* ============================================================================
+   25. SELECT WRAPPER
+   ============================================================================ */
+
+.assets-page
+[aria-label="Asset filters"]
+> .grid
+> div
+> .relative {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* ============================================================================
+   26. SELECT FIELDS
+   ============================================================================ */
+
+.assets-page
+#asset-filter-type,
+.assets-page
+#asset-filter-status,
+.assets-page
+#asset-filter-risk,
+.assets-page
+#asset-filter-os,
+.assets-page
+#asset-filter-environment {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 40px;
+
+  /*
+   * Space reserved for the custom dropdown arrow.
+   */
+
+  padding: 0 36px 0 12px;
+
+  border: 1px solid rgb(14 116 144 / 0.35);
+  border-radius: 8px;
+
+  background:
+    rgb(2 20 32 / 0.72);
+
+  color: #cbd5e1;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  outline: none;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.assets-page
+#asset-filter-type:hover:not(:disabled),
+.assets-page
+#asset-filter-status:hover:not(:disabled),
+.assets-page
+#asset-filter-risk:hover:not(:disabled),
+.assets-page
+#asset-filter-os:hover:not(:disabled),
+.assets-page
+#asset-filter-environment:hover:not(:disabled) {
+  border-color: rgb(34 211 238 / 0.35);
+}
+
+.assets-page
+#asset-filter-type:focus,
+.assets-page
+#asset-filter-status:focus,
+.assets-page
+#asset-filter-risk:focus,
+.assets-page
+#asset-filter-os:focus,
+.assets-page
+#asset-filter-environment:focus {
+  border-color: rgb(34 211 238 / 0.55);
+
+  background:
+    rgb(2 20 32 / 0.9);
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.08);
+}
+
+.assets-page
+#asset-filter-type:disabled,
+.assets-page
+#asset-filter-status:disabled,
+.assets-page
+#asset-filter-risk:disabled,
+.assets-page
+#asset-filter-os:disabled,
+.assets-page
+#asset-filter-environment:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+/* ============================================================================
+   27. DROPDOWN ARROW — CORRECT POSITION
+   ============================================================================ */
+
+/*
+ * Native select arrow is disabled by appearance:none.
+ *
+ * AssetFilters.tsx already contains a custom arrow:
+ *
+ * <span>▼</span>
+ *
+ * This positions it inside the select, on the far right,
+ * vertically centered.
+ */
+
+.assets-page
+[aria-label="Asset filters"]
+> .grid
+> div
+> .relative
+> select
++ span {
+  position: absolute;
+
+  top: 50%;
+  right: 12px;
+
+  width: 14px;
+  height: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translateY(-50%);
+
+  pointer-events: none;
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1;
+
+  z-index: 2;
+}
+
+.assets-page
+[aria-label="Asset filters"]
+> .grid
+> div
+> .relative:hover
+> select
++ span {
+  color: #94a3b8;
+}
+
+.assets-page
+[aria-label="Asset filters"]
+> .grid
+> div
+> .relative:focus-within
+> select
++ span {
+  color: #67e8f9;
+}
+
+
+/* ============================================================================
+   28. SELECT OPTIONS
+   ============================================================================ */
+
+.assets-page
+#asset-filter-type option,
+.assets-page
+#asset-filter-status option,
+.assets-page
+#asset-filter-risk option,
+.assets-page
+#asset-filter-os option,
+.assets-page
+#asset-filter-environment option {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+
+/* ============================================================================
+   29. RESET ROW — SEPARATE LINE
+   ============================================================================ */
+
+.assets-page
+[aria-label="Asset filters"]
+> .mt-3.flex.justify-end {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  margin-top: 10px;
+}
+
+
+/* ============================================================================
+   30. RESET BUTTON
+   ============================================================================ */
+
+.assets-page
+[aria-label="Asset filters"]
+> .mt-3.flex.justify-end
+> button {
+  height: 34px;
+  min-width: 76px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  border: 1px solid rgb(30 41 59);
+  border-radius: 8px;
+
+  background: rgb(15 23 42 / 0.55);
+  color: #64748b;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.assets-page
+[aria-label="Asset filters"]
+> .mt-3.flex.justify-end
+> button:hover:not(:disabled) {
+  border-color: #475569;
+  background: #1e293b;
+  color: #cbd5e1;
+}
+
+.assets-page
+[aria-label="Asset filters"]
+> .mt-3.flex.justify-end
+> button:focus-visible {
+  outline: none;
+
+  border-color: rgb(34 211 238 / 0.4);
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.08);
+}
+
+.assets-page
+[aria-label="Asset filters"]
+> .mt-3.flex.justify-end
+> button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+
+/* ============================================================================
+   31. GENERAL ERROR
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> div[role="alert"] {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 12px 16px;
+
+  border: 1px solid rgb(239 68 68 / 0.2);
+  border-radius: 10px;
+
+  background: rgb(239 68 68 / 0.05);
+  color: #fca5a5;
+}
+
+
+/* ============================================================================
+   32. TABLE OUTER CONTAINER
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:has(
+  .asset-table-panel
+) {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgb(30 41 59 / 0.85);
+  border-radius: 10px;
+
+  background:
+    rgb(2 6 23 / 0.35);
+}
+
+
+/* ============================================================================
+   33. PAGINATION CONTAINER
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:last-child {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 12px 18px;
+
+  border: 1px solid rgb(30 41 59 / 0.8);
+  border-radius: 10px;
+
+  background: rgb(2 6 23 / 0.3);
+}
+
+.assets-page
+> .mx-auto
+> section:last-child
+> div:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 12px;
+}
+
+.assets-page
+> .mx-auto
+> section:last-child
+> div:last-child
+> div {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+/* ============================================================================
+   34. PAGINATION BUTTONS
+   ============================================================================ */
+
+.assets-page
+> .mx-auto
+> section:last-child
+button {
+  min-width: 84px;
+  height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+
+  background: rgb(15 23 42 / 0.6);
+  color: #cbd5e1;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.assets-page
+> .mx-auto
+> section:last-child
+button:hover:not(:disabled) {
+  border-color: #475569;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.assets-page
+> .mx-auto
+> section:last-child
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+
+/* ============================================================================
+   35. MODAL BACKDROP
+   ============================================================================ */
+
+.assets-page
+> .fixed.inset-0 {
+  z-index: 100;
+
+  background: rgb(2 6 23 / 0.8);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+
+/* ============================================================================
+   36. RESPONSIVE — TABLET
+   ============================================================================ */
+
+@media (max-width: 1023px) {
+
+  .assets-page
+  > .mx-auto {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .assets-page
+  section[aria-label="Asset statistics"]
+  > div.grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div {
+    grid-column: auto;
+    padding-top: 0;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div::before {
+    display: none;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div:first-child {
+    grid-column: span 2;
+  }
+}
+
+
+/* ============================================================================
+   37. RESPONSIVE — MOBILE
+   ============================================================================ */
+
+@media (max-width: 767px) {
+
+  .assets-page
+  > .mx-auto {
+    gap: 12px;
+
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Header
+     -------------------------------------------------------------------------- */
+
+  .assets-page
+  > .mx-auto
+  > section:first-child {
+    flex-direction: column;
+    align-items: stretch;
+
+    padding: 16px;
+  }
+
+  .assets-page
+  > .mx-auto
+  > section:first-child
+  > div:last-child {
+    width: 100%;
+
+    margin-left: 0;
+
+    display: flex;
+    flex-direction: row;
+  }
+
+  .assets-page
+  > .mx-auto
+  > section:first-child
+  > div:last-child
+  > button {
+    flex: 1;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Statistics
+     -------------------------------------------------------------------------- */
+
+  .assets-page
+  section[aria-label="Asset statistics"]
+  > div.grid {
+    grid-template-columns:
+      minmax(0, 1fr);
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Filter Header
+     -------------------------------------------------------------------------- */
+
+  .assets-page
+  > .mx-auto
+  > section:has(
+    [aria-label="Asset filters"]
+  )
+  > div:first-child {
+    padding: 12px 16px;
+  }
+
+  .assets-page
+  > .mx-auto
+  > section:has(
+    [aria-label="Asset filters"]
+  )
+  > div:first-child
+  > div {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 4px;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Filter Content
+     -------------------------------------------------------------------------- */
+
+  .assets-page
+  > .mx-auto
+  > section:has(
+    [aria-label="Asset filters"]
+  )
+  > div:last-child {
+    padding: 14px 16px;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid {
+    grid-template-columns:
+      minmax(0, 1fr);
+
+    gap: 10px;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div {
+    grid-column: auto;
+    padding-top: 0;
+  }
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .grid
+  > div::before {
+    display: none;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Reset
+     -------------------------------------------------------------------------- */
+
+  .assets-page
+  [aria-label="Asset filters"]
+  > .mt-3.flex.justify-end {
+    margin-top: 10px;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Pagination
+     -------------------------------------------------------------------------- */
+
+  .assets-page
+  > .mx-auto
+  > section:last-child {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .assets-page
+  > .mx-auto
+  > section:last-child
+  > div:last-child {
+    width: 100%;
+
+    justify-content: space-between;
+  }
+
+  .assets-page
+  > .mx-auto
+  > section:last-child
+  button {
+    flex: 1;
+  }
+
+
+  /* --------------------------------------------------------------------------
+     Modal
+     -------------------------------------------------------------------------- */
+
+  .assets-page
+  > .fixed.inset-0 {
+    align-items: flex-start;
+
+    padding: 10px;
+  }
+}
+
+
+/* ============================================================================
+   38. SMALL MOBILE
+   ============================================================================ */
+
+@media (max-width: 479px) {
+
+  .assets-page
+  > .mx-auto {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .assets-page
+  > .mx-auto
+  > section:first-child
+  h1 {
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  .assets-page
+  > .mx-auto
+  > section:first-child
+  > div:last-child {
+    flex-direction: column;
+  }
+
+  .assets-page
+  > .mx-auto
+  > section:first-child
+  > div:last-child
+  > button {
+    width: 100%;
+  }
+}
+
+
+/* ============================================================================
+   39. FOCUS SAFETY
+   ============================================================================ */
+
+.assets-page
+button:focus-visible,
+.assets-page
+input:focus-visible,
+.assets-page
+select:focus-visible {
+  outline: none;
+}
+
+
+/* ============================================================================
+   40. REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .assets-page *,
+  .assets-page *::before,
+  .assets-page *::after {
+    transition-duration: 0.01ms !important;
+
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ============================================================================
+ * SentinelSIEM — Assets
+ * Step 2 — Asset Table + Asset Form
+ * Alerts-style SOC Dashboard
+ * ============================================================================
+ *
+ * Applies to:
+ *   - AssetTable.tsx
+ *   - AssetForm.tsx
+ *
+ * Important:
+ *   - Preserve existing JSX/class names
+ *   - Asset action menu is rendered through createPortal(document.body)
+ *   - Therefore .asset-action-dropdown must NOT depend on .assets-page
+ *   - Form body uses flex layout so the right-side scrollbar remains usable
+ * ============================================================================
+ */
+
+
+/* ============================================================================
+   41. ASSET TABLE PANEL
+   ============================================================================ */
+
+.assets-page
+.asset-table-panel {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgb(30 41 59 / 0.85);
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(8 47 73 / 0.14),
+      rgb(2 6 23 / 0.38)
+    );
+}
+
+
+/* ============================================================================
+   42. TABLE SCROLL CONTAINER
+   ============================================================================ */
+
+.assets-page
+.asset-table-scroll {
+  width: 100%;
+  min-width: 0;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgb(51 65 85 / 0.9)
+    rgb(2 6 23 / 0.35);
+}
+
+.assets-page
+.asset-table-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.assets-page
+.asset-table-scroll::-webkit-scrollbar-track {
+  background: rgb(2 6 23 / 0.35);
+}
+
+.assets-page
+.asset-table-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(51 65 85 / 0.9);
+}
+
+.assets-page
+.asset-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(71 85 105 / 0.95);
+}
+
+
+/* ============================================================================
+   43. TABLE
+   ============================================================================ */
+
+.assets-page
+.asset-table {
+  width: 100%;
+  min-width: 1080px;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  table-layout: fixed;
+}
+
+
+/* ============================================================================
+   44. TABLE HEADER
+   ============================================================================ */
+
+.assets-page
+.asset-table
+thead {
+  background:
+    rgb(8 47 73 / 0.16);
+}
+
+.assets-page
+.asset-table
+thead
+tr {
+  height: 48px;
+}
+
+.assets-page
+.asset-table
+thead
+th {
+  height: 48px;
+
+  padding: 0 14px;
+
+  border-bottom: 1px solid rgb(30 41 59 / 0.9);
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+
+  white-space: nowrap;
+
+  vertical-align: middle;
+}
+
+
+/* ============================================================================
+   45. TABLE COLUMN WIDTHS
+   ============================================================================ */
+
+.assets-page
+.asset-table
+.asset-col-asset {
+  width: 24%;
+}
+
+.assets-page
+.asset-table
+.asset-col-type {
+  width: 12%;
+}
+
+.assets-page
+.asset-table
+.asset-col-ip {
+  width: 13%;
+}
+
+.assets-page
+.asset-table
+.asset-col-os {
+  width: 14%;
+}
+
+.assets-page
+.asset-table
+.asset-col-status {
+  width: 11%;
+}
+
+.assets-page
+.asset-table
+.asset-col-risk {
+  width: 9%;
+}
+
+.assets-page
+.asset-table
+.asset-col-last-seen {
+  width: 10%;
+}
+
+.assets-page
+.asset-table
+.asset-col-actions {
+  width: 7%;
+  min-width: 72px;
+
+  text-align: center;
+}
+
+
+/* ============================================================================
+   46. TABLE BODY
+   ============================================================================ */
+
+.assets-page
+.asset-table
+tbody {
+  background: rgb(2 6 23 / 0.2);
+}
+
+
+/* ============================================================================
+   47. TABLE ROW
+   ============================================================================ */
+
+.assets-page
+.asset-table
+.asset-table-row {
+  height: 68px;
+
+  transition:
+    background-color 140ms ease;
+}
+
+.assets-page
+.asset-table
+.asset-table-row:hover {
+  background:
+    rgb(8 47 73 / 0.18);
+}
+
+.assets-page
+.asset-table
+.asset-table-row
+td {
+  border-bottom: 1px solid rgb(30 41 59 / 0.62);
+}
+
+.assets-page
+.asset-table
+.asset-table-row:last-child
+td {
+  border-bottom: 0;
+}
+
+
+/* ============================================================================
+   48. TABLE CELLS
+   ============================================================================ */
+
+.assets-page
+.asset-table-cell {
+  padding: 12px 14px;
+
+  color: #cbd5e1;
+
+  font-size: 12px;
+  line-height: 18px;
+
+  vertical-align: middle;
+
+  overflow: hidden;
+}
+
+
+/* ============================================================================
+   49. PRIMARY ASSET CELL
+   ============================================================================ */
+
+.assets-page
+.asset-cell-primary {
+  min-width: 0;
+}
+
+.assets-page
+.asset-identity {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+
+/* ============================================================================
+   50. ASSET NAME ROW
+   ============================================================================ */
+
+.assets-page
+.asset-name-row {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+/* ============================================================================
+   51. ASSET NAME MARKER
+   ============================================================================ */
+
+.assets-page
+.asset-name-marker {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+
+  border-radius: 999px;
+
+  background: #22d3ee;
+
+  box-shadow:
+    0 0 8px rgb(34 211 238 / 0.35);
+}
+
+
+/* ============================================================================
+   52. ASSET NAME BUTTON
+   ============================================================================ */
+
+.assets-page
+.asset-name-button {
+  min-width: 0;
+  max-width: 100%;
+
+  display: block;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+  color: #e2e8f0;
+
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+
+  text-align: left;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  cursor: pointer;
+
+  transition:
+    color 140ms ease;
+}
+
+.assets-page
+.asset-name-button:hover {
+  color: #67e8f9;
+}
+
+.assets-page
+.asset-name-button:focus-visible {
+  outline: none;
+
+  color: #67e8f9;
+
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+
+/* ============================================================================
+   53. NON-CLICKABLE ASSET NAME
+   ============================================================================ */
+
+.assets-page
+.asset-name {
+  min-width: 0;
+  max-width: 100%;
+
+  display: block;
+
+  color: #e2e8f0;
+
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   54. HOSTNAME
+   ============================================================================ */
+
+.assets-page
+.asset-hostname {
+  max-width: 100%;
+
+  margin: 0;
+
+  color: #475569;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  font-size: 10px;
+  line-height: 15px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   55. ASSET TYPE
+   ============================================================================ */
+
+.assets-page
+.asset-type {
+  display: inline-block;
+
+  max-width: 100%;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   56. IP ADDRESS
+   ============================================================================ */
+
+.assets-page
+.asset-ip-address {
+  display: block;
+
+  max-width: 100%;
+
+  color: #94a3b8;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  font-size: 11px;
+  line-height: 16px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   57. OPERATING SYSTEM
+   ============================================================================ */
+
+.assets-page
+.asset-operating-system {
+  display: block;
+
+  max-width: 100%;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+  line-height: 16px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   58. LAST SEEN
+   ============================================================================ */
+
+.assets-page
+.asset-last-seen {
+  display: block;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 16px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+   59. RISK BADGES
+   ============================================================================ */
+
+.assets-page
+.asset-risk-badge {
+  min-width: 58px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 3px 8px;
+
+  border: 1px solid transparent;
+  border-radius: 999px;
+
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  white-space: nowrap;
+}
+
+
+/* Critical */
+
+.assets-page
+.asset-risk-critical {
+  border-color: rgb(239 68 68 / 0.3);
+
+  background: rgb(239 68 68 / 0.1);
+
+  color: #f87171;
+}
+
+
+/* High */
+
+.assets-page
+.asset-risk-high {
+  border-color: rgb(249 115 22 / 0.3);
+
+  background: rgb(249 115 22 / 0.1);
+
+  color: #fb923c;
+}
+
+
+/* Medium */
+
+.assets-page
+.asset-risk-medium {
+  border-color: rgb(234 179 8 / 0.3);
+
+  background: rgb(234 179 8 / 0.1);
+
+  color: #facc15;
+}
+
+
+/* Low */
+
+.assets-page
+.asset-risk-low {
+  border-color: rgb(34 197 94 / 0.25);
+
+  background: rgb(34 197 94 / 0.08);
+
+  color: #4ade80;
+}
+
+
+/* Informational */
+
+.assets-page
+.asset-risk-informational {
+  border-color: rgb(56 189 248 / 0.25);
+
+  background: rgb(56 189 248 / 0.08);
+
+  color: #7dd3fc;
+}
+
+
+/* ============================================================================
+   60. STATUS BADGE SAFETY
+   ============================================================================ */
+
+.assets-page
+.asset-table
+.asset-table-cell
+span {
+  max-width: 100%;
+}
+
+
+/* ============================================================================
+   61. ACTIONS CELL
+   ============================================================================ */
+
+.assets-page
+.asset-actions-cell {
+  width: 1%;
+
+  padding-left: 8px;
+  padding-right: 10px;
+
+  text-align: center;
+
+  overflow: visible;
+}
+
+.assets-page
+.asset-action-menu {
+  position: relative;
+
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* ============================================================================
+   62. ACTION TRIGGER
+   ============================================================================ */
+
+.assets-page
+.asset-action-trigger {
+  width: 32px;
+  height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgb(51 65 85 / 0.75);
+  border-radius: 7px;
+
+  background: rgb(15 23 42 / 0.58);
+  color: #64748b;
+
+  cursor: pointer;
+
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.assets-page
+.asset-action-trigger:hover {
+  border-color: rgb(34 211 238 / 0.35);
+
+  background: rgb(8 47 73 / 0.45);
+
+  color: #cbd5e1;
+}
+
+.assets-page
+.asset-action-trigger[aria-expanded="true"] {
+  border-color: rgb(34 211 238 / 0.45);
+
+  background: rgb(8 47 73 / 0.5);
+
+  color: #67e8f9;
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.06);
+}
+
+.assets-page
+.asset-action-trigger:focus-visible {
+  outline: none;
+
+  border-color: rgb(34 211 238 / 0.5);
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.1);
+}
+
+
+/* ============================================================================
+   63. PORTAL ACTION DROPDOWN
+   ============================================================================ */
+
+/*
+ * IMPORTANT:
+ *
+ * AssetActions uses:
+ *
+ * createPortal(..., document.body)
+ *
+ * Therefore this selector intentionally does NOT use:
+ *
+ * .assets-page .asset-action-dropdown
+ *
+ * Otherwise the dropdown would lose its styling because it lives
+ * outside .assets-page.
+ */
+
+.asset-action-dropdown {
+  z-index: 1000;
+
+  width: 190px;
+  min-width: 190px;
+
+  padding: 5px;
+
+  border: 1px solid rgb(51 65 85 / 0.95);
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(15 23 42 / 0.98),
+      rgb(2 6 23 / 0.98)
+    );
+
+  box-shadow:
+    0 18px 45px rgb(0 0 0 / 0.42),
+    0 4px 12px rgb(0 0 0 / 0.25);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  overflow: hidden;
+}
+
+
+/* ============================================================================
+   64. ACTION ITEMS
+   ============================================================================ */
+
+.asset-action-item {
+  width: 100%;
+  min-height: 34px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 0 10px;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: transparent;
+  color: #cbd5e1;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.asset-action-item svg {
+  flex-shrink: 0;
+
+  color: #64748b;
+}
+
+.asset-action-item:hover {
+  background: rgb(30 41 59 / 0.72);
+
+  color: #f8fafc;
+}
+
+.asset-action-item:hover svg {
+  color: #94a3b8;
+}
+
+.asset-action-item:focus-visible {
+  outline: none;
+
+  background: rgb(30 41 59 / 0.8);
+
+  color: #f8fafc;
+
+  box-shadow:
+    inset 0 0 0 1px rgb(34 211 238 / 0.18);
+}
+
+
+/* ============================================================================
+   65. DISABLE ACTION
+   ============================================================================ */
+
+.asset-action-item.asset-action-disable {
+  color: #fca5a5;
+}
+
+.asset-action-item.asset-action-disable svg {
+  color: #f87171;
+}
+
+.asset-action-item.asset-action-disable:hover {
+  background: rgb(127 29 29 / 0.28);
+
+  color: #fecaca;
+}
+
+.asset-action-item.asset-action-disable:hover svg {
+  color: #fca5a5;
+}
+
+
+/* ============================================================================
+   66. ACTION DIVIDER
+   ============================================================================ */
+
+.asset-action-divider {
+  height: 1px;
+
+  margin: 4px 6px;
+
+  background: rgb(51 65 85 / 0.55);
+}
+
+
+/* ============================================================================
+   67. NO ACTION
+   ============================================================================ */
+
+.assets-page
+.asset-table-no-action {
+  color: #475569;
+
+  font-size: 12px;
+}
+
+
+/* ============================================================================
+   68. LOADING ROWS
+   ============================================================================ */
+
+.assets-page
+.asset-table-loading-row {
+  height: 68px;
+}
+
+.assets-page
+.asset-table-loading-cell {
+  padding: 12px 14px;
+
+  border-bottom: 1px solid rgb(30 41 59 / 0.55);
+}
+
+.assets-page
+.asset-table-skeleton {
+  width: 75%;
+  height: 10px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgb(30 41 59 / 0.55),
+      rgb(51 65 85 / 0.55),
+      rgb(30 41 59 / 0.55)
+    );
+
+  background-size: 200% 100%;
+
+  animation: asset-table-loading 1.5s ease-in-out infinite;
+}
+
+.assets-page
+.asset-table-loading-cell:nth-child(1)
+.asset-table-skeleton {
+  width: 70%;
+}
+
+.assets-page
+.asset-table-loading-cell:nth-child(2)
+.asset-table-skeleton {
+  width: 55%;
+}
+
+.assets-page
+.asset-table-loading-cell:nth-child(3)
+.asset-table-skeleton {
+  width: 65%;
+}
+
+.assets-page
+.asset-table-loading-cell:nth-child(4)
+.asset-table-skeleton {
+  width: 72%;
+}
+
+.assets-page
+.asset-table-loading-cell:nth-child(5)
+.asset-table-skeleton {
+  width: 48%;
+}
+
+.assets-page
+.asset-table-loading-cell:nth-child(6)
+.asset-table-skeleton {
+  width: 52%;
+}
+
+.assets-page
+.asset-table-loading-cell:nth-child(7)
+.asset-table-skeleton {
+  width: 60%;
+}
+
+.assets-page
+.asset-table-loading-cell:nth-child(8)
+.asset-table-skeleton {
+  width: 28%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@keyframes asset-table-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+/* ============================================================================
+   69. EMPTY STATE
+   ============================================================================ */
+
+.assets-page
+.asset-table-empty-cell {
+  height: 260px;
+
+  padding: 0;
+
+  border-bottom: 0;
+
+  text-align: center;
+}
+
+.assets-page
+.asset-table-empty {
+  min-height: 260px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 32px 20px;
+}
+
+.assets-page
+.asset-table-empty-icon {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 4px;
+
+  border: 1px solid rgb(51 65 85 / 0.65);
+  border-radius: 10px;
+
+  background: rgb(15 23 42 / 0.55);
+
+  color: #64748b;
+}
+
+.assets-page
+.asset-table-empty-title {
+  margin: 0;
+
+  color: #cbd5e1;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.assets-page
+.asset-table-empty-description {
+  max-width: 360px;
+
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 17px;
+}
+
+
+/* ============================================================================
+   70. TABLE ERROR
+   ============================================================================ */
+
+.assets-page
+.asset-table-error {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  padding: 18px 20px;
+
+  border: 1px solid rgb(239 68 68 / 0.2);
+  border-radius: 10px;
+
+  background:
+    rgb(69 10 10 / 0.16);
+
+  color: #fca5a5;
+}
+
+.assets-page
+.asset-table-error-title {
+  color: #fca5a5;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.assets-page
+.asset-table-error-message {
+  color: #f87171;
+
+  font-size: 11px;
+  line-height: 17px;
+}
+
+
+/* ============================================================================
+   71. TABLE FOOTER
+   ============================================================================ */
+
+.assets-page
+.asset-table-footer {
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 5px;
+
+  padding: 0 14px;
+
+  border-top: 1px solid rgb(30 41 59 / 0.72);
+
+  background: rgb(2 6 23 / 0.28);
+}
+
+.assets-page
+.asset-table-footer-label {
+  color: #475569;
+
+  font-size: 10px;
+}
+
+.assets-page
+.asset-table-footer-count {
+  color: #94a3b8;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ============================================================================
+   72. ASSET FORM — ROOT
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"],
+.assets-page
+form[aria-label="Edit asset form"] {
+  width: 100%;
+  min-width: 0;
+
+  /*
+   * Critical for modal scrolling.
+   */
+
+  display: flex;
+  flex-direction: column;
+
+  max-height: calc(100vh - 3rem);
+
+  overflow: hidden;
+}
+
+
+/* ============================================================================
+   73. FORM HEADER
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:first-child,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:first-child {
+  flex: 0 0 auto;
+
+  min-width: 0;
+}
+
+
+/* ============================================================================
+   74. FORM BODY — SCROLLABLE
+   ============================================================================ */
+
+/*
+ * This is the important part for the right-side scrollbar.
+ *
+ * The body is a flex item.
+ * min-height: 0 allows it to shrink inside the modal.
+ * overflow-y: auto creates the actual vertical scroll area.
+ */
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:nth-child(2),
+.assets-page
+form[aria-label="Edit asset form"]
+> div:nth-child(2) {
+  width: 100%;
+  min-width: 0;
+
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgb(71 85 105 / 0.95)
+    rgb(2 6 23 / 0.35);
+
+  scrollbar-gutter: stable;
+}
+
+
+/* ============================================================================
+   75. FORM BODY WEBKIT SCROLLBAR
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:nth-child(2)::-webkit-scrollbar,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:nth-child(2)::-webkit-scrollbar {
+  width: 8px;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:nth-child(2)::-webkit-scrollbar-track,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:nth-child(2)::-webkit-scrollbar-track {
+  background: rgb(2 6 23 / 0.35);
+
+  border-radius: 999px;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:nth-child(2)::-webkit-scrollbar-thumb,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:nth-child(2)::-webkit-scrollbar-thumb {
+  min-height: 42px;
+
+  border: 2px solid rgb(15 23 42 / 0.9);
+  border-radius: 999px;
+
+  background: rgb(71 85 105 / 0.95);
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:nth-child(2)::-webkit-scrollbar-thumb:hover,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:nth-child(2)::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139 / 0.98);
+}
+
+
+/* ============================================================================
+   76. FORM SECTIONS
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:nth-child(2)
+section,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:nth-child(2)
+section {
+  min-width: 0;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:nth-child(2)
+section
+h3,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:nth-child(2)
+section
+h3 {
+  color: #e2e8f0;
+
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:nth-child(2)
+section
+p,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:nth-child(2)
+section
+p {
+  color: #64748b;
+}
+
+
+/* ============================================================================
+   77. FORM INPUTS
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+input,
+.assets-page
+form[aria-label="Edit asset form"]
+input {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+
+  border: 1px solid rgb(51 65 85 / 0.85);
+  border-radius: 8px;
+
+  background: rgb(2 6 23 / 0.72);
+  color: #e2e8f0;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  outline: none;
+
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+input:hover:not(:disabled),
+.assets-page
+form[aria-label="Edit asset form"]
+input:hover:not(:disabled) {
+  border-color: #475569;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+input:focus,
+.assets-page
+form[aria-label="Edit asset form"]
+input:focus {
+  border-color: rgb(34 211 238 / 0.55);
+
+  background: rgb(2 6 23 / 0.9);
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.08);
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+input::placeholder,
+.assets-page
+form[aria-label="Edit asset form"]
+input::placeholder {
+  color: #475569;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+input:disabled,
+.assets-page
+form[aria-label="Edit asset form"]
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+/* ============================================================================
+   78. FORM SELECTS
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+select,
+.assets-page
+form[aria-label="Edit asset form"]
+select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+
+  padding-right: 40px;
+
+  border: 1px solid rgb(51 65 85 / 0.85);
+  border-radius: 8px;
+
+  background: rgb(2 6 23 / 0.72);
+  color: #e2e8f0;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  outline: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  cursor: pointer;
+
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+select:hover:not(:disabled),
+.assets-page
+form[aria-label="Edit asset form"]
+select:hover:not(:disabled) {
+  border-color: #475569;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+select:focus,
+.assets-page
+form[aria-label="Edit asset form"]
+select:focus {
+  border-color: rgb(34 211 238 / 0.55);
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.08);
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+select:disabled,
+.assets-page
+form[aria-label="Edit asset form"]
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+select
++ span,
+.assets-page
+form[aria-label="Edit asset form"]
+select
++ span {
+  position: absolute;
+
+  right: 12px;
+  top: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 14px;
+  height: 14px;
+
+  transform: translateY(-50%);
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1;
+
+  pointer-events: none;
+
+  z-index: 2;
+}
+
+
+/* ============================================================================
+   79. FORM SELECT OPTIONS
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+select
+option,
+.assets-page
+form[aria-label="Edit asset form"]
+select
+option {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+
+/* ============================================================================
+   80. FORM LABELS
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+label,
+.assets-page
+form[aria-label="Edit asset form"]
+label {
+  color: #94a3b8;
+
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+label
+span,
+.assets-page
+form[aria-label="Edit asset form"]
+label
+span {
+  color: #f87171;
+}
+
+
+/* ============================================================================
+   81. FORM TEXTAREAS
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+textarea,
+.assets-page
+form[aria-label="Edit asset form"]
+textarea {
+  width: 100%;
+  min-width: 0;
+
+  border: 1px solid rgb(51 65 85 / 0.85);
+  border-radius: 8px;
+
+  background: rgb(2 6 23 / 0.72);
+  color: #e2e8f0;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  outline: none;
+
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+textarea:hover:not(:disabled),
+.assets-page
+form[aria-label="Edit asset form"]
+textarea:hover:not(:disabled) {
+  border-color: #475569;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+textarea:focus,
+.assets-page
+form[aria-label="Edit asset form"]
+textarea:focus {
+  border-color: rgb(34 211 238 / 0.55);
+
+  background: rgb(2 6 23 / 0.9);
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.08);
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+textarea::placeholder,
+.assets-page
+form[aria-label="Edit asset form"]
+textarea::placeholder {
+  color: #475569;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+textarea:disabled,
+.assets-page
+form[aria-label="Edit asset form"]
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+/* ============================================================================
+   82. MONOSPACE FORM FIELDS
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+input.font-mono,
+.assets-page
+form[aria-label="Edit asset form"]
+input.font-mono,
+.assets-page
+form[aria-label="Create asset form"]
+textarea.font-mono,
+.assets-page
+form[aria-label="Edit asset form"]
+textarea.font-mono {
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+}
+
+
+/* ============================================================================
+   83. LIFECYCLE INFORMATION
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+section
+.rounded-xl.border.border-slate-800.bg-slate-950\/50,
+.assets-page
+form[aria-label="Edit asset form"]
+section
+.rounded-xl.border.border-slate-800.bg-slate-950\/50 {
+  border-color: rgb(51 65 85 / 0.65);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgb(15 23 42 / 0.52),
+      rgb(2 6 23 / 0.45)
+    );
+}
+
+
+/* ============================================================================
+   84. FORM ERROR
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+[role="alert"],
+.assets-page
+form[aria-label="Edit asset form"]
+[role="alert"] {
+  border-color: rgb(239 68 68 / 0.2);
+
+  background:
+    rgb(69 10 10 / 0.18);
+}
+
+
+/* ============================================================================
+   85. FORM FOOTER
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:last-child,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:last-child {
+  flex: 0 0 auto;
+
+  border-top-color: rgb(30 41 59 / 0.9);
+
+  background:
+    rgb(2 6 23 / 0.42);
+}
+
+
+/* ============================================================================
+   86. FORM FOOTER BUTTONS
+   ============================================================================ */
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:last-child
+button,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:last-child
+button {
+  min-height: 40px;
+
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.assets-page
+form[aria-label="Create asset form"]
+> div:last-child
+button:focus-visible,
+.assets-page
+form[aria-label="Edit asset form"]
+> div:last-child
+button:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.1);
+}
+
+
+/* ============================================================================
+   87. MODAL CONTENT SAFETY
+   ============================================================================ */
+
+.assets-page
+> .fixed.inset-0
+form[aria-label="Create asset form"],
+.assets-page
+> .fixed.inset-0
+form[aria-label="Edit asset form"] {
+  position: relative;
+
+  z-index: 101;
+}
+
+
+/* ============================================================================
+   88. TABLE RESPONSIVE — TABLET
+   ============================================================================ */
+
+@media (max-width: 1199px) {
+
+  .assets-page
+  .asset-table {
+    min-width: 1020px;
+  }
+
+  .assets-page
+  .asset-table
+  thead
+  th {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .assets-page
+  .asset-table-cell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .assets-page
+  .asset-col-asset {
+    width: 23%;
+  }
+
+  .assets-page
+  .asset-col-type {
+    width: 12%;
+  }
+
+  .assets-page
+  .asset-col-ip {
+    width: 13%;
+  }
+
+  .assets-page
+  .asset-col-os {
+    width: 14%;
+  }
+
+  .assets-page
+  .asset-col-status {
+    width: 11%;
+  }
+
+  .assets-page
+  .asset-col-risk {
+    width: 9%;
+  }
+
+  .assets-page
+  .asset-col-last-seen {
+    width: 11%;
+  }
+
+  .assets-page
+  .asset-col-actions {
+    width: 7%;
+  }
+}
+
+
+/* ============================================================================
+   89. FORM RESPONSIVE — TABLET
+   ============================================================================ */
+
+@media (max-width: 767px) {
+
+  .assets-page
+  form[aria-label="Create asset form"],
+  .assets-page
+  form[aria-label="Edit asset form"] {
+    max-height: calc(100vh - 1.25rem);
+
+    border-radius: 14px;
+  }
+
+  .assets-page
+  form[aria-label="Create asset form"]
+  > div:nth-child(2),
+  .assets-page
+  form[aria-label="Edit asset form"]
+  > div:nth-child(2) {
+    scrollbar-gutter: stable;
+  }
+
+
+  /* Form footer */
+
+  .assets-page
+  form[aria-label="Create asset form"]
+  > div:last-child
+  button,
+  .assets-page
+  form[aria-label="Edit asset form"]
+  > div:last-child
+  button {
+    width: 100%;
+  }
+}
+
+
+/* ============================================================================
+   90. TABLE RESPONSIVE — MOBILE
+   ============================================================================ */
+
+@media (max-width: 767px) {
+
+  .assets-page
+  .asset-table {
+    min-width: 960px;
+  }
+
+  .assets-page
+  .asset-table
+  thead
+  th {
+    height: 44px;
+
+    font-size: 9px;
+  }
+
+  .assets-page
+  .asset-table-row {
+    height: 62px;
+  }
+
+  .assets-page
+  .asset-table-cell {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .assets-page
+  .asset-name-button,
+  .assets-page
+  .asset-name {
+    font-size: 11px;
+  }
+
+  .assets-page
+  .asset-hostname,
+  .assets-page
+  .asset-type,
+  .assets-page
+  .asset-ip-address,
+  .assets-page
+  .asset-operating-system,
+  .assets-page
+  .asset-last-seen {
+    font-size: 10px;
+  }
+}
+
+
+/* ============================================================================
+   91. VERY SMALL MOBILE
+   ============================================================================ */
+
+@media (max-width: 479px) {
+
+  .assets-page
+  .asset-table {
+    min-width: 900px;
+  }
+
+  .assets-page
+  .asset-action-trigger {
+    width: 30px;
+    height: 30px;
+  }
+
+  .assets-page
+  .asset-risk-badge {
+    min-width: 52px;
+
+    padding-left: 6px;
+    padding-right: 6px;
+
+    font-size: 9px;
+  }
+}
+
+
+/* ============================================================================
+   92. INTERACTION SAFETY
+   ============================================================================ */
+
+.assets-page
+button,
+.assets-page
+input,
+.assets-page
+select,
+.assets-page
+textarea {
+  pointer-events: auto;
+}
+
+.assets-page
+button:disabled,
+.assets-page
+input:disabled,
+.assets-page
+select:disabled,
+.assets-page
+textarea:disabled {
+  pointer-events: auto;
+}
+
+
+/* ============================================================================
+   93. PORTAL MENU INTERACTION SAFETY
+   ============================================================================ */
+
+.asset-action-dropdown,
+.asset-action-dropdown *,
+.asset-action-dropdown button {
+  pointer-events: auto;
+}
+
+.asset-action-dropdown {
+  user-select: none;
+}
+
+
+/* ============================================================================
+   94. REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .assets-page
+  .asset-table-row,
+  .assets-page
+  .asset-action-trigger,
+  .assets-page
+  .asset-action-item,
+  .assets-page
+  form
+  input,
+  .assets-page
+  form
+  select,
+  .assets-page
+  form
+  textarea {
+    transition-duration: 0.01ms !important;
+  }
+
+  .assets-page
+  .asset-table-skeleton {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ============================================================================
+ * SentinelSIEM — Assets
+ * Step 3 — Asset Details + Status Badge
+ * Alerts-style SOC Dashboard
+ * ============================================================================
+ *
+ * Applies to:
+ *   - AssetDetails.tsx
+ *   - AssetStatusBadge.tsx
+ *
+ * Important:
+ *   - No JSX changes required
+ *   - Existing Tailwind classes are preserved
+ *   - Details page uses the existing DOM structure
+ *   - Right-side scrollbar is styled for long details content
+ * ============================================================================ */
+
+
+/* ============================================================================
+   95. DETAILS PAGE ROOT
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6 {
+  width: 100%;
+  min-width: 0;
+
+  color: #e2e8f0;
+}
+
+
+/* ============================================================================
+   96. DETAILS HEADER
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 18px 20px;
+
+  border: 1px solid rgb(30 41 59 / 0.85);
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(8 47 73 / 0.18),
+      rgb(2 6 23 / 0.38)
+    );
+}
+
+
+/* ============================================================================
+   97. BACK TO ASSETS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+a[href="/assets"] {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 24px;
+
+  color: #64748b;
+
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+
+  text-decoration: none;
+
+  transition:
+    color 140ms ease;
+}
+
+.assets-page
+> div.space-y-6
+> header
+a[href="/assets"]:hover {
+  color: #cbd5e1;
+}
+
+
+/* ============================================================================
+   98. DETAILS TITLE
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+h1 {
+  min-width: 0;
+  max-width: 100%;
+
+  margin: 0;
+
+  color: #f1f5f9;
+
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+
+  letter-spacing: -0.025em;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ============================================================================
+   99. DETAILS TITLE + STATUS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+h1
+~ span {
+  flex-shrink: 0;
+}
+
+
+/* ============================================================================
+   100. DETAILS META INFORMATION
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+h1
++ span
++ div {
+  min-width: 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.assets-page
+> div.space-y-6
+> header
+h1
++ span
++ div
+span {
+  max-width: 100%;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ============================================================================
+   101. ASSET ID
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+p.font-mono {
+  max-width: 100%;
+
+  margin-top: 8px;
+
+  color: #334155;
+
+  font-size: 10px;
+  line-height: 16px;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ============================================================================
+   102. DETAILS HEADER ACTIONS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+> div:last-child {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+}
+
+
+/* ============================================================================
+   103. DETAILS HEADER BUTTONS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+> div:last-child
+> button {
+  min-width: 84px;
+  height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  border-radius: 8px;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+
+/* ============================================================================
+   104. REFRESH / EDIT BUTTONS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+> div:last-child
+> button:first-child,
+.assets-page
+> div.space-y-6
+> header
+> div:last-child
+> button:nth-child(2) {
+  border: 1px solid #334155;
+
+  background: rgb(15 23 42 / 0.72);
+
+  color: #cbd5e1;
+}
+
+.assets-page
+> div.space-y-6
+> header
+> div:last-child
+> button:first-child:hover:not(:disabled),
+.assets-page
+> div.space-y-6
+> header
+> div:last-child
+> button:nth-child(2):hover:not(:disabled) {
+  border-color: #475569;
+
+  background: #1e293b;
+
+  color: #f8fafc;
+}
+
+
+/* ============================================================================
+   105. DISABLE BUTTON
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+> div:last-child
+> button:nth-child(3) {
+  border: 1px solid rgb(245 158 11 / 0.3);
+
+  background: rgb(245 158 11 / 0.05);
+
+  color: #fcd34d;
+}
+
+.assets-page
+> div.space-y-6
+> header
+> div:last-child
+> button:nth-child(3):hover:not(:disabled) {
+  border-color: rgb(245 158 11 / 0.5);
+
+  background: rgb(245 158 11 / 0.1);
+
+  color: #fde68a;
+}
+
+
+/* ============================================================================
+   106. ENABLE BUTTON
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> header
+> div:last-child
+> button:nth-child(3) {
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+
+/* ============================================================================
+   107. GENERAL DETAILS ERROR
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> div[role="alert"] {
+  width: 100%;
+
+  border: 1px solid rgb(239 68 68 / 0.2);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgb(69 10 10 / 0.18),
+      rgb(15 23 42 / 0.3)
+    );
+
+  color: #fca5a5;
+}
+
+
+/* ============================================================================
+   108. DETAILS MAIN PANEL
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgb(30 41 59 / 0.85) !important;
+  border-radius: 10px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(8 47 73 / 0.16),
+      rgb(2 6 23 / 0.42)
+    ) !important;
+}
+
+
+/* ============================================================================
+   109. DETAILS TABS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+nav[aria-label="Asset details"] {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: stretch;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgb(51 65 85 / 0.8)
+    transparent;
+}
+
+.assets-page
+> div.space-y-6
+> section
+nav[aria-label="Asset details"]::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.assets-page
+> div.space-y-6
+> section
+nav[aria-label="Asset details"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.assets-page
+> div.space-y-6
+> section
+nav[aria-label="Asset details"]::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+
+  background: rgb(51 65 85 / 0.8);
+}
+
+
+/* ============================================================================
+   110. TAB BUTTONS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+nav[aria-label="Asset details"]
+button {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  min-height: 46px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 18px;
+
+  border: 0;
+
+  background: transparent;
+
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    color 140ms ease,
+    background-color 140ms ease;
+}
+
+.assets-page
+> div.space-y-6
+> section
+nav[aria-label="Asset details"]
+button:hover {
+  background: rgb(15 23 42 / 0.45);
+
+  color: #cbd5e1;
+}
+
+
+/* ============================================================================
+   111. ACTIVE TAB
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+nav[aria-label="Asset details"]
+button[aria-current="page"] {
+  color: #67e8f9;
+}
+
+.assets-page
+> div.space-y-6
+> section
+nav[aria-label="Asset details"]
+button[aria-current="page"]
+span {
+  height: 2px;
+
+  background: #22d3ee;
+}
+
+
+/* ============================================================================
+   112. TAB CONTENT — RIGHT SIDE SCROLLBAR
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+> div:last-child {
+  width: 100%;
+  min-width: 0;
+
+  /*
+   * Keep the details workspace scrollable when content becomes large.
+   */
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgb(71 85 105 / 0.95)
+    rgb(2 6 23 / 0.35);
+
+  scrollbar-gutter: stable;
+}
+
+
+/* ============================================================================
+   113. TAB CONTENT WEBKIT SCROLLBAR
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+> div:last-child::-webkit-scrollbar {
+  width: 8px;
+}
+
+.assets-page
+> div.space-y-6
+> section
+> div:last-child::-webkit-scrollbar-track {
+  background: rgb(2 6 23 / 0.35);
+}
+
+.assets-page
+> div.space-y-6
+> section
+> div:last-child::-webkit-scrollbar-thumb {
+  min-height: 42px;
+
+  border: 2px solid rgb(15 23 42 / 0.85);
+  border-radius: 999px;
+
+  background: rgb(71 85 105 / 0.95);
+}
+
+.assets-page
+> div.space-y-6
+> section
+> div:last-child::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139 / 0.98);
+}
+
+
+/* ============================================================================
+   114. OVERVIEW HEADING
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+h2 {
+  color: #cbd5e1;
+
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+
+/* ============================================================================
+   115. DETAILS DESCRIPTION TEXT
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+h2
++ p {
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 17px;
+}
+
+
+/* ============================================================================
+   116. DETAIL GRID
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+dl {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* ============================================================================
+   117. DETAIL FIELD LABEL
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+dl
+dt {
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+
+/* ============================================================================
+   118. DETAIL FIELD VALUE
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+dl
+dd {
+  min-width: 0;
+
+  color: #e2e8f0;
+
+  font-size: 12px;
+  line-height: 19px;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ============================================================================
+   119. MONOSPACE DETAIL VALUES
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+dl
+dd.font-mono {
+  color: #94a3b8;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 11px;
+}
+
+
+/* ============================================================================
+   120. LIFECYCLE DETAIL BADGE
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+dl
+dd.inline-flex {
+  min-width: 82px;
+
+  align-items: center;
+  justify-content: center;
+
+  border-color: rgb(51 65 85 / 0.8) !important;
+
+  background: rgb(15 23 42 / 0.65) !important;
+
+  color: #cbd5e1 !important;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+}
+
+
+/* ============================================================================
+   121. DESCRIPTION / METADATA SECTIONS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+> div:last-child
+> div.border-t {
+  border-color: rgb(30 41 59 / 0.8);
+}
+
+
+/* ============================================================================
+   122. DESCRIPTION LABELS
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+h3 {
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+
+/* ============================================================================
+   123. DESCRIPTION CONTENT
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+h3
++ p {
+  color: #94a3b8;
+
+  font-size: 12px;
+  line-height: 20px;
+}
+
+
+/* ============================================================================
+   124. METADATA CODE BLOCK
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+pre {
+  width: 100%;
+  max-width: 100%;
+
+  border-color: rgb(30 41 59 / 0.85) !important;
+
+  background:
+    rgb(2 6 23 / 0.72) !important;
+
+  color: #94a3b8 !important;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+
+  font-size: 11px;
+  line-height: 19px;
+
+  overflow: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgb(71 85 105 / 0.9)
+    rgb(2 6 23 / 0.3);
+}
+
+.assets-page
+> div.space-y-6
+> section
+pre::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.assets-page
+> div.space-y-6
+> section
+pre::-webkit-scrollbar-track {
+  background: rgb(2 6 23 / 0.3);
+}
+
+.assets-page
+> div.space-y-6
+> section
+pre::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+
+  background: rgb(71 85 105 / 0.9);
+}
+
+
+/* ============================================================================
+   125. EMPTY TAB STATE
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.flex.min-h-\[260px\] {
+  min-height: 260px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+}
+
+
+/* ============================================================================
+   126. EMPTY TAB ICON
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.flex.min-h-\[260px\]
+> div:first-child {
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgb(51 65 85 / 0.75);
+  border-radius: 10px;
+
+  background:
+    rgb(15 23 42 / 0.58);
+
+  color: #475569;
+}
+
+
+/* ============================================================================
+   127. EMPTY TAB TITLE
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.flex.min-h-\[260px\]
+h2 {
+  margin-top: 14px;
+
+  color: #cbd5e1;
+
+  font-size: 13px;
+  line-height: 19px;
+}
+
+
+/* ============================================================================
+   128. EMPTY TAB DESCRIPTION
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.flex.min-h-\[260px\]
+h2
++ p {
+  max-width: 420px;
+
+  margin-top: 6px;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 18px;
+}
+
+
+/* ============================================================================
+   129. NETWORK INFORMATION CARD
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.rounded-lg.border.border-slate-800.bg-slate-950\/50 {
+  border-color: rgb(51 65 85 / 0.65) !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgb(15 23 42 / 0.5),
+      rgb(2 6 23 / 0.45)
+    ) !important;
+}
+
+
+/* ============================================================================
+   130. ACTIVITY LIST
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.rounded-lg.border.border-slate-800.bg-slate-950\/40 {
+  border-color: rgb(30 41 59 / 0.8) !important;
+
+  background:
+    rgb(2 6 23 / 0.42) !important;
+
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.assets-page
+> div.space-y-6
+> section
+.rounded-lg.border.border-slate-800.bg-slate-950\/40:hover {
+  border-color: rgb(51 65 85 / 0.9) !important;
+
+  background:
+    rgb(15 23 42 / 0.5) !important;
+}
+
+
+/* ============================================================================
+   131. ACTIVITY DOT
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.rounded-lg.border.border-slate-800.bg-slate-950\/40
+span.bg-cyan-400 {
+  width: 6px;
+  height: 6px;
+
+  min-width: 6px;
+
+  border-radius: 999px;
+
+  box-shadow:
+    0 0 8px rgb(34 211 238 / 0.35);
+}
+
+
+/* ============================================================================
+   132. ACTIVITY LABEL
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.rounded-lg.border.border-slate-800.bg-slate-950\/40
+span.text-slate-300 {
+  color: #cbd5e1;
+
+  font-size: 12px;
+}
+
+
+/* ============================================================================
+   133. ACTIVITY TIMESTAMP
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> section
+.rounded-lg.border.border-slate-800.bg-slate-950\/40
+span.text-slate-600 {
+  color: #64748b;
+
+  font-size: 10px;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================================
+   134. STATUS BADGE — BASE
+   ============================================================================ */
+
+.assets-page
+span[aria-label^="Asset status:"] {
+  min-height: 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0;
+
+  padding: 4px 9px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  letter-spacing: 0.02em;
+}
+
+
+/* ============================================================================
+   135. STATUS BADGE DOT
+   ============================================================================ */
+
+.assets-page
+span[aria-label^="Asset status:"]
+> span {
+  width: 6px;
+  height: 6px;
+
+  min-width: 6px;
+
+  margin-right: 6px;
+
+  border-radius: 999px;
+
+  background: currentColor;
+
+  box-shadow:
+    0 0 6px currentColor;
+}
+
+
+/* ============================================================================
+   136. ENABLED / ONLINE
+   ============================================================================ */
+
+.assets-page
+span[aria-label="Asset status: Enabled"],
+.assets-page
+span[aria-label="Asset status: Online"] {
+  border-color: rgb(16 185 129 / 0.25) !important;
+
+  background:
+    rgb(16 185 129 / 0.08) !important;
+
+  color: #34d399 !important;
+}
+
+
+/* ============================================================================
+   137. DISABLED
+   ============================================================================ */
+
+.assets-page
+span[aria-label="Asset status: Disabled"] {
+  border-color: rgb(100 116 139 / 0.25) !important;
+
+  background:
+    rgb(100 116 139 / 0.08) !important;
+
+  color: #94a3b8 !important;
+}
+
+
+/* ============================================================================
+   138. OFFLINE
+   ============================================================================ */
+
+.assets-page
+span[aria-label="Asset status: Offline"] {
+  border-color: rgb(239 68 68 / 0.25) !important;
+
+  background:
+    rgb(239 68 68 / 0.08) !important;
+
+  color: #f87171 !important;
+}
+
+
+/* ============================================================================
+   139. MAINTENANCE
+   ============================================================================ */
+
+.assets-page
+span[aria-label="Asset status: Maintenance"] {
+  border-color: rgb(245 158 11 / 0.25) !important;
+
+  background:
+    rgb(245 158 11 / 0.08) !important;
+
+  color: #fbbf24 !important;
+}
+
+
+/* ============================================================================
+   140. UNKNOWN
+   ============================================================================ */
+
+.assets-page
+span[aria-label="Asset status: Unknown"] {
+  border-color: rgb(100 116 139 / 0.25) !important;
+
+  background:
+    rgb(100 116 139 / 0.08) !important;
+
+  color: #cbd5e1 !important;
+}
+
+
+/* ============================================================================
+   141. DETAILS PAGE RIGHT SCROLLBAR
+   ============================================================================ */
+
+/*
+ * The Details page itself can become taller than the viewport.
+ *
+ * This styles the application/page scrollbar without changing
+ * the existing layout height.
+ */
+
+.assets-page {
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    rgb(51 65 85 / 0.9)
+    rgb(2 6 23 / 0.35);
+}
+
+.assets-page::-webkit-scrollbar {
+  width: 9px;
+}
+
+.assets-page::-webkit-scrollbar-track {
+  background:
+    rgb(2 6 23 / 0.45);
+}
+
+.assets-page::-webkit-scrollbar-thumb {
+  border: 2px solid rgb(2 6 23 / 0.85);
+
+  border-radius: 999px;
+
+  background:
+    rgb(51 65 85 / 0.95);
+}
+
+.assets-page::-webkit-scrollbar-thumb:hover {
+  background:
+    rgb(71 85 105 / 0.98);
+}
+
+
+/* ============================================================================
+   142. DETAILS MODAL SAFETY
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> .fixed.inset-0 {
+  z-index: 100;
+
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    rgb(71 85 105 / 0.9)
+    rgb(2 6 23 / 0.4);
+}
+
+.assets-page
+> div.space-y-6
+> .fixed.inset-0::-webkit-scrollbar {
+  width: 8px;
+}
+
+.assets-page
+> div.space-y-6
+> .fixed.inset-0::-webkit-scrollbar-track {
+  background: rgb(2 6 23 / 0.4);
+}
+
+.assets-page
+> div.space-y-6
+> .fixed.inset-0::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+
+  background: rgb(71 85 105 / 0.9);
+}
+
+
+/* ============================================================================
+   143. DETAILS MODAL FORM CONTAINER
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+> .fixed.inset-0
+> div {
+  min-width: 0;
+}
+
+
+/* ============================================================================
+   144. DETAILS RESPONSIVE — TABLET
+   ============================================================================ */
+
+@media (max-width: 1199px) {
+
+  .assets-page
+  > div.space-y-6
+  > header {
+    padding: 16px 18px;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > header
+  h1 {
+    font-size: 25px;
+    line-height: 31px;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > header
+  > div:last-child {
+    gap: 6px;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > header
+  > div:last-child
+  > button {
+    min-width: 76px;
+
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+}
+
+
+/* ============================================================================
+   145. DETAILS RESPONSIVE — MOBILE
+   ============================================================================ */
+
+@media (max-width: 767px) {
+
+  .assets-page
+  > div.space-y-6 {
+    gap: 12px;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > header {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 16px;
+
+    padding: 16px;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > header
+  h1 {
+    font-size: 23px;
+    line-height: 29px;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > header
+  > div:last-child {
+    width: 100%;
+
+    justify-content: stretch;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > header
+  > div:last-child
+  > button {
+    flex: 1;
+
+    min-width: 0;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > section
+  > div:last-child {
+    scrollbar-gutter: stable;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > section
+  nav[aria-label="Asset details"]
+  button {
+    min-height: 44px;
+
+    padding-left: 14px;
+    padding-right: 14px;
+
+    font-size: 11px;
+  }
+}
+
+
+/* ============================================================================
+   146. DETAILS RESPONSIVE — SMALL MOBILE
+   ============================================================================ */
+
+@media (max-width: 479px) {
+
+  .assets-page
+  > div.space-y-6
+  > header
+  > div:last-child {
+    flex-direction: column;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > header
+  > div:last-child
+  > button {
+    width: 100%;
+  }
+
+  .assets-page
+  > div.space-y-6
+  > section
+  > div:last-child {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+
+/* ============================================================================
+   147. FOCUS SAFETY
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+button:focus-visible,
+.assets-page
+> div.space-y-6
+a:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 2px rgb(34 211 238 / 0.12);
+}
+
+
+/* ============================================================================
+   148. DISABLED SAFETY
+   ============================================================================ */
+
+.assets-page
+> div.space-y-6
+button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.5;
+
+  pointer-events: auto;
+}
+
+
+/* ============================================================================
+   149. REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .assets-page
+  > div.space-y-6
+  *,
+  .assets-page
+  > div.space-y-6
+  *::before,
+  .assets-page
+  > div.space-y-6
+  *::after {
+    transition-duration: 0.01ms !important;
+
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+  }
+}
+/* ==========================================================================
+ * SENTINELSIEM — ASSET RIGHT-SIDE DRAWERS
+ * ========================================================================== */
+
+.asset-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  display: flex;
+  justify-content: flex-end;
+  background: rgb(2 6 23 / 58%);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.asset-drawer {
+  position: relative;
+  z-index: 1100;
+  width: min(760px, 92vw);
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-left: 1px solid #334155;
+  background: #0b1220;
+  color: #cbd5e1;
+  box-shadow: -18px 0 45px rgb(0 0 0 / 32%);
+  overflow: hidden;
+  animation: asset-drawer-slide-in 180ms ease-out;
+}
+
+.asset-drawer__header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #1e293b;
+  background: #0f172a;
+}
+
+.asset-drawer__eyebrow {
+  margin: 0 0 5px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.asset-drawer__title {
+  min-width: 0;
+  margin: 0;
+  color: #f8fafc;
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.asset-drawer__close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #111827;
+  color: #94a3b8;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.asset-drawer__close:hover {
+  border-color: #475569;
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.asset-drawer__close:focus-visible {
+  outline: none;
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgb(100 116 139 / 14%);
+}
+
+.asset-drawer__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.asset-drawer__body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.asset-drawer__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asset-drawer__body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #334155;
+}
+
+.asset-drawer__body::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Form inside drawer */
+
+.asset-drawer
+form[aria-label="Create asset form"],
+.asset-drawer
+form[aria-label="Edit asset form"] {
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.asset-drawer
+form[aria-label="Create asset form"]
+> div:nth-child(2),
+.asset-drawer
+form[aria-label="Edit asset form"]
+> div:nth-child(2) {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.asset-drawer
+form[aria-label="Create asset form"]
+> div:last-child,
+.asset-drawer
+form[aria-label="Edit asset form"]
+> div:last-child {
+  flex: 0 0 auto;
+}
+
+/* Details content */
+
+.asset-drawer
+.asset-details-content {
+  min-width: 0;
+}
+
+@keyframes asset-drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ==========================================================================
+ * MOBILE
+ * ========================================================================== */
+
+@media (max-width: 760px) {
+  .asset-drawer {
+    width: 100%;
+    border-left: 0;
+  }
+
+  .asset-drawer__header {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asset-drawer {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   ASSET DRAWER — PROFESSIONAL UI OVERRIDES
+   Append below existing Assets.css
+   ============================================================ */
+
+/* ---------- Drawer Overlay ---------- */
+
+.asset-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: assetDrawerOverlayIn 180ms ease-out;
+}
+
+@keyframes assetDrawerOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- Drawer Surface ---------- */
+
+.asset-drawer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(780px, 94vw);
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+  background: var(--color-bg-primary, #ffffff);
+  border-left: 1px solid var(--color-border, #e2e8f0);
+  box-shadow:
+    -18px 0 45px rgba(15, 23, 42, 0.16),
+    -4px 0 14px rgba(15, 23, 42, 0.08);
+  animation: assetDrawerSlideIn 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes assetDrawerSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ---------- Details / Form Width ---------- */
+
+.asset-drawer-details {
+  width: min(780px, 94vw);
+}
+
+.asset-drawer-form {
+  width: min(640px, 94vw);
+}
+
+/* ============================================================
+   DRAWER HEADER
+   ============================================================ */
+
+.asset-drawer__header {
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 24px;
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-bg-primary, #ffffff) 0%,
+      var(--color-bg-secondary, #f8fafc) 100%
+    );
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.asset-drawer__header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-primary, #2563eb) 20%,
+    var(--color-primary, #2563eb) 80%,
+    transparent 100%
+  );
+  opacity: 0.75;
+}
+
+.asset-drawer__header-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.asset-drawer__eyebrow {
+  margin: 0;
+  color: var(--color-text-secondary, #64748b);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.asset-drawer__title {
+  margin: 0;
+  max-width: 560px;
+  overflow: hidden;
+  color: var(--color-text-primary, #0f172a);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asset-drawer__close {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  background: var(--color-bg-primary, #ffffff);
+  color: var(--color-text-secondary, #64748b);
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.asset-drawer__close:hover {
+  border-color: var(--color-border-hover, #cbd5e1);
+  background: var(--color-bg-hover, #f1f5f9);
+  color: var(--color-text-primary, #0f172a);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.asset-drawer__close:active {
+  transform: scale(0.96);
+}
+
+.asset-drawer__close:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.15),
+    0 0 0 1px var(--color-primary, #2563eb);
+}
+
+/* ============================================================
+   DRAWER BODY
+   ============================================================ */
+
+.asset-drawer__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  background: var(--color-bg-primary, #ffffff);
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.asset-drawer__body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.asset-drawer__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asset-drawer__body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.asset-drawer__body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ============================================================
+   ASSET DETAILS
+   ============================================================ */
+
+.asset-drawer-details .asset-details-drawer-content {
+  width: 100%;
+}
+
+.asset-drawer-details .asset-details-drawer-content h1,
+.asset-drawer-details .asset-details-drawer-content h2,
+.asset-drawer-details .asset-details-drawer-content h3 {
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.01em;
+}
+
+.asset-drawer-details .asset-details-drawer-content h1 {
+  margin-top: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.asset-drawer-details .asset-details-drawer-content h2 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.asset-drawer-details .asset-details-drawer-content h3 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* ---------- Details Header ---------- */
+
+.asset-drawer-details .asset-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.asset-drawer-details .asset-details-header h1 {
+  margin: 0;
+}
+
+.asset-drawer-details .asset-details-header p {
+  margin: 5px 0 0;
+  color: var(--color-text-secondary, #64748b);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.asset-drawer-details .asset-details-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ---------- Details Buttons ---------- */
+
+.asset-drawer-details .asset-details-actions button,
+.asset-drawer-details button {
+  min-height: 36px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.asset-drawer-details .asset-details-actions button:hover,
+.asset-drawer-details button:hover {
+  transform: translateY(-1px);
+}
+
+.asset-drawer-details .asset-details-actions button:focus-visible,
+.asset-drawer-details button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+/* ============================================================
+   DETAILS TABS
+   ============================================================ */
+
+.asset-drawer-details .asset-details-tabs,
+.asset-drawer-details [role="tablist"] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 22px;
+  padding: 4px;
+  overflow-x: auto;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--color-bg-secondary, #f8fafc);
+  scrollbar-width: none;
+}
+
+.asset-drawer-details .asset-details-tabs::-webkit-scrollbar,
+.asset-drawer-details [role="tablist"]::-webkit-scrollbar {
+  display: none;
+}
+
+.asset-drawer-details .asset-details-tabs button,
+.asset-drawer-details [role="tablist"] button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 7px 13px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-secondary, #64748b);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+}
+
+.asset-drawer-details .asset-details-tabs button:hover,
+.asset-drawer-details [role="tablist"] button:hover {
+  background: var(--color-bg-primary, #ffffff);
+  color: var(--color-text-primary, #0f172a);
+}
+
+.asset-drawer-details .asset-details-tabs button.active,
+.asset-drawer-details .asset-details-tabs button[aria-selected="true"],
+.asset-drawer-details [role="tablist"] button.active,
+.asset-drawer-details [role="tablist"] button[aria-selected="true"] {
+  border-color: var(--color-border, #e2e8f0);
+  background: var(--color-bg-primary, #ffffff);
+  color: var(--color-primary, #2563eb);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+/* ============================================================
+   DETAILS CARDS / SECTIONS
+   ============================================================ */
+
+.asset-drawer-details .asset-details-card,
+.asset-drawer-details .asset-detail-card,
+.asset-drawer-details .asset-details-section {
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  background: var(--color-bg-primary, #ffffff);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.asset-drawer-details .asset-details-card:last-child,
+.asset-drawer-details .asset-detail-card:last-child,
+.asset-drawer-details .asset-details-section:last-child {
+  margin-bottom: 0;
+}
+
+.asset-drawer-details .asset-details-card-header,
+.asset-drawer-details .asset-detail-card-header,
+.asset-drawer-details .asset-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.asset-drawer-details .asset-details-card-header h2,
+.asset-drawer-details .asset-detail-card-header h2,
+.asset-drawer-details .asset-section-header h2,
+.asset-drawer-details .asset-details-card-header h3,
+.asset-drawer-details .asset-detail-card-header h3,
+.asset-drawer-details .asset-section-header h3 {
+  margin: 0;
+}
+
+/* ---------- Detail Fields ---------- */
+
+.asset-drawer-details .asset-detail-field,
+.asset-drawer-details .asset-details-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.asset-drawer-details .asset-detail-label,
+.asset-drawer-details .asset-details-label {
+  color: var(--color-text-secondary, #64748b);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.asset-drawer-details .asset-detail-value,
+.asset-drawer-details .asset-details-value {
+  color: var(--color-text-primary, #0f172a);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Metadata ---------- */
+
+.asset-drawer-details .asset-metadata,
+.asset-drawer-details .asset-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.asset-drawer-details code {
+  padding: 2px 6px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 5px;
+  background: var(--color-bg-secondary, #f8fafc);
+  color: var(--color-text-primary, #334155);
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+  font-size: 12px;
+}
+
+/* ---------- Empty State ---------- */
+
+.asset-drawer-details .asset-details-empty,
+.asset-drawer-details .asset-empty-state {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  border: 1px dashed var(--color-border, #cbd5e1);
+  border-radius: 12px;
+  background: var(--color-bg-secondary, #f8fafc);
+  color: var(--color-text-secondary, #64748b);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ---------- Activity / Event Rows ---------- */
+
+.asset-drawer-details .asset-activity-item,
+.asset-drawer-details .asset-event-item,
+.asset-drawer-details .asset-history-item {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.asset-drawer-details .asset-activity-item:first-child,
+.asset-drawer-details .asset-event-item:first-child,
+.asset-drawer-details .asset-history-item:first-child {
+  padding-top: 0;
+}
+
+.asset-drawer-details .asset-activity-item:last-child,
+.asset-drawer-details .asset-event-item:last-child,
+.asset-drawer-details .asset-history-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* ============================================================
+   ASSET FORM DRAWER
+   ============================================================ */
+
+.asset-drawer-form .asset-drawer__body {
+  padding: 24px;
+}
+
+.asset-drawer-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.asset-drawer-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  background: var(--color-bg-primary, #ffffff);
+}
+
+.asset-drawer-form legend {
+  padding: 0 8px;
+  color: var(--color-text-primary, #0f172a);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.asset-drawer-form label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--color-text-primary, #334155);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.asset-drawer-form label span {
+  color: inherit;
+}
+
+.asset-drawer-form input,
+.asset-drawer-form select,
+.asset-drawer-form textarea {
+  width: 100%;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 8px;
+  outline: none;
+  background: var(--color-bg-primary, #ffffff);
+  color: var(--color-text-primary, #0f172a);
+  font-size: 13px;
+  line-height: 1.5;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.asset-drawer-form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.asset-drawer-form input::placeholder,
+.asset-drawer-form textarea::placeholder {
+  color: #94a3b8;
+}
+
+.asset-drawer-form input:hover,
+.asset-drawer-form select:hover,
+.asset-drawer-form textarea:hover {
+  border-color: #94a3b8;
+}
+
+.asset-drawer-form input:focus,
+.asset-drawer-form select:focus,
+.asset-drawer-form textarea:focus {
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.asset-drawer-form input:disabled,
+.asset-drawer-form select:disabled,
+.asset-drawer-form textarea:disabled {
+  background: var(--color-bg-secondary, #f8fafc);
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.asset-drawer-form .asset-form-error,
+.asset-drawer-form .error-message,
+.asset-drawer-form [role="alert"] {
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.asset-drawer-form .asset-form-help,
+.asset-drawer-form .form-help {
+  margin-top: 5px;
+  color: var(--color-text-secondary, #64748b);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   FORM FOOTER / BUTTONS
+   ============================================================ */
+
+.asset-drawer-form .asset-form-footer,
+.asset-drawer-form .form-actions,
+.asset-drawer-form .asset-form-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  margin: 24px -24px -24px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 5;
+}
+
+.asset-drawer-form button {
+  min-height: 38px;
+  padding: 8px 15px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.asset-drawer-form button:hover {
+  transform: translateY(-1px);
+}
+
+.asset-drawer-form button:active {
+  transform: translateY(0);
+}
+
+.asset-drawer-form button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.asset-drawer-form button[type="submit"] {
+  min-width: 112px;
+  border-color: var(--color-primary, #2563eb);
+  background: var(--color-primary, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.18);
+}
+
+.asset-drawer-form button[type="submit"]:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22);
+}
+
+.asset-drawer-form button[type="button"] {
+  border-color: var(--color-border, #cbd5e1);
+  background: var(--color-bg-primary, #ffffff);
+  color: var(--color-text-secondary, #475569);
+}
+
+.asset-drawer-form button[type="button"]:hover {
+  border-color: #94a3b8;
+  background: var(--color-bg-secondary, #f8fafc);
+  color: var(--color-text-primary, #0f172a);
+}
+
+/* Disabled / loading button */
+
+.asset-drawer-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ============================================================
+   STATUS / RISK BADGE POLISH
+   ============================================================ */
+
+.asset-drawer .asset-status-badge,
+.asset-drawer .asset-risk-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 760px) {
+  .asset-drawer,
+  .asset-drawer-details,
+  .asset-drawer-form {
+    width: 100vw;
+    max-width: 100vw;
+    border-left: 0;
+  }
+
+  .asset-drawer__header {
+    min-height: 72px;
+    padding: 16px 18px;
+  }
+
+  .asset-drawer__title {
+    max-width: calc(100vw - 90px);
+    font-size: 18px;
+  }
+
+  .asset-drawer__body {
+    padding: 18px;
+  }
+
+  .asset-drawer-form .asset-form-footer,
+  .asset-drawer-form .form-actions,
+  .asset-drawer-form .asset-form-actions {
+    margin-right: -18px;
+    margin-bottom: -18px;
+    margin-left: -18px;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .asset-drawer-details .asset-metadata,
+  .asset-drawer-details .asset-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-drawer-details .asset-details-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .asset-drawer-details .asset-details-actions {
+    width: 100%;
+  }
+
+  .asset-drawer-details .asset-details-actions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .asset-drawer__header {
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .asset-drawer__body {
+    padding: 16px;
+  }
+
+  .asset-drawer__eyebrow {
+    font-size: 10px;
+  }
+
+  .asset-drawer__title {
+    font-size: 17px;
+  }
+
+  .asset-drawer__close {
+    width: 34px;
+    height: 34px;
+  }
+
+  .asset-drawer-form fieldset {
+    padding: 15px;
+  }
+
+  .asset-drawer-form .asset-form-footer,
+  .asset-drawer-form .form-actions,
+  .asset-drawer-form .asset-form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .asset-drawer-form button {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .asset-drawer-overlay,
+  .asset-drawer {
+    animation: none;
+  }
+
+  .asset-drawer button,
+  .asset-drawer input,
+  .asset-drawer select,
+  .asset-drawer textarea {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+ * SENTINELSIEM ASSET DRAWER — FINAL PROFESSIONAL OVERRIDES
+ * ==========================================================================
+ *
+ * IMPORTANT:
+ * Paste this block at the VERY BOTTOM of Assets.css.
+ *
+ * Purpose:
+ * - Fix global button CSS conflicts
+ * - Fix tab background/border conflicts
+ * - Professional View drawer
+ * - Professional Add/Edit drawer
+ * - Consistent header / buttons / fields
+ * - Preserve existing Assets table/filter styling
+ * ========================================================================== */
+
+
+/* ==========================================================================
+ * 01. DRAWER OVERLAY
+ * ========================================================================== */
+
+.asset-drawer-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1100 !important;
+
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+
+  background: rgba(2, 6, 23, 0.68) !important;
+
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+
+  animation: asset-drawer-overlay-in 180ms ease-out !important;
+}
+
+@keyframes asset-drawer-overlay-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* ==========================================================================
+ * 02. DRAWER CONTAINER
+ * ========================================================================== */
+
+.asset-drawer-overlay > .asset-drawer {
+  position: relative !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  width: min(760px, 94vw) !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      #0b1220 0%,
+      #080f1d 100%
+    ) !important;
+
+  border: 0 !important;
+  border-left: 1px solid #1e293b !important;
+
+  border-radius: 0 !important;
+
+  box-shadow:
+    -24px 0 60px rgba(0, 0, 0, 0.42),
+    -8px 0 24px rgba(0, 0, 0, 0.25) !important;
+
+  animation: asset-drawer-slide-in 220ms
+    cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+@keyframes asset-drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+
+/* ==========================================================================
+ * 03. DRAWER WIDTHS
+ * ========================================================================== */
+
+.asset-drawer-overlay
+  > .asset-drawer.asset-drawer-details {
+  width: min(760px, 94vw) !important;
+}
+
+.asset-drawer-overlay
+  > .asset-drawer.asset-drawer-form {
+  width: min(640px, 94vw) !important;
+}
+
+
+/* ==========================================================================
+ * 04. DRAWER HEADER
+ * ========================================================================== */
+
+.asset-drawer-overlay
+  .asset-drawer__header {
+  position: relative !important;
+
+  flex: 0 0 auto !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  min-height: 82px !important;
+
+  margin: 0 !important;
+  padding: 18px 24px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      #10192c 0%,
+      #0d1627 100%
+    ) !important;
+
+  border: 0 !important;
+  border-bottom: 1px solid #1e293b !important;
+
+  border-radius: 0 !important;
+
+  box-shadow: none !important;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__header::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: -1px;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(34, 211, 238, 0),
+      rgba(34, 211, 238, 0.55),
+      rgba(34, 211, 238, 0)
+    ) !important;
+
+  opacity: 1 !important;
+}
+
+
+/* ==========================================================================
+ * 05. HEADER TEXT
+ * ========================================================================== */
+
+.asset-drawer-overlay
+  .asset-drawer__eyebrow {
+  margin: 0 0 5px 0 !important;
+
+  color: #64748b !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.2 !important;
+
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__title {
+  margin: 0 !important;
+
+  max-width: 560px !important;
+
+  overflow: hidden !important;
+
+  color: #f1f5f9 !important;
+
+  font-size: 20px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.3 !important;
+
+  letter-spacing: -0.01em !important;
+
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+
+/* ==========================================================================
+ * 06. CLOSE BUTTON
+ * ========================================================================== */
+
+.asset-drawer-overlay
+  .asset-drawer__close {
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 40px !important;
+  height: 40px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 1px solid #26344a !important;
+  border-radius: 10px !important;
+
+  background: #111b2e !important;
+
+  color: #94a3b8 !important;
+
+  font-family: inherit !important;
+  font-size: 20px !important;
+  font-weight: 400 !important;
+
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease !important;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__close:hover {
+  border-color: #3b4b63 !important;
+
+  background: #172237 !important;
+
+  color: #e2e8f0 !important;
+
+  transform: none !important;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__close:active {
+  transform: scale(0.96) !important;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__close:focus-visible {
+  outline: none !important;
+
+  border-color: #22d3ee !important;
+
+  box-shadow:
+    0 0 0 3px rgba(34, 211, 238, 0.12) !important;
+}
+
+
+/* ==========================================================================
+ * 07. DRAWER BODY
+ * ========================================================================== */
+
+.asset-drawer-overlay
+  .asset-drawer__body {
+  flex: 1 1 auto !important;
+
+  min-height: 0 !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  margin: 0 !important;
+
+  padding: 26px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      #080f1d 0%,
+      #07101d 100%
+    ) !important;
+
+  border: 0 !important;
+
+  scrollbar-width: thin !important;
+  scrollbar-color: #334155 transparent !important;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+
+  background: #334155;
+}
+
+.asset-drawer-overlay
+  .asset-drawer__body::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+
+/* ==========================================================================
+ * 08. DETAILS CONTENT — RESET OLD GENERIC STYLES
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content {
+  width: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  color: #cbd5e1 !important;
+}
+
+
+/* ==========================================================================
+ * 09. DETAILS MAIN HEADER
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  > .space-y-6
+  > header {
+  display: flex !important;
+  flex-direction: column !important;
+
+  gap: 18px !important;
+
+  margin: 0 0 24px 0 !important;
+  padding: 0 !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  h1 {
+  margin: 0 !important;
+
+  color: #f8fafc !important;
+
+  font-size: 25px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.25 !important;
+
+  letter-spacing: -0.025em !important;
+}
+
+
+/* ==========================================================================
+ * 10. ASSET ID / META LINE
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  .text-slate-500 {
+  color: #64748b !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  .font-mono {
+  color: #64748b !important;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace !important;
+
+  font-size: 12px !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  .text-slate-700 {
+  color: #334155 !important;
+}
+
+
+/* ==========================================================================
+ * 11. PROFESSIONAL STATUS BADGE
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  .rounded-full {
+  min-height: 26px !important;
+
+  padding: 5px 10px !important;
+
+  border: 1px solid rgba(16, 185, 129, 0.18) !important;
+  border-radius: 999px !important;
+
+  background: rgba(16, 185, 129, 0.08) !important;
+
+  color: #34d399 !important;
+
+  font-size: 11px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.2 !important;
+}
+
+
+/* ==========================================================================
+ * 12. DETAILS ACTION BUTTONS
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button {
+  box-sizing: border-box !important;
+
+  min-height: 38px !important;
+
+  margin: 0 !important;
+  padding: 8px 15px !important;
+
+  border-radius: 8px !important;
+
+  font-family: inherit !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  line-height: 1.4 !important;
+
+  cursor: pointer !important;
+
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease !important;
+}
+
+
+/* Refresh */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button:first-child {
+  border: 1px solid #26344a !important;
+
+  background: #101a2b !important;
+
+  color: #a8b5c7 !important;
+
+  box-shadow: none !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button:first-child:hover {
+  border-color: #3b4b63 !important;
+
+  background: #172237 !important;
+
+  color: #e2e8f0 !important;
+}
+
+
+/* Edit */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button:nth-child(2) {
+  border: 1px solid rgba(34, 211, 238, 0.28) !important;
+
+  background: rgba(34, 211, 238, 0.07) !important;
+
+  color: #67e8f9 !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button:nth-child(2):hover {
+  border-color: rgba(34, 211, 238, 0.48) !important;
+
+  background: rgba(34, 211, 238, 0.13) !important;
+
+  color: #a5f3fc !important;
+}
+
+
+/* Disable */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button:nth-child(3) {
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+
+  background: rgba(245, 158, 11, 0.06) !important;
+
+  color: #fbbf24 !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button:nth-child(3):hover {
+  border-color: rgba(245, 158, 11, 0.48) !important;
+
+  background: rgba(245, 158, 11, 0.11) !important;
+
+  color: #fcd34d !important;
+}
+
+
+/* Enable */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button:nth-child(3) {
+  /* Base state shared with lifecycle button. */
+}
+
+
+/* Disabled */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  header
+  button:disabled {
+  opacity: 0.45 !important;
+
+  cursor: not-allowed !important;
+
+  transform: none !important;
+}
+
+
+/* ==========================================================================
+ * 13. DETAILS TABS — IMPORTANT FIX
+ *
+ * This removes the gray button appearance visible in the screenshot.
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  nav {
+  display: flex !important;
+  align-items: stretch !important;
+
+  width: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow-x: auto !important;
+
+  border: 0 !important;
+  border-bottom: 1px solid #1e293b !important;
+
+  border-radius: 0 !important;
+
+  background: #0a1322 !important;
+
+  scrollbar-width: none !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  nav::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* Every tab */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  nav
+  button {
+  position: relative !important;
+
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-height: 52px !important;
+
+  margin: 0 !important;
+  padding: 0 17px !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background: transparent !important;
+
+  color: #64748b !important;
+
+  font-family: inherit !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  line-height: 1 !important;
+
+  box-shadow: none !important;
+
+  cursor: pointer !important;
+
+  transform: none !important;
+
+  transition:
+    color 150ms ease,
+    background 150ms ease !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  nav
+  button:hover {
+  border: 0 !important;
+
+  background: rgba(148, 163, 184, 0.04) !important;
+
+  color: #cbd5e1 !important;
+
+  box-shadow: none !important;
+
+  transform: none !important;
+}
+
+
+/* Active tab */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  nav
+  button.text-cyan-300 {
+  border: 0 !important;
+
+  background: rgba(34, 211, 238, 0.055) !important;
+
+  color: #67e8f9 !important;
+
+  box-shadow: none !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  nav
+  button
+  span.absolute {
+  left: 0 !important;
+  right: 0 !important;
+
+  bottom: 0 !important;
+
+  height: 2px !important;
+
+  background: #22d3ee !important;
+
+  box-shadow:
+    0 0 8px rgba(34, 211, 238, 0.35) !important;
+}
+
+
+/* ==========================================================================
+ * 14. TAB CONTENT CONTAINER
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  section {
+  margin: 0 !important;
+
+  border: 1px solid #1e293b !important;
+
+  border-radius: 10px !important;
+
+  background: #0a1322 !important;
+
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.18) !important;
+
+  overflow: hidden !important;
+}
+
+
+/* ==========================================================================
+ * 15. TAB CONTENT PADDING
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  section
+  > div:last-child {
+  padding: 22px !important;
+}
+
+
+/* ==========================================================================
+ * 16. SECTION HEADINGS
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  h2 {
+  margin: 0 !important;
+
+  color: #e2e8f0 !important;
+
+  font-size: 14px !important;
+  font-weight: 650 !important;
+
+  line-height: 1.5 !important;
+
+  letter-spacing: 0.01em !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  h3 {
+  margin: 0 !important;
+
+  color: #94a3b8 !important;
+
+  font-size: 11px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.4 !important;
+
+  letter-spacing: 0.08em !important;
+
+  text-transform: uppercase !important;
+}
+
+
+/* ==========================================================================
+ * 17. DESCRIPTION / SUPPORTING TEXT
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  p.text-xs {
+  color: #64748b !important;
+
+  font-size: 11px !important;
+
+  line-height: 1.6 !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  p.text-sm {
+  color: #94a3b8 !important;
+
+  font-size: 13px !important;
+
+  line-height: 1.65 !important;
+}
+
+
+/* ==========================================================================
+ * 18. DETAIL FIELD VALUES
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  dl
+  > div {
+  min-width: 0 !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  dt {
+  margin: 0 !important;
+
+  color: #64748b !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.4 !important;
+
+  letter-spacing: 0.07em !important;
+
+  text-transform: uppercase !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  dd {
+  margin-top: 5px !important;
+
+  color: #dbe4ef !important;
+
+  font-size: 13px !important;
+  font-weight: 500 !important;
+
+  line-height: 1.5 !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  dd.font-mono {
+  color: #a5b4c7 !important;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace !important;
+
+  font-size: 12px !important;
+}
+
+
+/* ==========================================================================
+ * 19. METADATA / CODE BLOCK
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  pre {
+  margin: 0 !important;
+
+  border: 1px solid #1e293b !important;
+  border-radius: 8px !important;
+
+  background: #060c17 !important;
+
+  color: #94a3b8 !important;
+
+  font-size: 11px !important;
+
+  line-height: 1.7 !important;
+}
+
+
+/* ==========================================================================
+ * 20. ACTIVITY ITEMS
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  .bg-slate-950\/40 {
+  border: 1px solid #1e293b !important;
+
+  border-radius: 8px !important;
+
+  background: rgba(6, 12, 23, 0.72) !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  .bg-slate-950\/40
+  .text-slate-300 {
+  color: #cbd5e1 !important;
+
+  font-size: 12px !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  .bg-slate-950\/40
+  .text-slate-600 {
+  color: #64748b !important;
+
+  font-size: 11px !important;
+}
+
+
+/* ==========================================================================
+ * 21. DIVIDERS
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  .border-slate-800 {
+  border-color: #1e293b !important;
+}
+
+
+/* ==========================================================================
+ * 22. FORM DRAWER
+ * ========================================================================== */
+
+.asset-drawer-form
+  .asset-drawer__body {
+  padding: 26px !important;
+}
+
+.asset-drawer-form
+  .asset-drawer__body
+  > * {
+  width: 100% !important;
+}
+
+
+/* ==========================================================================
+ * 23. FORM GLOBAL RESET
+ * ========================================================================== */
+
+.asset-drawer-form form {
+  width: 100% !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  gap: 18px !important;
+
+  margin: 0 !important;
+}
+
+
+/* ==========================================================================
+ * 24. FORM LABELS
+ * ========================================================================== */
+
+.asset-drawer-form label {
+  display: block !important;
+
+  margin: 0 0 7px 0 !important;
+
+  color: #cbd5e1 !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  line-height: 1.4 !important;
+}
+
+
+/* ==========================================================================
+ * 25. FORM INPUTS
+ * ========================================================================== */
+
+.asset-drawer-form input,
+.asset-drawer-form select,
+.asset-drawer-form textarea {
+  box-sizing: border-box !important;
+
+  width: 100% !important;
+
+  min-height: 40px !important;
+
+  margin: 0 !important;
+  padding: 9px 11px !important;
+
+  border: 1px solid #26344a !important;
+  border-radius: 8px !important;
+
+  outline: none !important;
+
+  background: #0b1526 !important;
+
+  color: #e2e8f0 !important;
+
+  font-family: inherit !important;
+
+  font-size: 13px !important;
+
+  line-height: 1.5 !important;
+
+  box-shadow: none !important;
+
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease !important;
+}
+
+.asset-drawer-form
+  textarea {
+  min-height: 100px !important;
+
+  resize: vertical !important;
+}
+
+.asset-drawer-form
+  input::placeholder,
+.asset-drawer-form
+  textarea::placeholder {
+  color: #475569 !important;
+}
+
+.asset-drawer-form
+  input:hover,
+.asset-drawer-form
+  select:hover,
+.asset-drawer-form
+  textarea:hover {
+  border-color: #3b4b63 !important;
+}
+
+.asset-drawer-form
+  input:focus,
+.asset-drawer-form
+  select:focus,
+.asset-drawer-form
+  textarea:focus {
+  border-color: rgba(34, 211, 238, 0.55) !important;
+
+  background: #0d182a !important;
+
+  box-shadow:
+    0 0 0 3px rgba(34, 211, 238, 0.08) !important;
+}
+
+
+/* ==========================================================================
+ * 26. FORM SELECT ARROW / OPTIONS
+ * ========================================================================== */
+
+.asset-drawer-form
+  select {
+  color-scheme: dark !important;
+
+  cursor: pointer !important;
+}
+
+.asset-drawer-form
+  select
+  option {
+  background: #0b1526 !important;
+
+  color: #e2e8f0 !important;
+}
+
+
+/* ==========================================================================
+ * 27. FORM ERROR
+ * ========================================================================== */
+
+.asset-drawer-form
+  [role="alert"] {
+  margin: 0 !important;
+
+  padding: 10px 12px !important;
+
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+
+  border-radius: 8px !important;
+
+  background: rgba(239, 68, 68, 0.06) !important;
+
+  color: #f87171 !important;
+
+  font-size: 12px !important;
+
+  line-height: 1.5 !important;
+}
+
+
+/* ==========================================================================
+ * 28. FORM BUTTON AREA
+ * ========================================================================== */
+
+.asset-drawer-form
+  .asset-form-footer,
+.asset-drawer-form
+  .form-actions,
+.asset-drawer-form
+  .asset-form-actions {
+  display: flex !important;
+
+  align-items: center !important;
+  justify-content: flex-end !important;
+
+  gap: 9px !important;
+
+  margin: 24px -26px -26px !important;
+
+  padding: 15px 26px !important;
+
+  border-top: 1px solid #1e293b !important;
+
+  background: rgba(8, 15, 29, 0.96) !important;
+
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+
+  position: sticky !important;
+  bottom: 0 !important;
+
+  z-index: 10 !important;
+}
+
+
+/* ==========================================================================
+ * 29. FORM BUTTON RESET
+ *
+ * This is intentionally highly specific because the old Assets.css
+ * appears to have generic button styling.
+ * ========================================================================== */
+
+.asset-drawer-form
+  button {
+  box-sizing: border-box !important;
+
+  min-height: 39px !important;
+
+  margin: 0 !important;
+  padding: 8px 16px !important;
+
+  border-radius: 8px !important;
+
+  font-family: inherit !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  line-height: 1.4 !important;
+
+  cursor: pointer !important;
+
+  box-shadow: none !important;
+
+  transform: none !important;
+
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease !important;
+}
+
+
+/* Cancel */
+
+.asset-drawer-form
+  button[type="button"] {
+  border: 1px solid #26344a !important;
+
+  background: #101a2b !important;
+
+  color: #94a3b8 !important;
+}
+
+.asset-drawer-form
+  button[type="button"]:hover {
+  border-color: #3b4b63 !important;
+
+  background: #172237 !important;
+
+  color: #e2e8f0 !important;
+}
+
+
+/* Submit */
+
+.asset-drawer-form
+  button[type="submit"] {
+  min-width: 112px !important;
+
+  border: 1px solid rgba(34, 211, 238, 0.42) !important;
+
+  background: #0891b2 !important;
+
+  color: #ecfeff !important;
+
+  box-shadow:
+    0 3px 10px rgba(8, 145, 178, 0.16) !important;
+}
+
+.asset-drawer-form
+  button[type="submit"]:hover {
+  border-color: rgba(34, 211, 238, 0.62) !important;
+
+  background: #0e7490 !important;
+
+  color: #ffffff !important;
+
+  box-shadow:
+    0 5px 14px rgba(8, 145, 178, 0.22) !important;
+}
+
+.asset-drawer-form
+  button:disabled {
+  opacity: 0.45 !important;
+
+  cursor: not-allowed !important;
+
+  transform: none !important;
+
+  box-shadow: none !important;
+}
+
+
+/* ==========================================================================
+ * 30. STANDALONE / EMPTY / LOADING STATES
+ * ========================================================================== */
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  .animate-pulse {
+  background: #172237 !important;
+}
+
+.asset-drawer-details
+  .asset-details-drawer-content
+  .text-slate-600 {
+  color: #526176 !important;
+}
+
+
+/* ==========================================================================
+ * 31. MOBILE
+ * ========================================================================== */
+
+@media (max-width: 760px) {
+  .asset-drawer-overlay
+    > .asset-drawer,
+  .asset-drawer-overlay
+    > .asset-drawer.asset-drawer-details,
+  .asset-drawer-overlay
+    > .asset-drawer.asset-drawer-form {
+    width: 100vw !important;
+    max-width: 100vw !important;
+
+    border-left: 0 !important;
+  }
+
+  .asset-drawer-overlay
+    .asset-drawer__header {
+    min-height: 74px !important;
+
+    padding: 16px 18px !important;
+  }
+
+  .asset-drawer-overlay
+    .asset-drawer__body {
+    padding: 20px 18px !important;
+  }
+
+  .asset-drawer-overlay
+    .asset-drawer__title {
+    max-width: calc(100vw - 90px) !important;
+
+    font-size: 18px !important;
+  }
+
+  .asset-drawer-details
+    .asset-details-drawer-content
+    section
+    > div:last-child {
+    padding: 18px !important;
+  }
+
+  .asset-drawer-details
+    .asset-details-drawer-content
+    nav
+    button {
+    min-height: 48px !important;
+
+    padding: 0 14px !important;
+
+    font-size: 11px !important;
+  }
+
+  .asset-drawer-form
+    .asset-form-footer,
+  .asset-drawer-form
+    .form-actions,
+  .asset-drawer-form
+    .asset-form-actions {
+    margin-right: -18px !important;
+    margin-bottom: -20px !important;
+    margin-left: -18px !important;
+
+    padding-right: 18px !important;
+    padding-left: 18px !important;
+  }
+}
+
+
+/* ==========================================================================
+ * 32. SMALL MOBILE
+ * ========================================================================== */
+
+@media (max-width: 480px) {
+  .asset-drawer-overlay
+    .asset-drawer__header {
+    padding: 14px 16px !important;
+  }
+
+  .asset-drawer-overlay
+    .asset-drawer__body {
+    padding: 18px 16px !important;
+  }
+
+  .asset-drawer-overlay
+    .asset-drawer__close {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .asset-drawer-form
+    .asset-form-footer,
+  .asset-drawer-form
+    .form-actions,
+  .asset-drawer-form
+    .asset-form-actions {
+    flex-direction: column-reverse !important;
+
+    align-items: stretch !important;
+  }
+
+  .asset-drawer-form
+    .asset-form-footer
+    button,
+  .asset-drawer-form
+    .form-actions
+    button,
+  .asset-drawer-form
+    .asset-form-actions
+    button {
+    width: 100% !important;
+  }
+}
+
+
+/* ==========================================================================
+ * 33. REDUCED MOTION
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .asset-drawer-overlay,
+  .asset-drawer-overlay
+    > .asset-drawer {
+    animation: none !important;
+  }
+
+  .asset-drawer-overlay
+    button,
+  .asset-drawer-overlay
+    input,
+  .asset-drawer-overlay
+    select,
+  .asset-drawer-overlay
+    textarea {
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+ * ASSET PAGE HEADER — SINGLE LINE DESCRIPTION
+ * ========================================================================== */
+
+/* ==========================================================
+ * ASSETS — CLEAN PAGE HEADER
+ * Single-line description / User Management style
+ * ========================================================== */
+
+.assets-page > section:first-of-type {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 24px !important;
+  min-width: 0 !important;
+}
+
+.assets-page > section:first-of-type > div:first-child {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.assets-page > section:first-of-type > div:first-child > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.assets-page > section:first-of-type > div:first-child > div > div:last-child {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.assets-page > section:first-of-type h1 {
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+.assets-page > section:first-of-type h1 + p {
+  display: block !important;
+  width: max-content !important;
+  max-width: none !important;
+  margin-top: 4px !important;
+  margin-bottom: 0 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.assets-page > section:first-of-type > div:last-child {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: max-content !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* Responsive */
+
+@media (max-width: 1023px) {
+  .assets-page > section:first-of-type {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .assets-page > section:first-of-type > div:last-child {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .assets-page > section:first-of-type h1 {
+    font-size: 1.5rem !important;
+  }
+
+  .assets-page > section:first-of-type h1 + p {
+    width: max-content !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .assets-page > section:first-of-type > div:last-child button {
+    flex: 1 1 0 !important;
+  }
+}
+
+/* ============================================================================
+ * ASSETS — RESET FILTER BUTTON
+ * ========================================================================== */
+
+.assets .asset-filter-reset,
+.assets .asset-filters-reset,
+.assets .reset-filters-button,
+.assets .asset-reset-button {
+  flex: 0 0 auto !important;
+
+  min-width: 118px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-sizing: border-box !important;
+
+  margin-left: auto !important;
+  margin-right: 0 !important;
+
+  padding: 0 14px !important;
+
+  border: 1px solid rgba(100, 116, 139, 0.42) !important;
+  border-radius: 8px !important;
+
+  background: rgba(17, 28, 46, 0.95) !important;
+
+  color: #aebbd0 !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+}
+
+
+/* ============================================================================
+ * Assets — Reset Container
+ * ========================================================================== */
+
+.assets .asset-filter-actions,
+.assets .asset-filters-actions,
+.assets .asset-filter-reset-row,
+.assets .asset-filters-reset-row {
+  width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+
+  grid-column: 1 / -1 !important;
+
+  margin-top: 4px !important;
+}
+
+
+/* ============================================================================
+ * Reset — Hover
+ * ========================================================================== */
+
+.assets .asset-filter-reset:hover:not(:disabled),
+.assets .asset-filters-reset:hover:not(:disabled),
+.assets .reset-filters-button:hover:not(:disabled),
+.assets .asset-reset-button:hover:not(:disabled) {
+  background: rgba(30, 47, 71, 0.98) !important;
+
+  border-color: rgba(34, 211, 238, 0.38) !important;
+
+  color: #e2e8f0 !important;
+
+  transform: translateY(-1px) !important;
+}
+
+
+/* ============================================================================
+ * Reset — Disabled
+ * ========================================================================== */
+
+.assets .asset-filter-reset:disabled,
+.assets .asset-filters-reset:disabled,
+.assets .reset-filters-button:disabled,
+.assets .asset-reset-button:disabled {
+  background: rgba(15, 25, 41, 0.82) !important;
+
+  border-color: rgba(100, 116, 139, 0.28) !important;
+
+  color: #718096 !important;
+
+  cursor: not-allowed !important;
+
+  opacity: 1 !important;
+
+  transform: none !important;
+}
+
+
+/* ============================================================================
+ * ASSETS — PAGINATION
+ * ========================================================================== */
+
+.assets .asset-pagination {
+  width: 100% !important;
+
+  min-height: 64px !important;
+
+  box-sizing: border-box !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin-top: 12px !important;
+  padding: 10px 14px !important;
+
+  border: 1px solid rgba(30, 58, 85, 0.55) !important;
+  border-radius: 10px !important;
+
+  background: rgba(7, 20, 34, 0.82) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.018),
+    0 2px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+
+/* ============================================================================
+ * Pagination Content — SINGLE LINE
+ * ========================================================================== */
+
+.assets .asset-pagination-content {
+  width: 100% !important;
+  max-width: 900px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex-wrap: nowrap !important;
+
+  gap: 18px !important;
+
+  margin: 0 auto !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* ============================================================================
+ * Pagination Info
+ * ========================================================================== */
+
+.assets .asset-pagination-info {
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  white-space: nowrap !important;
+
+  color: #8293aa !important;
+
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+}
+
+
+.assets .asset-pagination-info strong {
+  color: #d5deea !important;
+
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+
+/* ============================================================================
+ * Pagination Controls — SINGLE LINE
+ * ========================================================================== */
+
+.assets .asset-pagination-controls {
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex-wrap: nowrap !important;
+
+  gap: 8px !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* ============================================================================
+ * Page Text
+ * ========================================================================== */
+
+.assets .asset-pagination-page {
+  flex: 0 0 auto !important;
+
+  white-space: nowrap !important;
+
+  color: #8293aa !important;
+
+  font-size: 12px !important;
+  font-weight: 550 !important;
+}
+
+
+.assets .asset-pagination-page strong {
+  color: #cbd5e1 !important;
+
+  font-weight: 700 !important;
+}
+
+
+/* ============================================================================
+ * Pagination Buttons
+ * ========================================================================== */
+
+.assets .asset-pagination-button {
+  flex: 0 0 auto !important;
+
+  min-width: 78px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-sizing: border-box !important;
+
+  padding: 0 14px !important;
+
+  border: 1px solid rgba(51, 78, 106, 0.62) !important;
+  border-radius: 8px !important;
+
+  background: rgba(12, 28, 45, 0.92) !important;
+
+  color: #a7b6c9 !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  white-space: nowrap !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 2px 6px rgba(0, 0, 0, 0.12) !important;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease !important;
+}
+
+
+/* ============================================================================
+ * Pagination Button — Hover
+ * ========================================================================== */
+
+.assets .asset-pagination-button:hover:not(:disabled) {
+  background: rgba(20, 42, 64, 0.96) !important;
+
+  border-color: rgba(34, 211, 238, 0.34) !important;
+
+  color: #dbe7f3 !important;
+
+  transform: translateY(-1px) !important;
+}
+
+
+/* ============================================================================
+ * Pagination Button — Disabled
+ * ========================================================================== */
+
+.assets .asset-pagination-button:disabled {
+  background: rgba(10, 24, 39, 0.72) !important;
+
+  border-color: rgba(51, 78, 106, 0.32) !important;
+
+  color: #526176 !important;
+
+  cursor: not-allowed !important;
+
+  opacity: 1 !important;
+
+  transform: none !important;
+}
+
+
+/* ============================================================================
+ * Assets Pagination — Force One Line
+ * ========================================================================== */
+
+.assets .asset-pagination,
+.assets .asset-pagination-content,
+.assets .asset-pagination-info,
+.assets .asset-pagination-controls {
+  white-space: nowrap !important;
+}
+
+
+/* ============================================================================
+ * Responsive — Keep One Line
+ * ========================================================================== */
+
+@media (max-width: 760px) {
+  .assets .asset-pagination-content {
+    gap: 12px !important;
+  }
+
+  .assets .asset-pagination-button {
+    min-width: 70px !important;
+    height: 34px !important;
+
+    padding: 0 10px !important;
+  }
+
+  .assets .asset-pagination-info,
+  .assets .asset-pagination-page {
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .assets .asset-pagination-content {
+    gap: 8px !important;
+  }
+
+  .assets .asset-pagination-button {
+    min-width: 64px !important;
+
+    padding: 0 8px !important;
+
+    font-size: 11px !important;
+  }
+}
+
+
+/* ============================================================================
+ * ASSETS — FINAL PAGINATION + FILTER RESET OVERRIDE
+ * Exact root: .assets-page
+ * ========================================================================== */
+
+
+/* ============================================================================
+ * FILTER RESET — FORCE TO ITS OWN BOTTOM ROW
+ * ========================================================================== */
+
+.assets-page .asset-filters-reset-row {
+  width: 100% !important;
+  grid-column: 1 / -1 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+
+  margin-top: 4px !important;
+}
+
+
+/*
+ * Fallback: if the reset button is rendered directly inside the filter grid,
+ * force the button to the far right of the final grid row.
+ */
+.assets-page
+[aria-label="Asset filters"]
+button {
+  box-sizing: border-box;
+}
+
+
+/* Reset button visual style */
+.assets-page
+[aria-label="Asset filters"]
+button {
+  font-family: inherit;
+}
+
+
+/* ============================================================================
+ * PAGINATION SECTION
+ *
+ * Existing JSX:
+ *
+ * <section
+ *   className="
+ *     flex flex-col gap-4 rounded-xl ...
+ *     lg:flex-row lg:items-center lg:justify-between
+ *   "
+ * >
+ *
+ * Override the responsive row behavior and center everything.
+ * ========================================================================== */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4 {
+  width: 100% !important;
+  min-height: 64px !important;
+
+  box-sizing: border-box !important;
+
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex-wrap: nowrap !important;
+
+  gap: 18px !important;
+
+  margin-top: 12px !important;
+  padding: 10px 14px !important;
+
+  border: 1px solid rgba(30, 58, 85, 0.55) !important;
+  border-radius: 10px !important;
+
+  background: rgba(7, 20, 34, 0.82) !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.018),
+    0 2px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+
+/* ============================================================================
+ * PAGINATION — RANGE TEXT
+ * ========================================================================== */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:first-child {
+  flex: 0 0 auto !important;
+
+  min-width: 0 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  white-space: nowrap !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  color: #8293aa !important;
+
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+
+  font-variant-numeric: tabular-nums !important;
+}
+
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:first-child
+.font-medium {
+  color: #d5deea !important;
+
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+
+/* ============================================================================
+ * PAGINATION — PAGE + BUTTON GROUP
+ * ========================================================================== */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child {
+  flex: 0 0 auto !important;
+
+  width: auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex-wrap: nowrap !important;
+
+  gap: 12px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* Page 1 of 1 */
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> span {
+  flex: 0 0 auto !important;
+
+  white-space: nowrap !important;
+
+  color: #8293aa !important;
+
+  font-size: 12px !important;
+  font-weight: 550 !important;
+}
+
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> span
+.font-medium {
+  color: #cbd5e1 !important;
+
+  font-weight: 700 !important;
+}
+
+
+/* ============================================================================
+ * PREVIOUS / NEXT WRAPPER
+ * ========================================================================== */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> div {
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex-wrap: nowrap !important;
+
+  gap: 8px !important;
+
+  margin: 0 !important;
+}
+
+
+/* ============================================================================
+ * PREVIOUS / NEXT BUTTONS
+ * ========================================================================== */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> div
+> button {
+  flex: 0 0 auto !important;
+
+  min-width: 78px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-sizing: border-box !important;
+
+  padding: 0 14px !important;
+
+  border: 1px solid rgba(51, 78, 106, 0.62) !important;
+  border-radius: 8px !important;
+
+  background: rgba(12, 28, 45, 0.92) !important;
+
+  color: #a7b6c9 !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+
+  white-space: nowrap !important;
+
+  cursor: pointer !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 2px 6px rgba(0, 0, 0, 0.12) !important;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease !important;
+}
+
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> div
+> button:hover:not(:disabled) {
+  background: rgba(20, 42, 64, 0.96) !important;
+
+  border-color: rgba(34, 211, 238, 0.34) !important;
+
+  color: #dbe7f3 !important;
+
+  transform: translateY(-1px) !important;
+}
+
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> div
+> button:disabled {
+  background: rgba(10, 24, 39, 0.72) !important;
+
+  border-color: rgba(51, 78, 106, 0.32) !important;
+
+  color: #526176 !important;
+
+  cursor: not-allowed !important;
+
+  opacity: 1 !important;
+
+  transform: none !important;
+}
+
+
+/* ============================================================================
+ * FORCE SINGLE LINE
+ * ========================================================================== */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4,
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4 > div,
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4 button {
+  white-space: nowrap !important;
+}
+
+
+/* ============================================================================
+ * RESPONSIVE — STILL HORIZONTAL
+ * ========================================================================== */
+
+@media (max-width: 760px) {
+  .assets-page
+  section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4 {
+    gap: 12px !important;
+
+    padding: 9px 10px !important;
+  }
+
+  .assets-page
+  section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+  > div:last-child {
+    gap: 8px !important;
+  }
+
+  .assets-page
+  section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+  > div:last-child
+  > div {
+    gap: 6px !important;
+  }
+
+  .assets-page
+  section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+  > div:last-child
+  > div
+  > button {
+    min-width: 70px !important;
+    height: 34px !important;
+    padding: 0 10px !important;
+  }
+}
+
+
+/* ============================================================================
+ * ASSETS PAGINATION — FINAL SPACING POLISH
+ * ========================================================================== */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4 {
+  width: 100% !important;
+  min-height: 64px !important;
+  box-sizing: border-box !important;
+
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;
+
+  gap: 24px !important;
+
+  margin-top: 12px !important;
+  padding: 10px 16px !important;
+
+  border: 1px solid rgba(30, 58, 85, 0.55) !important;
+  border-radius: 10px !important;
+
+  background: rgba(7, 20, 34, 0.82) !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * RANGE
+ * Example: 1–2 Assets / Total 2
+ * ------------------------------------------------------------------------ */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:first-child {
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 5px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  white-space: nowrap !important;
+
+  color: #8293aa !important;
+
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+
+  font-variant-numeric: tabular-nums !important;
+}
+
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:first-child
+.font-medium {
+  color: #d5deea !important;
+
+  font-size: 12px !important;
+  font-weight: 700 !important;
+
+  margin: 0 2px !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * PAGE INFO + BUTTON GROUP
+ * ------------------------------------------------------------------------ */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child {
+  flex: 0 0 auto !important;
+
+  width: auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex-wrap: nowrap !important;
+
+  gap: 18px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* Page 1 of 1 */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> span {
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+
+  white-space: nowrap !important;
+
+  color: #8293aa !important;
+
+  font-size: 12px !important;
+  font-weight: 550 !important;
+
+  letter-spacing: 0.01em !important;
+}
+
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> span
+.font-medium {
+  color: #cbd5e1 !important;
+  font-weight: 700 !important;
+
+  margin: 0 3px !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * PREVIOUS / NEXT GROUP
+ * ------------------------------------------------------------------------ */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> div {
+  flex: 0 0 auto !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 10px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * BUTTONS
+ * ------------------------------------------------------------------------ */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> div
+> button {
+  flex: 0 0 auto !important;
+
+  min-width: 82px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-sizing: border-box !important;
+
+  padding: 0 15px !important;
+
+  border: 1px solid rgba(51, 78, 106, 0.62) !important;
+  border-radius: 8px !important;
+
+  background: rgba(12, 28, 45, 0.92) !important;
+
+  color: #a7b6c9 !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+
+  white-space: nowrap !important;
+
+  cursor: pointer !important;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease !important;
+}
+
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> div
+> button:hover:not(:disabled) {
+  background: rgba(20, 42, 64, 0.96) !important;
+
+  border-color: rgba(34, 211, 238, 0.34) !important;
+
+  color: #dbe7f3 !important;
+
+  transform: translateY(-1px) !important;
+}
+
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+> div:last-child
+> div
+> button:disabled {
+  background: rgba(10, 24, 39, 0.72) !important;
+
+  border-color: rgba(51, 78, 106, 0.32) !important;
+
+  color: #526176 !important;
+
+  cursor: not-allowed !important;
+
+  opacity: 1 !important;
+
+  transform: none !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * KEEP EVERYTHING ON ONE LINE
+ * ------------------------------------------------------------------------ */
+
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4,
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4 > div,
+.assets-page
+section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4 button {
+  white-space: nowrap !important;
+}
+
+
+/* --------------------------------------------------------------------------
+ * MOBILE — KEEP HORIZONTAL
+ * ------------------------------------------------------------------------ */
+
+@media (max-width: 760px) {
+
+  .assets-page
+  section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4 {
+    gap: 14px !important;
+    padding: 9px 10px !important;
+  }
+
+  .assets-page
+  section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+  > div:last-child {
+    gap: 12px !important;
+  }
+
+  .assets-page
+  section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+  > div:last-child
+  > div {
+    gap: 8px !important;
+  }
+
+  .assets-page
+  section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\/30.px-5.py-4
+  > div:last-child
+  > div
+  > button {
+    min-width: 72px !important;
+    height: 34px !important;
+    padding: 0 10px !important;
+  }
+}
