@@ -1,0 +1,5846 @@
+/* ============================================================================
+ * SentinelSIEM
+ * Threat Intelligence — STEP 1
+ *
+ * Scope:
+ * - Page root
+ * - Page heading
+ * - Header actions
+ * - KPI cards
+ * - IOC inventory / Panel integration
+ * - Filters
+ * - Search
+ * - Loading / Error / Empty states
+ * - Pagination
+ *
+ * Step 2/3 components intentionally excluded:
+ * - IOCTable internals
+ * - IOC details drawer
+ * - Add/Edit form
+ * - Status confirmation modal
+ * ========================================================================== */
+
+/* ============================================================================
+ * ROOT
+ * ========================================================================== */
+
+.threat-intelligence {
+  --ti-bg: #06111d;
+  --ti-bg-deep: #040d17;
+
+  --ti-panel: #091827;
+  --ti-panel-raised: #0c1c2d;
+  --ti-panel-hover: #102238;
+
+  --ti-border: rgba(103, 142, 174, 0.18);
+  --ti-border-hover: rgba(103, 142, 174, 0.30);
+  --ti-border-strong: rgba(34, 211, 238, 0.32);
+
+  --ti-text: #e6eef5;
+  --ti-text-secondary: #a7bacb;
+  --ti-text-muted: #6f879a;
+
+  --ti-cyan: #22d3ee;
+  --ti-cyan-bright: #67e8f9;
+  --ti-cyan-soft: rgba(34, 211, 238, 0.09);
+
+  --ti-green: #34d399;
+  --ti-yellow: #fbbf24;
+  --ti-orange: #fb923c;
+  --ti-red: #f87171;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+
+  color: var(--ti-text);
+}
+
+.threat-intelligence,
+.threat-intelligence *,
+.threat-intelligence *::before,
+.threat-intelligence *::after {
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+ * PAGE HEADING
+ * ========================================================================== */
+
+.threat-intelligence .page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  width: 100%;
+  min-width: 0;
+
+  gap: 24px;
+  margin: 0 0 20px;
+}
+
+.threat-intelligence .page-heading > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.threat-intelligence .page-heading h2 {
+  margin: 0;
+
+  color: var(--ti-text);
+
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  letter-spacing: -0.025em;
+}
+
+.threat-intelligence .page-heading p {
+  margin: 7px 0 0;
+
+  color: var(--ti-text-secondary);
+
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+/* ============================================================================
+ * HEADER ACTIONS
+ * ========================================================================== */
+
+.threat-intelligence .threat-intelligence-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  flex: 0 0 auto;
+  min-width: max-content;
+}
+
+/* --------------------------------------------------------------------------
+ * Primary action
+ * -------------------------------------------------------------------------- */
+
+.threat-intelligence .threat-intelligence-actions .primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 35px;
+  padding: 0 14px;
+
+  border: 1px solid var(--ti-cyan);
+  border-radius: 6px;
+
+  background: var(--ti-cyan);
+  color: #03131b;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.threat-intelligence .threat-intelligence-actions .primary-action:hover {
+  border-color: var(--ti-cyan-bright);
+  background: var(--ti-cyan-bright);
+
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 0 18px rgba(34, 211, 238, 0.14);
+}
+
+.threat-intelligence .threat-intelligence-actions .primary-action:active {
+  transform: translateY(1px);
+}
+
+.threat-intelligence .threat-intelligence-actions .primary-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+ * Secondary header actions
+ * -------------------------------------------------------------------------- */
+
+.threat-intelligence
+  .threat-intelligence-actions
+  > button:not(.primary-action) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 35px;
+  padding: 0 13px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 6px;
+
+  background: var(--ti-panel);
+  color: var(--ti-text-secondary);
+
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.threat-intelligence
+  .threat-intelligence-actions
+  > button:not(.primary-action):hover {
+  border-color: var(--ti-border-hover);
+  background: var(--ti-panel-hover);
+  color: var(--ti-text);
+}
+
+.threat-intelligence
+  .threat-intelligence-actions
+  > button:not(.primary-action):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+ * KPI SECTION
+ * ========================================================================== */
+
+.threat-intelligence .threat-intelligence-kpis {
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0 0 18px;
+}
+
+/* ============================================================================
+ * KPI CARD
+ * ========================================================================== */
+
+.threat-intelligence .threat-kpi-card {
+  position: relative;
+
+  min-width: 0;
+  min-height: 94px;
+
+  padding: 14px 15px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 7px;
+
+  background: var(--ti-panel);
+
+  overflow: hidden;
+
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.threat-intelligence .threat-kpi-card::before {
+  position: absolute;
+
+  top: 0;
+  right: 0;
+  left: 0;
+
+  height: 2px;
+
+  background: rgba(34, 211, 238, 0.28);
+
+  content: "";
+}
+
+.threat-intelligence .threat-kpi-card:hover {
+  border-color: var(--ti-border-hover);
+  background: var(--ti-panel-raised);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+ * KPI tones
+ * -------------------------------------------------------------------------- */
+
+.threat-intelligence .threat-kpi-accent::before {
+  background: var(--ti-cyan);
+}
+
+.threat-intelligence .threat-kpi-warning::before {
+  background: var(--ti-yellow);
+}
+
+.threat-intelligence .threat-kpi-danger::before {
+  background: var(--ti-red);
+}
+
+.threat-intelligence .threat-kpi-default::before {
+  background: rgba(103, 142, 174, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+ * KPI text
+ * -------------------------------------------------------------------------- */
+
+.threat-intelligence .threat-kpi-label {
+  display: block;
+
+  margin: 0 0 8px;
+
+  color: var(--ti-text-muted);
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  letter-spacing: 0.09em;
+
+  text-transform: uppercase;
+}
+
+.threat-intelligence .threat-kpi-value {
+  display: block;
+
+  color: var(--ti-text);
+
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+
+  letter-spacing: -0.025em;
+}
+
+/* ============================================================================
+ * IOC INVENTORY PANEL
+ * ========================================================================== */
+
+/*
+ * Panel is a shared component. We scope only its placement from this module.
+ */
+
+.threat-intelligence > .panel,
+.threat-intelligence > [class*="panel"] {
+  min-width: 0;
+}
+
+/* ============================================================================
+ * FILTER BAR
+ *
+ * Actual JSX structure:
+ *
+ * .threat-intelligence-filters
+ *   ├── .threat-intelligence-search
+ *   │     └── input
+ *   ├── select
+ *   ├── select
+ *   ├── select
+ *   ├── select
+ *   ├── select
+ *   └── button
+ * ========================================================================== */
+
+.threat-intelligence .threat-intelligence-filters {
+  display: grid;
+
+  grid-template-columns:
+    minmax(220px, 2fr)
+    repeat(5, minmax(105px, 1fr))
+    auto;
+
+  align-items: center;
+
+  gap: 7px;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+
+  padding: 10px 12px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 7px 7px 0 0;
+
+  background: #071522;
+}
+
+/* ============================================================================
+ * SEARCH
+ * ========================================================================== */
+
+.threat-intelligence .threat-intelligence-search {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+}
+
+.threat-intelligence .threat-intelligence-search input {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+
+  padding: 0 10px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 5px;
+
+  outline: none;
+
+  background: #06111d;
+  color: var(--ti-text);
+
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.threat-intelligence .threat-intelligence-search input::placeholder {
+  color: #536b7e;
+}
+
+.threat-intelligence .threat-intelligence-search input:hover {
+  border-color: var(--ti-border-hover);
+  background: #071522;
+}
+
+.threat-intelligence .threat-intelligence-search input:focus {
+  border-color: var(--ti-cyan);
+
+  background: #071522;
+
+  box-shadow:
+    0 0 0 2px var(--ti-cyan-soft);
+}
+
+/* ============================================================================
+ * FILTER SELECTS
+ * ========================================================================== */
+
+.threat-intelligence .threat-intelligence-filters > select {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+
+  padding: 0 9px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 5px;
+
+  outline: none;
+
+  background: #06111d;
+  color: var(--ti-text-secondary);
+
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease;
+}
+
+.threat-intelligence .threat-intelligence-filters > select:hover {
+  border-color: var(--ti-border-hover);
+  background: #071522;
+  color: var(--ti-text);
+}
+
+.threat-intelligence .threat-intelligence-filters > select:focus {
+  border-color: var(--ti-cyan);
+
+  background: #071522;
+  color: var(--ti-text);
+
+  box-shadow:
+    0 0 0 2px var(--ti-cyan-soft);
+}
+
+/* ============================================================================
+ * RESET FILTER BUTTON
+ * ========================================================================== */
+
+.threat-intelligence .threat-intelligence-filters > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: max-content;
+  height: 34px;
+
+  padding: 0 11px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 5px;
+
+  background: var(--ti-panel);
+  color: var(--ti-text-secondary);
+
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    opacity 140ms ease;
+}
+
+.threat-intelligence .threat-intelligence-filters > button:hover {
+  border-color: var(--ti-border-strong);
+  background: var(--ti-panel-hover);
+  color: var(--ti-text);
+}
+
+.threat-intelligence .threat-intelligence-filters > button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+ * EMPTY / LOADING / ERROR STATES
+ * ========================================================================== */
+
+.threat-intelligence .empty-state {
+  display: flex;
+
+  min-height: 130px;
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 22px;
+
+  color: var(--ti-text-muted);
+
+  text-align: center;
+}
+
+.threat-intelligence .empty-state p {
+  max-width: 620px;
+
+  margin: 0;
+
+  color: var(--ti-text-muted);
+
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.threat-intelligence .empty-state strong {
+  color: var(--ti-text-secondary);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Retry button inside error state */
+
+.threat-intelligence .empty-state button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 32px;
+
+  padding: 0 12px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 5px;
+
+  background: var(--ti-panel);
+  color: var(--ti-text-secondary);
+
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.threat-intelligence .empty-state button:hover {
+  border-color: var(--ti-border-strong);
+  background: var(--ti-panel-hover);
+  color: var(--ti-text);
+}
+
+/* ============================================================================
+ * PAGINATION
+ *
+ * Actual JSX:
+ *
+ * .ioc-pagination
+ *   ├── div   -> range / total
+ *   └── div
+ *       ├── span -> Page X of Y
+ *       ├── button
+ *       └── button
+ * ========================================================================== */
+
+.threat-intelligence .ioc-pagination {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 11px 12px;
+
+  border: 1px solid var(--ti-border);
+  border-top: 0;
+
+  background: #071522;
+
+  color: var(--ti-text-muted);
+
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* Left pagination information */
+
+.threat-intelligence .ioc-pagination > div:first-child {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: var(--ti-text-muted);
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Right pagination controls */
+
+.threat-intelligence .ioc-pagination > div:last-child {
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 7px;
+
+  flex-shrink: 0;
+}
+
+.threat-intelligence .ioc-pagination > div:last-child > span {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 28px;
+
+  padding: 0 5px;
+
+  color: var(--ti-text-secondary);
+
+  font-size: 10px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.threat-intelligence .ioc-pagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 68px;
+  min-height: 28px;
+
+  padding: 0 9px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 5px;
+
+  background: var(--ti-panel);
+  color: var(--ti-text-secondary);
+
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.threat-intelligence .ioc-pagination button:hover:not(:disabled) {
+  border-color: var(--ti-border-strong);
+  background: var(--ti-panel-hover);
+  color: var(--ti-text);
+}
+
+.threat-intelligence .ioc-pagination button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+ * FOCUS ACCESSIBILITY
+ * ========================================================================== */
+
+.threat-intelligence button:focus-visible,
+.threat-intelligence input:focus-visible,
+.threat-intelligence select:focus-visible,
+.threat-intelligence textarea:focus-visible {
+  outline: 2px solid var(--ti-cyan);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+ * RESPONSIVE — LARGE TABLET
+ * ========================================================================== */
+
+@media (max-width: 1250px) {
+  .threat-intelligence .threat-intelligence-filters {
+    grid-template-columns:
+      minmax(210px, 2fr)
+      repeat(3, minmax(105px, 1fr))
+      repeat(2, minmax(105px, 1fr))
+      auto;
+  }
+}
+
+/* ============================================================================
+ * RESPONSIVE — TABLET
+ * ========================================================================== */
+
+@media (max-width: 1080px) {
+  .threat-intelligence .threat-intelligence-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .threat-intelligence .threat-intelligence-filters {
+    grid-template-columns:
+      minmax(220px, 2fr)
+      repeat(3, minmax(120px, 1fr));
+  }
+
+  .threat-intelligence .threat-intelligence-filters > button {
+    width: 100%;
+  }
+}
+
+/* ============================================================================
+ * RESPONSIVE — SMALL TABLET
+ * ========================================================================== */
+
+@media (max-width: 820px) {
+  .threat-intelligence .page-heading {
+    gap: 16px;
+  }
+
+  .threat-intelligence .threat-intelligence-filters {
+    grid-template-columns:
+      minmax(200px, 1fr)
+      repeat(2, minmax(120px, 1fr));
+  }
+}
+
+/* ============================================================================
+ * RESPONSIVE — MOBILE
+ * ========================================================================== */
+
+@media (max-width: 700px) {
+  .threat-intelligence .page-heading {
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  .threat-intelligence .page-heading h2 {
+    font-size: 22px;
+  }
+
+  .threat-intelligence .page-heading p {
+    font-size: 12px;
+  }
+
+  .threat-intelligence .threat-intelligence-actions {
+    width: 100%;
+
+    justify-content: flex-start;
+  }
+
+  .threat-intelligence
+    .threat-intelligence-actions
+    > button {
+    flex: 1 1 0;
+  }
+
+  .threat-intelligence .threat-intelligence-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+  }
+
+  .threat-intelligence .threat-kpi-card {
+    min-height: 86px;
+
+    padding: 12px 13px;
+  }
+
+  .threat-intelligence .threat-kpi-value {
+    font-size: 21px;
+  }
+
+  .threat-intelligence .threat-intelligence-filters {
+    grid-template-columns: 1fr;
+
+    gap: 7px;
+
+    padding: 10px;
+
+    border-radius: 7px 7px 0 0;
+  }
+
+  .threat-intelligence .threat-intelligence-filters > select,
+  .threat-intelligence .threat-intelligence-filters > button {
+    width: 100%;
+  }
+
+  .threat-intelligence .ioc-pagination {
+    align-items: stretch;
+
+    flex-direction: column;
+
+    gap: 9px;
+  }
+
+  .threat-intelligence .ioc-pagination > div:last-child {
+    justify-content: space-between;
+
+    width: 100%;
+  }
+
+  .threat-intelligence .ioc-pagination button {
+    flex: 1 1 0;
+  }
+}
+
+/* ============================================================================
+ * RESPONSIVE — SMALL MOBILE
+ * ========================================================================== */
+
+@media (max-width: 480px) {
+  .threat-intelligence .threat-intelligence-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .threat-intelligence .threat-kpi-card {
+    min-height: 82px;
+  }
+
+  .threat-intelligence .threat-kpi-value {
+    font-size: 20px;
+  }
+
+  .threat-intelligence .threat-intelligence-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .threat-intelligence
+    .threat-intelligence-actions
+    > button {
+    width: 100%;
+  }
+
+  .threat-intelligence .ioc-pagination > div:last-child {
+    flex-wrap: wrap;
+  }
+
+  .threat-intelligence .ioc-pagination > div:last-child > span {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ============================================================================
+ * REDUCED MOTION
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .threat-intelligence *,
+  .threat-intelligence *::before,
+  .threat-intelligence *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================================
+ * KPI ICONS
+ * ========================================================================== */
+
+.threat-intelligence .threat-kpi-card {
+  padding-left: 58px;
+}
+
+/* Icon container */
+
+.threat-intelligence .threat-kpi-card::after {
+  position: absolute;
+
+  top: 14px;
+  left: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+
+  border: 1px solid rgba(103, 142, 174, 0.20);
+  border-radius: 6px;
+
+  background: rgba(103, 142, 174, 0.08);
+
+  color: var(--ti-text-secondary);
+
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+
+  content: "◈";
+}
+
+/* Total */
+
+.threat-intelligence .threat-kpi-default::after {
+  content: "◈";
+
+  border-color: rgba(103, 142, 174, 0.22);
+  background: rgba(103, 142, 174, 0.08);
+  color: var(--ti-text-secondary);
+}
+
+/* Active */
+
+.threat-intelligence .threat-kpi-accent::after {
+  content: "✓";
+
+  border-color: rgba(34, 211, 238, 0.25);
+  background: rgba(34, 211, 238, 0.09);
+  color: var(--ti-cyan);
+}
+
+/* High Risk */
+
+.threat-intelligence .threat-kpi-warning::after {
+  content: "⚠";
+
+  border-color: rgba(251, 191, 36, 0.25);
+  background: rgba(251, 191, 36, 0.09);
+  color: var(--ti-yellow);
+}
+
+/* Expired */
+
+.threat-intelligence .threat-kpi-danger::after {
+  content: "◷";
+
+  border-color: rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.09);
+  color: var(--ti-red);
+}
+
+/* Mobile */
+
+@media (max-width: 480px) {
+  .threat-intelligence .threat-kpi-card {
+    padding-left: 54px;
+  }
+
+  .threat-intelligence .threat-kpi-card::after {
+    top: 13px;
+    left: 13px;
+
+    width: 28px;
+    height: 28px;
+
+    font-size: 13px;
+  }
+}
+
+/* ============================================================================
+ * SentinelSIEM — Threat Intelligence
+ * STEP 2 — IOC TABLE
+ *
+ * Matched directly to:
+ *   frontend/src/modules/threat-intelligence/components/IOCTable.tsx
+ *
+ * Scope:
+ * - IOC table container
+ * - Table structure
+ * - IOC value
+ * - Type / severity / status / reputation pills
+ * - Last Seen
+ * - Row actions
+ * - Action dropdown
+ * - Table responsiveness
+ * ========================================================================== */
+
+
+/* ============================================================================
+ * TABLE CONTAINER
+ * ========================================================================== */
+
+.threat-intelligence .table-wrap {
+  width: 100%;
+  min-width: 0;
+
+  overflow-x: auto;
+  overflow-y: visible;
+
+  border: 1px solid var(--ti-border);
+  border-top: 0;
+
+  background: var(--ti-panel);
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgba(103, 142, 174, 0.28)
+    transparent;
+}
+
+.threat-intelligence .table-wrap::-webkit-scrollbar {
+  height: 7px;
+}
+
+.threat-intelligence .table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.threat-intelligence .table-wrap::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(103, 142, 174, 0.25);
+}
+
+.threat-intelligence .table-wrap::-webkit-scrollbar-thumb:hover {
+  background: rgba(103, 142, 174, 0.40);
+}
+
+
+/* ============================================================================
+ * TABLE
+ * ========================================================================== */
+
+.threat-intelligence .table-wrap table {
+  width: 100%;
+  min-width: 900px;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  color: var(--ti-text);
+
+  font-size: 11px;
+}
+
+
+/* ============================================================================
+ * TABLE HEADER
+ * ========================================================================== */
+
+.threat-intelligence .table-wrap thead {
+  background: #071522;
+}
+
+.threat-intelligence .table-wrap thead tr {
+  height: 40px;
+}
+
+.threat-intelligence .table-wrap th {
+  height: 40px;
+
+  padding: 0 12px;
+
+  border-bottom: 1px solid var(--ti-border);
+
+  color: var(--ti-text-muted);
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+
+  letter-spacing: 0.075em;
+
+  text-align: left;
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.threat-intelligence .table-wrap th:first-child {
+  padding-left: 14px;
+}
+
+.threat-intelligence .table-wrap th:last-child {
+  padding-right: 14px;
+
+  text-align: right;
+}
+
+
+/* ============================================================================
+ * TABLE BODY
+ * ========================================================================== */
+
+.threat-intelligence .table-wrap tbody tr {
+  height: 52px;
+
+  background: var(--ti-panel);
+
+  transition:
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.threat-intelligence .table-wrap tbody tr:hover {
+  background: var(--ti-panel-hover);
+}
+
+.threat-intelligence .table-wrap tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.threat-intelligence .table-wrap td {
+  height: 52px;
+
+  padding: 8px 12px;
+
+  border-bottom: 1px solid rgba(103, 142, 174, 0.10);
+
+  color: var(--ti-text-secondary);
+
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+
+  vertical-align: middle;
+
+  white-space: nowrap;
+}
+
+.threat-intelligence .table-wrap td:first-child {
+  padding-left: 14px;
+}
+
+.threat-intelligence .table-wrap td:last-child {
+  padding-right: 14px;
+
+  text-align: right;
+}
+
+
+/* ============================================================================
+ * IOC VALUE BUTTON
+ *
+ * Actual JSX:
+ *
+ * <button className="ioc-value-button">
+ *   <code>...</code>
+ * </button>
+ * ========================================================================== */
+
+.threat-intelligence .ioc-value-button {
+  display: inline-flex;
+  align-items: center;
+
+  max-width: 320px;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+  color: var(--ti-cyan-bright);
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.threat-intelligence .ioc-value-button code {
+  display: block;
+
+  max-width: 320px;
+
+  overflow: hidden;
+
+  color: inherit;
+
+  font-family:
+    "SFMono-Regular",
+    "Cascadia Code",
+    "Roboto Mono",
+    Consolas,
+    monospace;
+
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.threat-intelligence .ioc-value-button:hover {
+  color: #a5f3fc;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.threat-intelligence .ioc-value-button:active {
+  color: var(--ti-cyan);
+}
+
+
+/* ============================================================================
+ * HEALTH PILL — BASE
+ *
+ * Existing component intentionally reuses:
+ *   health-pill
+ *   healthy
+ *   degraded
+ *   warning
+ *   offline
+ * ========================================================================== */
+
+.threat-intelligence .health-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 22px;
+
+  padding: 0 8px;
+
+  border: 1px solid rgba(103, 142, 174, 0.18);
+  border-radius: 999px;
+
+  background: rgba(103, 142, 174, 0.08);
+
+  color: var(--ti-text-secondary);
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+
+  letter-spacing: 0.025em;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================================
+ * HEALTH PILL — HEALTHY
+ * ========================================================================== */
+
+.threat-intelligence .health-pill.healthy {
+  border-color: rgba(52, 211, 153, 0.25);
+
+  background: rgba(52, 211, 153, 0.08);
+
+  color: #6ee7b7;
+}
+
+
+/* ============================================================================
+ * HEALTH PILL — DEGRADED
+ * ========================================================================== */
+
+.threat-intelligence .health-pill.degraded {
+  border-color: rgba(251, 146, 60, 0.28);
+
+  background: rgba(251, 146, 60, 0.09);
+
+  color: #fdba74;
+}
+
+
+/* ============================================================================
+ * HEALTH PILL — WARNING
+ * ========================================================================== */
+
+.threat-intelligence .health-pill.warning {
+  border-color: rgba(251, 191, 36, 0.28);
+
+  background: rgba(251, 191, 36, 0.09);
+
+  color: #fde68a;
+}
+
+
+/* ============================================================================
+ * HEALTH PILL — OFFLINE
+ * ========================================================================== */
+
+.threat-intelligence .health-pill.offline {
+  border-color: rgba(248, 113, 113, 0.28);
+
+  background: rgba(248, 113, 113, 0.09);
+
+  color: #fca5a5;
+}
+
+
+/* ============================================================================
+ * IOC LAST SEEN
+ * ========================================================================== */
+
+.threat-intelligence .ioc-last-seen {
+  display: inline-block;
+
+  color: var(--ti-text-muted);
+
+  font-size: 10px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+.threat-intelligence .table-wrap tbody tr:hover .ioc-last-seen {
+  color: var(--ti-text-secondary);
+}
+
+
+/* ============================================================================
+ * SOURCE COLUMN
+ * ========================================================================== */
+
+.threat-intelligence .table-wrap td:nth-child(5) {
+  max-width: 150px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================================
+ * ACTIONS
+ *
+ * Actual JSX:
+ *
+ * <div className="ioc-actions">
+ *   <button className="ioc-action-button">⋮</button>
+ *   <div className="ioc-action-menu">
+ *      ...
+ *   </div>
+ * </div>
+ * ========================================================================== */
+
+.threat-intelligence .ioc-actions {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  width: 30px;
+  height: 30px;
+}
+
+
+/* ============================================================================
+ * THREE-DOT ACTION BUTTON
+ * ========================================================================== */
+
+.threat-intelligence .ioc-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  border: 1px solid transparent;
+  border-radius: 5px;
+
+  background: transparent;
+  color: var(--ti-text-muted);
+
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+
+  letter-spacing: 1px;
+
+  cursor: pointer;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.threat-intelligence .ioc-action-button:hover {
+  border-color: var(--ti-border);
+
+  background: rgba(103, 142, 174, 0.10);
+
+  color: var(--ti-text);
+}
+
+.threat-intelligence .ioc-action-button:active {
+  background: rgba(34, 211, 238, 0.08);
+}
+
+.threat-intelligence .ioc-action-button:focus-visible {
+  border-color: var(--ti-cyan);
+
+  outline: 2px solid rgba(34, 211, 238, 0.20);
+  outline-offset: 1px;
+}
+
+
+/* ============================================================================
+ * ACTION MENU
+ * ========================================================================== */
+
+.threat-intelligence .ioc-action-menu {
+  position: absolute;
+
+  z-index: 50;
+
+  top: calc(100% + 5px);
+  right: 0;
+
+  display: none;
+
+  min-width: 156px;
+
+  padding: 4px;
+
+  border: 1px solid var(--ti-border-hover);
+  border-radius: 6px;
+
+  background: #0a1929;
+
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.34),
+    0 2px 8px rgba(0, 0, 0, 0.20);
+
+  text-align: left;
+}
+
+
+/*
+ * The JSX currently places the menu directly inside .ioc-actions.
+ *
+ * Show it when the action container is hovered/focused.
+ */
+
+.threat-intelligence .ioc-actions:hover .ioc-action-menu,
+.threat-intelligence .ioc-actions:focus-within .ioc-action-menu {
+  display: block;
+}
+
+
+/* ============================================================================
+ * ACTION MENU BUTTONS
+ * ========================================================================== */
+
+.threat-intelligence .ioc-action-menu button {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 32px;
+
+  padding: 0 10px;
+
+  border: 0;
+  border-radius: 4px;
+
+  background: transparent;
+  color: var(--ti-text-secondary);
+
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+
+  text-align: left;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.threat-intelligence .ioc-action-menu button:hover {
+  background: rgba(34, 211, 238, 0.08);
+
+  color: var(--ti-text);
+}
+
+.threat-intelligence .ioc-action-menu button:active {
+  background: rgba(34, 211, 238, 0.13);
+}
+
+.threat-intelligence .ioc-action-menu button:focus-visible {
+  outline: 2px solid var(--ti-cyan);
+  outline-offset: -2px;
+}
+
+
+/* ============================================================================
+ * ACTION MENU — STATUS ACTION
+ * ========================================================================== */
+
+/*
+ * Third action:
+ *   ● Disable IOC
+ *   ● Enable IOC
+ *
+ * Keep the same neutral menu language rather than making the entire menu
+ * visually aggressive.
+ */
+
+.threat-intelligence .ioc-action-menu button:last-child {
+  color: var(--ti-text-secondary);
+}
+
+.threat-intelligence .ioc-action-menu button:last-child:hover {
+  color: var(--ti-text);
+}
+
+
+/* ============================================================================
+ * TABLE COLUMN WIDTHS
+ * ========================================================================== */
+
+.threat-intelligence .table-wrap th:nth-child(1),
+.threat-intelligence .table-wrap td:nth-child(1) {
+  width: 27%;
+  min-width: 220px;
+}
+
+.threat-intelligence .table-wrap th:nth-child(2),
+.threat-intelligence .table-wrap td:nth-child(2) {
+  width: 10%;
+  min-width: 90px;
+}
+
+.threat-intelligence .table-wrap th:nth-child(3),
+.threat-intelligence .table-wrap td:nth-child(3) {
+  width: 10%;
+  min-width: 90px;
+}
+
+.threat-intelligence .table-wrap th:nth-child(4),
+.threat-intelligence .table-wrap td:nth-child(4) {
+  width: 10%;
+  min-width: 90px;
+}
+
+.threat-intelligence .table-wrap th:nth-child(5),
+.threat-intelligence .table-wrap td:nth-child(5) {
+  width: 12%;
+  min-width: 100px;
+}
+
+.threat-intelligence .table-wrap th:nth-child(6),
+.threat-intelligence .table-wrap td:nth-child(6) {
+  width: 11%;
+  min-width: 100px;
+}
+
+.threat-intelligence .table-wrap th:nth-child(7),
+.threat-intelligence .table-wrap td:nth-child(7) {
+  width: 12%;
+  min-width: 105px;
+}
+
+.threat-intelligence .table-wrap th:nth-child(8),
+.threat-intelligence .table-wrap td:nth-child(8) {
+  width: 8%;
+  min-width: 70px;
+}
+
+
+/* ============================================================================
+ * EMPTY TABLE STATE
+ * ========================================================================== */
+
+.threat-intelligence .table-wrap + .empty-state {
+  border: 1px solid var(--ti-border);
+  border-top: 0;
+}
+
+
+/* ============================================================================
+ * RESPONSIVE — TABLET
+ * ========================================================================== */
+
+@media (max-width: 900px) {
+  .threat-intelligence .table-wrap table {
+    min-width: 850px;
+  }
+
+  .threat-intelligence .table-wrap th,
+  .threat-intelligence .table-wrap td {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .threat-intelligence .table-wrap th:first-child,
+  .threat-intelligence .table-wrap td:first-child {
+    padding-left: 12px;
+  }
+
+  .threat-intelligence .table-wrap th:last-child,
+  .threat-intelligence .table-wrap td:last-child {
+    padding-right: 12px;
+  }
+
+  .threat-intelligence .ioc-value-button,
+  .threat-intelligence .ioc-value-button code {
+    max-width: 240px;
+  }
+}
+
+
+/* ============================================================================
+ * RESPONSIVE — MOBILE
+ * ========================================================================== */
+
+@media (max-width: 700px) {
+  .threat-intelligence .table-wrap {
+    border-radius: 0;
+  }
+
+  .threat-intelligence .table-wrap table {
+    min-width: 820px;
+  }
+
+  .threat-intelligence .table-wrap th {
+    height: 38px;
+
+    font-size: 8px;
+  }
+
+  .threat-intelligence .table-wrap td {
+    height: 50px;
+
+    font-size: 10px;
+  }
+
+  .threat-intelligence .health-pill {
+    min-height: 21px;
+
+    padding: 0 7px;
+
+    font-size: 8px;
+  }
+
+  .threat-intelligence .ioc-value-button,
+  .threat-intelligence .ioc-value-button code {
+    max-width: 220px;
+  }
+
+  /*
+   * Keep the action menu inside the viewport on smaller screens.
+   */
+
+  .threat-intelligence .ioc-action-menu {
+    right: 0;
+
+    min-width: 150px;
+  }
+}
+
+
+/* ============================================================================
+ * RESPONSIVE — SMALL MOBILE
+ * ========================================================================== */
+
+@media (max-width: 480px) {
+  .threat-intelligence .table-wrap table {
+    min-width: 780px;
+  }
+
+  .threat-intelligence .ioc-value-button,
+  .threat-intelligence .ioc-value-button code {
+    max-width: 190px;
+  }
+
+  .threat-intelligence .ioc-action-menu {
+    min-width: 145px;
+  }
+}
+
+
+/* ============================================================================
+ * REDUCED MOTION
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .threat-intelligence .table-wrap tbody tr,
+  .threat-intelligence .ioc-value-button,
+  .threat-intelligence .ioc-action-button,
+  .threat-intelligence .ioc-action-menu button {
+    transition: none;
+  }
+}
+
+/* ============================================================================
+ * SentinelSIEM — Threat Intelligence
+ * STEP 3 — IOC DETAILS + RIGHT SIDEBAR DRAWERS
+ *
+ * Matched to:
+ *   pages/IOCDetails.tsx
+ *   pages/ThreatIntelligence.tsx
+ *
+ * Scope:
+ * - IOC standalone details workspace
+ * - IOC details sections
+ * - Identity
+ * - Classification
+ * - Overview
+ * - Description
+ * - Tags
+ * - Relationships
+ * - Metadata
+ * - Loading / Error / Empty states
+ * - View / Add / Edit right-side drawer
+ * - Drawer header
+ * - Drawer content
+ * - Responsive behavior
+ * ========================================================================== */
+
+
+/* ============================================================================
+ * RIGHT-SIDE DRAWER BACKDROP
+ * ========================================================================== */
+
+.threat-intelligence .ioc-drawer-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1090;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+
+  background: rgba(2, 8, 15, 0.68);
+
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+
+  animation: ioc-drawer-backdrop-in 160ms ease-out;
+}
+
+
+/* ============================================================================
+ * RIGHT-SIDE DRAWER
+ *
+ * Used by:
+ * - View IOC
+ * - Add IOC
+ * - Edit IOC
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-drawer {
+  position: relative;
+
+  z-index: 1100;
+
+  display: flex;
+
+  width: min(720px, 94vw);
+  height: 100vh;
+
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border-left: 1px solid rgba(103, 142, 174, 0.24);
+
+  background:
+    linear-gradient(
+      180deg,
+      #0a1929 0%,
+      #071522 100%
+    );
+
+  color: var(--ti-text);
+
+  box-shadow:
+    -18px 0 50px rgba(0, 0, 0, 0.36),
+    -4px 0 18px rgba(0, 0, 0, 0.18);
+
+  animation: ioc-drawer-slide-in 190ms cubic-bezier(
+    0.22,
+    1,
+    0.36,
+    1
+  );
+}
+
+
+/* ============================================================================
+ * DRAWER HEADER
+ * ========================================================================== */
+
+.threat-intelligence .ioc-drawer-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  flex: 0 0 auto;
+
+  min-height: 72px;
+
+  padding: 15px 18px;
+
+  border-bottom: 1px solid var(--ti-border);
+
+  background: rgba(7, 21, 34, 0.96);
+
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.015);
+}
+
+.threat-intelligence .ioc-drawer-header > div {
+  min-width: 0;
+}
+
+.threat-intelligence .ioc-drawer-header span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--ti-cyan);
+
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.threat-intelligence .ioc-drawer-header h3 {
+  margin: 0;
+
+  color: var(--ti-text);
+
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  letter-spacing: -0.01em;
+}
+
+.threat-intelligence .ioc-drawer-header > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 32px;
+  height: 32px;
+
+  margin-left: 14px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 6px;
+
+  background: rgba(103, 142, 174, 0.06);
+  color: var(--ti-text-muted);
+
+  font-family: inherit;
+  font-size: 21px;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.threat-intelligence .ioc-drawer-header > button:hover {
+  border-color: var(--ti-border-hover);
+
+  background: rgba(103, 142, 174, 0.12);
+
+  color: var(--ti-text);
+}
+
+.threat-intelligence .ioc-drawer-header > button:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+}
+
+
+/* ============================================================================
+ * DRAWER CONTENT
+ * ========================================================================== */
+
+.threat-intelligence .ioc-drawer-content {
+  flex: 1 1 auto;
+
+  min-height: 0;
+
+  padding: 18px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgba(103, 142, 174, 0.30)
+    transparent;
+}
+
+.threat-intelligence .ioc-drawer-content::-webkit-scrollbar {
+  width: 7px;
+}
+
+.threat-intelligence .ioc-drawer-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.threat-intelligence .ioc-drawer-content::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+
+  background: rgba(103, 142, 174, 0.25);
+}
+
+.threat-intelligence .ioc-drawer-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(103, 142, 174, 0.40);
+}
+
+
+/* ============================================================================
+ * DRAWER EMPTY / LOADING / ERROR STATE
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-drawer > .empty-state {
+  flex: 1 1 auto;
+
+  min-height: 0;
+
+  padding: 30px 22px;
+}
+
+
+/* ============================================================================
+ * DETAILS CONTENT
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-content {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* ============================================================================
+ * DETAILS SECTION
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-section {
+  width: 100%;
+  min-width: 0;
+
+  margin: 0 0 18px;
+  padding: 0 0 18px;
+
+  border-bottom: 1px solid rgba(103, 142, 174, 0.12);
+}
+
+.threat-intelligence .ioc-details-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+
+  border-bottom: 0;
+}
+
+
+/* ============================================================================
+ * DETAILS SECTION HEADER
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-section-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 12px;
+}
+
+.threat-intelligence .ioc-details-section-header > div {
+  min-width: 0;
+}
+
+.threat-intelligence .ioc-details-section-header h3 {
+  margin: 0;
+
+  color: var(--ti-text);
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+
+  letter-spacing: -0.005em;
+}
+
+.threat-intelligence .ioc-details-section-header p {
+  margin: 4px 0 0;
+
+  color: var(--ti-text-muted);
+
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+
+/* ============================================================================
+ * DETAILS GRID
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 8px;
+}
+
+
+/* ============================================================================
+ * DETAIL FIELD
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-field {
+  min-width: 0;
+
+  padding: 10px 11px;
+
+  border: 1px solid rgba(103, 142, 174, 0.14);
+  border-radius: 6px;
+
+  background: rgba(103, 142, 174, 0.035);
+}
+
+.threat-intelligence .ioc-details-field-label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--ti-text-muted);
+
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  letter-spacing: 0.065em;
+
+  text-transform: uppercase;
+}
+
+.threat-intelligence .ioc-details-field-value {
+  display: block;
+
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+
+  color: var(--ti-text-secondary);
+
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.threat-intelligence .ioc-details-field-value-emphasis {
+  color: var(--ti-cyan-bright);
+
+  font-family:
+    "SFMono-Regular",
+    "Cascadia Code",
+    "Roboto Mono",
+    Consolas,
+    monospace;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+/* ============================================================================
+ * CLASSIFICATION
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-classification {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 8px;
+}
+
+.threat-intelligence .ioc-details-classification-item {
+  min-width: 0;
+
+  padding: 10px;
+
+  border: 1px solid rgba(103, 142, 174, 0.14);
+  border-radius: 6px;
+
+  background: rgba(103, 142, 174, 0.035);
+}
+
+.threat-intelligence .ioc-details-classification-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: var(--ti-text-muted);
+
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  letter-spacing: 0.065em;
+
+  text-transform: uppercase;
+}
+
+
+/* ============================================================================
+ * DETAILS BADGES
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 22px;
+  max-width: 100%;
+
+  padding: 0 8px;
+
+  border: 1px solid rgba(103, 142, 174, 0.20);
+  border-radius: 999px;
+
+  background: rgba(103, 142, 174, 0.08);
+
+  color: var(--ti-text-secondary);
+
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+.threat-intelligence .ioc-details-badge-critical {
+  border-color: rgba(248, 113, 113, 0.30);
+
+  background: rgba(248, 113, 113, 0.10);
+
+  color: #fca5a5;
+}
+
+.threat-intelligence .ioc-details-badge-high {
+  border-color: rgba(251, 146, 60, 0.30);
+
+  background: rgba(251, 146, 60, 0.10);
+
+  color: #fdba74;
+}
+
+.threat-intelligence .ioc-details-badge-medium {
+  border-color: rgba(251, 191, 36, 0.30);
+
+  background: rgba(251, 191, 36, 0.10);
+
+  color: #fde68a;
+}
+
+.threat-intelligence .ioc-details-badge-low {
+  border-color: rgba(52, 211, 153, 0.28);
+
+  background: rgba(52, 211, 153, 0.09);
+
+  color: #6ee7b7;
+}
+
+.threat-intelligence .ioc-details-badge-info {
+  border-color: rgba(34, 211, 238, 0.25);
+
+  background: rgba(34, 211, 238, 0.08);
+
+  color: var(--ti-cyan-bright);
+}
+
+.threat-intelligence .ioc-details-badge-active {
+  border-color: rgba(52, 211, 153, 0.30);
+
+  background: rgba(52, 211, 153, 0.10);
+
+  color: #6ee7b7;
+}
+
+.threat-intelligence .ioc-details-badge-neutral {
+  border-color: rgba(103, 142, 174, 0.20);
+
+  background: rgba(103, 142, 174, 0.07);
+
+  color: var(--ti-text-secondary);
+}
+
+
+/* ============================================================================
+ * DESCRIPTION
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-description {
+  padding: 12px 13px;
+
+  border: 1px solid rgba(103, 142, 174, 0.14);
+  border-radius: 6px;
+
+  background: rgba(103, 142, 174, 0.035);
+}
+
+.threat-intelligence .ioc-details-description p {
+  margin: 0;
+
+  color: var(--ti-text-secondary);
+
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.65;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+
+/* ============================================================================
+ * MUTED
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-muted {
+  color: var(--ti-text-muted);
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+
+/* ============================================================================
+ * TAGS
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-tags {
+  display: flex;
+
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 6px;
+}
+
+.threat-intelligence .ioc-details-tag {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 23px;
+
+  padding: 0 8px;
+
+  border: 1px solid rgba(34, 211, 238, 0.20);
+  border-radius: 999px;
+
+  background: rgba(34, 211, 238, 0.06);
+
+  color: #8be9f5;
+
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================================
+ * RELATIONSHIPS
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-relationships {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 8px;
+}
+
+.threat-intelligence .ioc-details-relationship-card {
+  min-width: 0;
+
+  padding: 11px;
+
+  border: 1px solid rgba(103, 142, 174, 0.14);
+  border-radius: 6px;
+
+  background: rgba(103, 142, 174, 0.035);
+}
+
+.threat-intelligence .ioc-details-relationship-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin-bottom: 8px;
+}
+
+.threat-intelligence .ioc-details-relationship-title {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: var(--ti-text-secondary);
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.3;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.threat-intelligence .ioc-details-relationship-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  min-width: 23px;
+  height: 20px;
+
+  padding: 0 6px;
+
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  border-radius: 999px;
+
+  background: rgba(34, 211, 238, 0.07);
+
+  color: var(--ti-cyan);
+
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.threat-intelligence .ioc-details-relationship-list {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+  min-width: 0;
+}
+
+.threat-intelligence .ioc-details-relationship-id {
+  display: block;
+
+  min-width: 0;
+
+  padding: 5px 7px;
+
+  border: 1px solid rgba(103, 142, 174, 0.10);
+  border-radius: 4px;
+
+  background: rgba(4, 13, 23, 0.55);
+
+  color: var(--ti-text-muted);
+
+  font-family:
+    "SFMono-Regular",
+    "Cascadia Code",
+    "Roboto Mono",
+    Consolas,
+    monospace;
+
+  font-size: 8px;
+  line-height: 1.35;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ============================================================================
+ * METADATA
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-metadata {
+  width: 100%;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(103, 142, 174, 0.14);
+  border-radius: 6px;
+
+  background: rgba(103, 142, 174, 0.035);
+}
+
+.threat-intelligence .ioc-details-metadata-row {
+  display: grid;
+
+  grid-template-columns:
+    minmax(120px, 0.7fr)
+    minmax(0, 2fr);
+
+  gap: 12px;
+
+  padding: 9px 11px;
+
+  border-bottom: 1px solid rgba(103, 142, 174, 0.10);
+}
+
+.threat-intelligence .ioc-details-metadata-row:last-child {
+  border-bottom: 0;
+}
+
+.threat-intelligence .ioc-details-metadata-key {
+  min-width: 0;
+
+  color: var(--ti-text-muted);
+
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+.threat-intelligence .ioc-details-metadata-value {
+  min-width: 0;
+
+  color: var(--ti-text-secondary);
+
+  font-family:
+    "SFMono-Regular",
+    "Cascadia Code",
+    "Roboto Mono",
+    Consolas,
+    monospace;
+
+  font-size: 8px;
+  line-height: 1.5;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+
+/* ============================================================================
+ * DETAILS PAGE — BACK LINK
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 34px;
+
+  padding: 0 12px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 5px;
+
+  background: var(--ti-panel);
+  color: var(--ti-text-secondary);
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.threat-intelligence .ioc-details-back-link:hover {
+  border-color: var(--ti-border-hover);
+
+  background: var(--ti-panel-hover);
+
+  color: var(--ti-text);
+}
+
+
+/* ============================================================================
+ * DETAILS PAGE STATES
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-state {
+  display: flex;
+
+  min-height: 300px;
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 24px;
+
+  text-align: center;
+}
+
+.threat-intelligence .ioc-details-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  margin-bottom: 12px;
+
+  border: 1px solid rgba(34, 211, 238, 0.20);
+  border-radius: 8px;
+
+  background: rgba(34, 211, 238, 0.07);
+
+  color: var(--ti-cyan);
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.threat-intelligence .ioc-details-state h3 {
+  margin: 0;
+
+  color: var(--ti-text);
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.threat-intelligence .ioc-details-state p {
+  max-width: 480px;
+
+  margin: 7px 0 0;
+
+  color: var(--ti-text-muted);
+
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.threat-intelligence .ioc-details-state-error
+  .ioc-details-state-icon {
+  border-color: rgba(248, 113, 113, 0.25);
+
+  background: rgba(248, 113, 113, 0.08);
+
+  color: #fca5a5;
+}
+
+
+/* ============================================================================
+ * RETRY
+ * ========================================================================== */
+
+.threat-intelligence .ioc-details-retry-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 32px;
+
+  margin-top: 15px;
+  padding: 0 13px;
+
+  border: 1px solid var(--ti-border);
+  border-radius: 5px;
+
+  background: var(--ti-panel);
+  color: var(--ti-text-secondary);
+
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.threat-intelligence .ioc-details-retry-button:hover {
+  border-color: var(--ti-border-strong);
+
+  background: var(--ti-panel-hover);
+
+  color: var(--ti-text);
+}
+
+
+/* ============================================================================
+ * DRAWER / PAGE RESPONSIVE — TABLET
+ * ========================================================================== */
+
+@media (max-width: 900px) {
+  .threat-intelligence .ioc-details-drawer {
+    width: min(680px, 96vw);
+  }
+
+  .threat-intelligence .ioc-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .threat-intelligence .ioc-details-classification {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .threat-intelligence .ioc-details-relationships {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ============================================================================
+ * DRAWER / PAGE RESPONSIVE — MOBILE
+ * ========================================================================== */
+
+@media (max-width: 700px) {
+  .threat-intelligence .ioc-drawer-backdrop {
+    justify-content: stretch;
+  }
+
+  .threat-intelligence .ioc-details-drawer {
+    width: 100vw;
+    max-width: 100vw;
+
+    border-left: 0;
+  }
+
+  .threat-intelligence .ioc-drawer-header {
+    min-height: 64px;
+
+    padding: 13px 14px;
+  }
+
+  .threat-intelligence .ioc-drawer-content {
+    padding: 14px;
+  }
+
+  .threat-intelligence .ioc-details-classification {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .threat-intelligence .ioc-details-metadata-row {
+    grid-template-columns: 1fr;
+
+    gap: 4px;
+  }
+
+  .threat-intelligence .ioc-details-section {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+  }
+}
+
+
+/* ============================================================================
+ * SMALL MOBILE
+ * ========================================================================== */
+
+@media (max-width: 480px) {
+  .threat-intelligence .ioc-details-classification {
+    grid-template-columns: 1fr;
+  }
+
+  .threat-intelligence .ioc-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .threat-intelligence .ioc-drawer-content {
+    padding: 12px;
+  }
+
+  .threat-intelligence .ioc-drawer-header {
+    padding: 12px;
+  }
+
+  .threat-intelligence .ioc-details-field {
+    padding: 9px 10px;
+  }
+
+  .threat-intelligence .ioc-details-section-header h3 {
+    font-size: 11px;
+  }
+}
+
+
+/* ============================================================================
+ * DRAWER ANIMATIONS
+ * ========================================================================== */
+
+@keyframes ioc-drawer-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ioc-drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+
+/* ============================================================================
+ * REDUCED MOTION
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .threat-intelligence .ioc-drawer-backdrop,
+  .threat-intelligence .ioc-details-drawer {
+    animation: none;
+  }
+
+  .threat-intelligence .ioc-details-retry-button,
+  .threat-intelligence .ioc-details-back-link,
+  .threat-intelligence .ioc-drawer-header > button {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   THREAT INTELLIGENCE
+   PROFESSIONAL IOC DRAWER + FORM POLISH
+   Final override layer
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   DRAWER BACKDROP
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-drawer-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1200 !important;
+
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+
+  background: rgba(2, 8, 18, 0.72) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+
+/* ------------------------------------------------------------
+   RIGHT SIDEBAR
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-details-drawer {
+  position: relative !important;
+
+  width: min(760px, 94vw) !important;
+  max-width: 760px !important;
+  min-width: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      #0a1929 0%,
+      #081725 45%,
+      #06111d 100%
+    ) !important;
+
+  border-left: 1px solid rgba(103, 232, 249, 0.14) !important;
+  box-shadow:
+    -18px 0 50px rgba(0, 0, 0, 0.42),
+    -2px 0 12px rgba(34, 211, 238, 0.05) !important;
+
+  animation: ti-ioc-drawer-in 220ms ease-out both !important;
+}
+
+
+/* ------------------------------------------------------------
+   DRAWER HEADER
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-drawer-header {
+  position: relative !important;
+
+  flex: 0 0 auto !important;
+
+  min-height: 76px !important;
+  height: auto !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+
+  padding: 18px 24px !important;
+
+  background: rgba(5, 16, 29, 0.96) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+
+
+/* small drawer category */
+
+.threat-intelligence .ioc-drawer-header > div:first-child {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+
+/* drawer eyebrow */
+
+.threat-intelligence .ioc-drawer-header span {
+  display: block !important;
+
+  color: #67e8f9 !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+}
+
+
+/* drawer title */
+
+.threat-intelligence .ioc-drawer-header h3 {
+  margin: 0 !important;
+
+  color: #f1f5f9 !important;
+
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+
+  letter-spacing: -0.01em !important;
+}
+
+
+/* close button */
+
+.threat-intelligence .ioc-drawer-header > button {
+  flex: 0 0 auto !important;
+
+  width: 40px !important;
+  height: 40px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 10px !important;
+
+  background: rgba(15, 31, 48, 0.8) !important;
+
+  color: #8ea4b8 !important;
+
+  font-size: 23px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease !important;
+}
+
+.threat-intelligence .ioc-drawer-header > button:hover {
+  background: rgba(34, 211, 238, 0.09) !important;
+  border-color: rgba(34, 211, 238, 0.30) !important;
+  color: #67e8f9 !important;
+}
+
+.threat-intelligence .ioc-drawer-header > button:active {
+  transform: scale(0.96) !important;
+}
+
+
+/* ------------------------------------------------------------
+   DRAWER BODY
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-drawer-content {
+  flex: 1 1 auto !important;
+
+  min-height: 0 !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  padding: 24px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(6, 17, 29, 0.55),
+      rgba(4, 13, 23, 0.92)
+    ) !important;
+}
+
+
+/* ------------------------------------------------------------
+   VIEW IOC — CONTENT
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-details-content {
+  width: 100% !important;
+  max-width: none !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+}
+
+
+/* detail sections */
+
+.threat-intelligence .ioc-detail-section {
+  width: 100% !important;
+
+  padding: 18px !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 28, 45, 0.92),
+      rgba(8, 22, 36, 0.88)
+    ) !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.11) !important;
+  border-radius: 12px !important;
+
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.12) !important;
+}
+
+
+/* section heading */
+
+.threat-intelligence .ioc-section-heading {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+
+  margin: 0 0 16px !important;
+  padding-bottom: 12px !important;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.09) !important;
+}
+
+.threat-intelligence .ioc-section-heading h4 {
+  margin: 0 !important;
+
+  color: #dce8f2 !important;
+
+  font-size: 13px !important;
+  font-weight: 700 !important;
+
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+
+/* ------------------------------------------------------------
+   IOC OVERVIEW GRID
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-overview-grid {
+  display: grid !important;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+
+  gap: 14px !important;
+}
+
+
+.threat-intelligence .ioc-detail-field {
+  min-width: 0 !important;
+
+  padding: 13px 14px !important;
+
+  background: rgba(3, 12, 22, 0.48) !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.09) !important;
+  border-radius: 9px !important;
+}
+
+
+.threat-intelligence .ioc-detail-field > span:first-child {
+  display: block !important;
+
+  margin-bottom: 6px !important;
+
+  color: #71879a !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+
+.threat-intelligence .ioc-detail-value {
+  display: block !important;
+
+  min-width: 0 !important;
+
+  color: #dbe7f0 !important;
+
+  font-size: 13px !important;
+  font-weight: 600 !important;
+
+  line-height: 1.5 !important;
+
+  overflow-wrap: anywhere !important;
+}
+
+
+/* ------------------------------------------------------------
+   IOC VALUE
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-detail-value code {
+  display: inline-block !important;
+
+  max-width: 100% !important;
+
+  padding: 5px 8px !important;
+
+  color: #67e8f9 !important;
+
+  background: rgba(34, 211, 238, 0.07) !important;
+
+  border: 1px solid rgba(34, 211, 238, 0.13) !important;
+  border-radius: 6px !important;
+
+  font-family:
+    "JetBrains Mono",
+    "SFMono-Regular",
+    Consolas,
+    monospace !important;
+
+  font-size: 12px !important;
+
+  overflow-wrap: anywhere !important;
+}
+
+
+/* ------------------------------------------------------------
+   DESCRIPTION
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-description {
+  margin: 0 !important;
+
+  color: #9db0c0 !important;
+
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+}
+
+
+/* ------------------------------------------------------------
+   TAGS
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-tags {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+
+  margin-top: 4px !important;
+}
+
+
+.threat-intelligence .ioc-tags > * {
+  display: inline-flex !important;
+  align-items: center !important;
+
+  min-height: 26px !important;
+
+  padding: 4px 9px !important;
+
+  color: #a8d9e2 !important;
+
+  background: rgba(34, 211, 238, 0.06) !important;
+
+  border: 1px solid rgba(34, 211, 238, 0.14) !important;
+  border-radius: 6px !important;
+
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+
+/* ------------------------------------------------------------
+   HEALTH / SEVERITY BADGES
+   ------------------------------------------------------------ */
+
+.threat-intelligence .health-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-height: 24px !important;
+
+  padding: 4px 9px !important;
+
+  border-radius: 999px !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+
+  white-space: nowrap !important;
+}
+
+
+/* ------------------------------------------------------------
+   RELATIONSHIPS
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-relationship-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+
+.threat-intelligence .ioc-relationship-list > * {
+  padding: 11px 12px !important;
+
+  background: rgba(3, 12, 22, 0.44) !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.09) !important;
+  border-radius: 8px !important;
+}
+
+
+.threat-intelligence .ioc-no-relationships {
+  margin: 0 !important;
+
+  color: #687f92 !important;
+
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+
+/* ------------------------------------------------------------
+   FORM DRAWER
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-drawer-form {
+  flex: 1 1 auto !important;
+
+  min-height: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  padding: 24px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(6, 17, 29, 0.78),
+      rgba(4, 13, 23, 0.96)
+    ) !important;
+}
+
+
+/* ------------------------------------------------------------
+   FORM GRID
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-form-grid {
+  width: 100% !important;
+
+  display: grid !important;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+
+  gap: 18px 16px !important;
+
+  align-items: start !important;
+}
+
+
+/* each form field */
+
+.threat-intelligence .ioc-form-grid > div {
+  min-width: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 7px !important;
+}
+
+
+/* full width field */
+
+.threat-intelligence .ioc-form-grid > .full-width {
+  grid-column: 1 / -1 !important;
+}
+
+
+/* labels */
+
+.threat-intelligence .ioc-form-grid label {
+  display: block !important;
+
+  margin: 0 !important;
+
+  color: #9fb2c2 !important;
+
+  font-size: 11px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.35 !important;
+
+  letter-spacing: 0.055em !important;
+  text-transform: uppercase !important;
+}
+
+
+/* required star */
+
+.threat-intelligence .ioc-form-grid label .required,
+.threat-intelligence .ioc-form-grid label span {
+  color: inherit;
+}
+
+
+/* ------------------------------------------------------------
+   FORM INPUTS
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-form-grid input,
+.threat-intelligence .ioc-form-grid select,
+.threat-intelligence .ioc-form-grid textarea {
+  box-sizing: border-box !important;
+
+  width: 100% !important;
+  max-width: 100% !important;
+
+  min-height: 42px !important;
+
+  padding: 10px 12px !important;
+
+  color: #dce8f2 !important;
+
+  background: #081624 !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 8px !important;
+
+  outline: none !important;
+
+  font-family: inherit !important;
+  font-size: 13px !important;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease !important;
+}
+
+
+.threat-intelligence .ioc-form-grid input::placeholder,
+.threat-intelligence .ioc-form-grid textarea::placeholder {
+  color: #526a7e !important;
+}
+
+
+.threat-intelligence .ioc-form-grid input:hover,
+.threat-intelligence .ioc-form-grid select:hover,
+.threat-intelligence .ioc-form-grid textarea:hover {
+  border-color: rgba(103, 232, 249, 0.22) !important;
+}
+
+
+.threat-intelligence .ioc-form-grid input:focus,
+.threat-intelligence .ioc-form-grid select:focus,
+.threat-intelligence .ioc-form-grid textarea:focus {
+  background: #091a2a !important;
+
+  border-color: rgba(34, 211, 238, 0.52) !important;
+
+  box-shadow:
+    0 0 0 3px rgba(34, 211, 238, 0.08) !important;
+}
+
+
+/* textarea */
+
+.threat-intelligence .ioc-form-grid textarea {
+  min-height: 120px !important;
+
+  resize: vertical !important;
+
+  line-height: 1.55 !important;
+}
+
+
+/* select */
+
+.threat-intelligence .ioc-form-grid select {
+  cursor: pointer !important;
+}
+
+
+/* date input */
+
+.threat-intelligence .ioc-form-grid input[type="datetime-local"],
+.threat-intelligence .ioc-form-grid input[type="date"] {
+  color-scheme: dark !important;
+}
+
+
+/* ------------------------------------------------------------
+   CONFIDENCE / NUMBER INPUT
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-confidence-input {
+  width: 100% !important;
+}
+
+
+/* ------------------------------------------------------------
+   FORM ERROR
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-form-error {
+  grid-column: 1 / -1 !important;
+
+  margin: 0 !important;
+  padding: 11px 13px !important;
+
+  color: #fecaca !important;
+
+  background: rgba(127, 29, 29, 0.18) !important;
+
+  border: 1px solid rgba(248, 113, 113, 0.22) !important;
+  border-radius: 8px !important;
+
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL / FORM ACTIONS
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-modal-actions {
+  flex: 0 0 auto !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+
+  margin-top: 24px !important;
+  padding-top: 18px !important;
+
+  border-top: 1px solid rgba(148, 163, 184, 0.10) !important;
+}
+
+
+/* all action buttons */
+
+.threat-intelligence .ioc-modal-actions button {
+  min-height: 40px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 9px 16px !important;
+
+  border-radius: 8px !important;
+
+  font-size: 12px !important;
+  font-weight: 700 !important;
+
+  cursor: pointer !important;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease !important;
+}
+
+
+/* secondary / cancel */
+
+.threat-intelligence .ioc-modal-actions button:first-child {
+  color: #9fb2c2 !important;
+
+  background: rgba(15, 31, 48, 0.72) !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.15) !important;
+}
+
+
+.threat-intelligence .ioc-modal-actions button:first-child:hover {
+  color: #e2e8f0 !important;
+
+  background: rgba(30, 48, 67, 0.9) !important;
+
+  border-color: rgba(148, 163, 184, 0.26) !important;
+}
+
+
+/* primary action */
+
+.threat-intelligence .ioc-modal-actions button:last-child {
+  color: #04212a !important;
+
+  background: #22d3ee !important;
+
+  border: 1px solid #22d3ee !important;
+
+  box-shadow:
+    0 5px 14px rgba(34, 211, 238, 0.12) !important;
+}
+
+
+.threat-intelligence .ioc-modal-actions button:last-child:hover {
+  background: #67e8f9 !important;
+
+  border-color: #67e8f9 !important;
+
+  transform: translateY(-1px) !important;
+
+  box-shadow:
+    0 7px 18px rgba(34, 211, 238, 0.18) !important;
+}
+
+
+.threat-intelligence .ioc-modal-actions button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+
+/* ------------------------------------------------------------
+   LOADING / EMPTY INSIDE DRAWER
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-details-drawer > .empty-state {
+  flex: 1 1 auto !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  min-height: 300px !important;
+
+  padding: 40px 24px !important;
+
+  color: #7f96a9 !important;
+}
+
+
+/* ------------------------------------------------------------
+   STANDALONE IOC DETAILS PAGE
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-details-workspace {
+  width: 100% !important;
+  max-width: 1100px !important;
+
+  margin: 0 auto !important;
+}
+
+
+.threat-intelligence .ioc-details-back-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+
+  margin-bottom: 18px !important;
+
+  color: #67e8f9 !important;
+
+  font-size: 12px !important;
+  font-weight: 700 !important;
+
+  text-decoration: none !important;
+}
+
+
+.threat-intelligence .ioc-details-back-link:hover {
+  color: #a5f3fc !important;
+}
+
+
+/* ------------------------------------------------------------
+   SCROLLBAR
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-details-drawer::-webkit-scrollbar,
+.threat-intelligence .ioc-drawer-content::-webkit-scrollbar,
+.threat-intelligence .ioc-drawer-form::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+
+.threat-intelligence .ioc-details-drawer::-webkit-scrollbar-track,
+.threat-intelligence .ioc-drawer-content::-webkit-scrollbar-track,
+.threat-intelligence .ioc-drawer-form::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+
+.threat-intelligence .ioc-details-drawer::-webkit-scrollbar-thumb,
+.threat-intelligence .ioc-drawer-content::-webkit-scrollbar-thumb,
+.threat-intelligence .ioc-drawer-form::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.28) !important;
+
+  border-radius: 999px !important;
+}
+
+
+.threat-intelligence .ioc-details-drawer::-webkit-scrollbar-thumb:hover,
+.threat-intelligence .ioc-drawer-content::-webkit-scrollbar-thumb:hover,
+.threat-intelligence .ioc-drawer-form::-webkit-scrollbar-thumb:hover {
+  background: rgba(103, 232, 249, 0.32) !important;
+}
+
+
+/* ------------------------------------------------------------
+   RESPONSIVE
+   ------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+  .threat-intelligence .ioc-details-drawer {
+    width: min(680px, 96vw) !important;
+    max-width: 680px !important;
+  }
+
+  .threat-intelligence .ioc-overview-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .threat-intelligence .ioc-details-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  .threat-intelligence .ioc-drawer-header {
+    min-height: 68px !important;
+
+    padding:
+      15px
+      16px !important;
+  }
+
+  .threat-intelligence .ioc-drawer-content,
+  .threat-intelligence .ioc-drawer-form {
+    padding: 18px !important;
+  }
+
+  .threat-intelligence .ioc-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+
+  .threat-intelligence .ioc-form-grid > .full-width {
+    grid-column: auto !important;
+  }
+
+  .threat-intelligence .ioc-modal-actions {
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+  }
+
+  .threat-intelligence .ioc-modal-actions button {
+    width: 100% !important;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .threat-intelligence .ioc-drawer-header h3 {
+    font-size: 17px !important;
+  }
+
+  .threat-intelligence .ioc-drawer-header > button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .threat-intelligence .ioc-detail-section {
+    padding: 14px !important;
+  }
+
+  .threat-intelligence .ioc-details-drawer {
+    border-left: 0 !important;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   ANIMATION
+   ------------------------------------------------------------ */
+
+@keyframes ti-ioc-drawer-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0.85;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   ACCESSIBILITY
+   ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .threat-intelligence .ioc-details-drawer {
+    animation: none !important;
+  }
+
+  .threat-intelligence .ioc-drawer-header > button,
+  .threat-intelligence .ioc-form-grid input,
+  .threat-intelligence .ioc-form-grid select,
+  .threat-intelligence .ioc-form-grid textarea,
+  .threat-intelligence .ioc-modal-actions button {
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   IOC ACTION MENU — FINAL FLOATING DROPDOWN FIX
+   ============================================================ */
+
+.threat-intelligence .ioc-actions {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  overflow: visible !important;
+}
+
+
+/* Keep the action cell itself visible */
+.threat-intelligence .ioc-actions,
+.threat-intelligence td:last-child {
+  overflow: visible !important;
+}
+
+
+/* Three-dot button */
+.threat-intelligence .ioc-action-button {
+  position: relative !important;
+  z-index: 10 !important;
+
+  width: 36px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  border-radius: 8px !important;
+
+  background: rgba(15, 31, 48, 0.82) !important;
+
+  color: #8ea4b8 !important;
+
+  font-size: 18px !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease !important;
+}
+
+
+.threat-intelligence .ioc-action-button:hover,
+.threat-intelligence .ioc-action-button:focus-visible {
+  background: rgba(34, 211, 238, 0.09) !important;
+  border-color: rgba(34, 211, 238, 0.30) !important;
+  color: #67e8f9 !important;
+}
+
+
+/* ------------------------------------------------------------
+   FLOATING MENU
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-action-menu {
+  position: absolute !important;
+
+  top: calc(100% + 6px) !important;
+  right: 0 !important;
+  left: auto !important;
+
+  z-index: 2000 !important;
+
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 180px !important;
+
+  padding: 6px !important;
+
+  display: none !important;
+
+  background: #0a1929 !important;
+
+  border: 1px solid rgba(103, 232, 249, 0.16) !important;
+  border-radius: 10px !important;
+
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.25) !important;
+
+  overflow: hidden !important;
+}
+
+
+/* Show menu */
+.threat-intelligence .ioc-actions:hover .ioc-action-menu,
+.threat-intelligence .ioc-actions:focus-within .ioc-action-menu {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+
+/* Menu buttons */
+.threat-intelligence .ioc-action-menu button {
+  width: 100% !important;
+  min-height: 36px !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  gap: 9px !important;
+
+  padding: 8px 10px !important;
+
+  border: 0 !important;
+  border-radius: 6px !important;
+
+  background: transparent !important;
+
+  color: #aebfce !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  text-align: left !important;
+
+  cursor: pointer !important;
+
+  white-space: nowrap !important;
+
+  transition:
+    background 140ms ease,
+    color 140ms ease !important;
+}
+
+
+.threat-intelligence .ioc-action-menu button:hover {
+  background: rgba(34, 211, 238, 0.08) !important;
+  color: #e2f7fb !important;
+}
+
+
+/* ------------------------------------------------------------
+   IMPORTANT:
+   Table containers must NOT clip the dropdown
+   ------------------------------------------------------------ */
+
+.threat-intelligence .threat-intelligence-table-container {
+  overflow: visible !important;
+}
+
+
+.threat-intelligence .table-wrap {
+  overflow: visible !important;
+}
+
+
+.threat-intelligence .table-wrap table {
+  overflow: visible !important;
+}
+
+
+/* Table cells containing action menu */
+.threat-intelligence .table-wrap tbody td:last-child {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+
+/* ------------------------------------------------------------
+   Last row menu should open upward
+   ------------------------------------------------------------ */
+
+.threat-intelligence .table-wrap tbody tr:last-child .ioc-action-menu {
+  top: auto !important;
+  bottom: calc(100% + 6px) !important;
+}
+
+
+/* ------------------------------------------------------------
+   Keep dropdown above everything
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-action-menu {
+  isolation: isolate !important;
+}
+
+
+/* ------------------------------------------------------------
+   Small screens
+   ------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+  .threat-intelligence .ioc-action-menu {
+    width: 170px !important;
+    min-width: 170px !important;
+    max-width: 170px !important;
+  }
+}
+
+/* ============================================================
+   IOC CONFIRMATION MODAL
+   FINAL PROFESSIONAL OVERLAY
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   FULL-SCREEN MODAL BACKDROP
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+
+  z-index: 5000 !important;
+
+  width: 100vw !important;
+  height: 100vh !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 0 !important;
+  padding: 24px !important;
+
+  background: rgba(2, 8, 18, 0.76) !important;
+
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+
+  box-sizing: border-box !important;
+
+  animation: ti-modal-backdrop-in 160ms ease-out both !important;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL CARD
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-modal {
+  position: relative !important;
+
+  width: min(460px, calc(100vw - 48px)) !important;
+  max-width: 460px !important;
+
+  max-height: calc(100vh - 48px) !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  margin: auto !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      #0b1c2d 0%,
+      #081725 55%,
+      #06111d 100%
+    ) !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 14px !important;
+
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.58),
+    0 10px 28px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(34, 211, 238, 0.025) !important;
+
+  animation: ti-modal-in 180ms ease-out both !important;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL HEADER
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-modal-header {
+  position: relative !important;
+
+  min-height: 72px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+
+  padding: 16px 20px !important;
+
+  background: rgba(5, 16, 29, 0.88) !important;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.11) !important;
+}
+
+
+/* header content */
+
+.threat-intelligence .ioc-modal-header > div:first-child {
+  min-width: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+
+/* eyebrow */
+
+.threat-intelligence .ioc-modal-header span {
+  color: #67e8f9 !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.2 !important;
+
+  letter-spacing: 0.13em !important;
+  text-transform: uppercase !important;
+}
+
+
+/* title */
+
+.threat-intelligence .ioc-modal-header h3 {
+  margin: 0 !important;
+
+  color: #f1f5f9 !important;
+
+  font-size: 17px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.3 !important;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL CLOSE BUTTON
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-modal-header > button {
+  flex: 0 0 auto !important;
+
+  width: 36px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+
+  color: #8ba0b2 !important;
+
+  background: rgba(15, 31, 48, 0.75) !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  border-radius: 8px !important;
+
+  font-size: 19px !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease !important;
+}
+
+
+.threat-intelligence .ioc-modal-header > button:hover {
+  color: #e2e8f0 !important;
+
+  background: rgba(148, 163, 184, 0.10) !important;
+
+  border-color: rgba(148, 163, 184, 0.25) !important;
+}
+
+
+/* ------------------------------------------------------------
+   CONFIRMATION CONTENT
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-confirmation-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+
+  padding: 28px 24px 22px !important;
+
+  text-align: center !important;
+}
+
+
+/* warning / status icon */
+
+.threat-intelligence .ioc-confirmation-content::before {
+  content: "!" !important;
+
+  width: 48px !important;
+  height: 48px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin-bottom: 16px !important;
+
+  color: #fbbf24 !important;
+
+  background: rgba(245, 158, 11, 0.09) !important;
+
+  border: 1px solid rgba(245, 158, 11, 0.25) !important;
+  border-radius: 50% !important;
+
+  font-size: 21px !important;
+  font-weight: 800 !important;
+}
+
+
+/* IOC value */
+
+.threat-intelligence .ioc-confirmation-content code {
+  display: inline-block !important;
+
+  max-width: 100% !important;
+
+  margin: 0 0 12px !important;
+  padding: 7px 11px !important;
+
+  color: #67e8f9 !important;
+
+  background: rgba(34, 211, 238, 0.07) !important;
+
+  border: 1px solid rgba(34, 211, 238, 0.14) !important;
+  border-radius: 7px !important;
+
+  font-family:
+    "JetBrains Mono",
+    "SFMono-Regular",
+    Consolas,
+    monospace !important;
+
+  font-size: 13px !important;
+  font-weight: 600 !important;
+
+  overflow-wrap: anywhere !important;
+}
+
+
+/* confirmation message */
+
+.threat-intelligence .ioc-confirmation-content p {
+  margin: 0 !important;
+
+  max-width: 360px !important;
+
+  color: #91a6b8 !important;
+
+  font-size: 13px !important;
+  line-height: 1.65 !important;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL FOOTER
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-modal > .ioc-modal-actions {
+  flex: 0 0 auto !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+
+  margin: 0 !important;
+  padding: 16px 20px !important;
+
+  background: rgba(3, 12, 22, 0.42) !important;
+
+  border-top: 1px solid rgba(148, 163, 184, 0.10) !important;
+}
+
+
+/* footer buttons */
+
+.threat-intelligence .ioc-modal > .ioc-modal-actions button {
+  min-height: 40px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 9px 16px !important;
+
+  border-radius: 8px !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+
+  cursor: pointer !important;
+
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease !important;
+}
+
+
+/* Cancel */
+
+.threat-intelligence .ioc-modal > .ioc-modal-actions button:first-child {
+  color: #a9bac8 !important;
+
+  background: rgba(15, 31, 48, 0.80) !important;
+
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+}
+
+
+.threat-intelligence .ioc-modal > .ioc-modal-actions button:first-child:hover {
+  color: #e2e8f0 !important;
+
+  background: rgba(30, 48, 67, 0.92) !important;
+
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+
+/* Disable / Enable */
+
+.threat-intelligence .ioc-modal > .ioc-modal-actions button:last-child {
+  color: #fff7ed !important;
+
+  background: #c2410c !important;
+
+  border: 1px solid #ea580c !important;
+
+  box-shadow:
+    0 5px 16px rgba(234, 88, 12, 0.15) !important;
+}
+
+
+.threat-intelligence .ioc-modal > .ioc-modal-actions button:last-child:hover {
+  background: #ea580c !important;
+
+  border-color: #f97316 !important;
+
+  transform: translateY(-1px) !important;
+
+  box-shadow:
+    0 8px 20px rgba(234, 88, 12, 0.22) !important;
+}
+
+
+/* ------------------------------------------------------------
+   ANIMATIONS
+   ------------------------------------------------------------ */
+
+@keyframes ti-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+@keyframes ti-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE
+   ------------------------------------------------------------ */
+
+@media (max-width: 600px) {
+  .threat-intelligence .ioc-modal-backdrop {
+    padding: 16px !important;
+  }
+
+  .threat-intelligence .ioc-modal {
+    width: min(100%, 460px) !important;
+    max-height: calc(100vh - 32px) !important;
+  }
+
+  .threat-intelligence .ioc-modal-header {
+    padding: 14px 16px !important;
+  }
+
+  .threat-intelligence .ioc-confirmation-content {
+    padding: 24px 18px 20px !important;
+  }
+
+  .threat-intelligence .ioc-modal > .ioc-modal-actions {
+    padding: 14px 16px !important;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .threat-intelligence .ioc-modal-backdrop,
+  .threat-intelligence .ioc-modal {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   IOC ACTION MENU
+   CURSOR / HOVER BRIDGE FIX
+   ============================================================ */
+
+/* Keep the action area stable */
+.threat-intelligence .ioc-actions {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+
+/* ------------------------------------------------------------
+   MENU — NO DEAD GAP
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-actions .ioc-action-menu {
+  top: calc(100% + 2px) !important;
+  right: 0 !important;
+
+  pointer-events: auto !important;
+
+  opacity: 0 !important;
+  visibility: hidden !important;
+
+  transform: translateY(-3px) !important;
+
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease,
+    transform 120ms ease !important;
+}
+
+
+/* ------------------------------------------------------------
+   SHOW MENU WHILE CURSOR IS ON BUTTON OR MENU
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-actions:hover .ioc-action-menu,
+.threat-intelligence .ioc-actions:focus-within .ioc-action-menu {
+  display: flex !important;
+  flex-direction: column !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+
+  transform: translateY(0) !important;
+
+  pointer-events: auto !important;
+}
+
+
+/* ------------------------------------------------------------
+   INVISIBLE HOVER BRIDGE
+   This fills the tiny space between button and menu.
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-actions .ioc-action-menu::before {
+  content: "" !important;
+
+  position: absolute !important;
+
+  top: -8px !important;
+  right: 0 !important;
+
+  width: 100% !important;
+  height: 10px !important;
+
+  background: transparent !important;
+
+  pointer-events: auto !important;
+}
+
+
+/* ------------------------------------------------------------
+   MENU ITSELF
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-actions .ioc-action-menu {
+  position: absolute !important;
+
+  z-index: 9999 !important;
+
+  width: 180px !important;
+  min-width: 180px !important;
+
+  padding: 6px !important;
+
+  background: #0a1929 !important;
+
+  border: 1px solid rgba(103, 232, 249, 0.16) !important;
+  border-radius: 10px !important;
+
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.48),
+    0 5px 15px rgba(0, 0, 0, 0.25) !important;
+
+  overflow: visible !important;
+}
+
+
+/* ------------------------------------------------------------
+   MENU ITEMS
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-actions .ioc-action-menu button {
+  position: relative !important;
+  z-index: 2 !important;
+
+  width: 100% !important;
+  min-height: 36px !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  padding: 8px 10px !important;
+
+  border: 0 !important;
+  border-radius: 6px !important;
+
+  background: transparent !important;
+
+  color: #aebfce !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  text-align: left !important;
+
+  white-space: nowrap !important;
+
+  cursor: pointer !important;
+
+  pointer-events: auto !important;
+
+  transition:
+    background 130ms ease,
+    color 130ms ease !important;
+}
+
+
+.threat-intelligence .ioc-actions .ioc-action-menu button:hover {
+  background: rgba(34, 211, 238, 0.09) !important;
+  color: #e2f7fb !important;
+}
+
+
+/* ------------------------------------------------------------
+   LAST ROW — OPEN UPWARD
+   ------------------------------------------------------------ */
+
+.threat-intelligence
+.table-wrap
+tbody
+tr:last-child
+.ioc-actions
+.ioc-action-menu {
+  top: auto !important;
+  bottom: calc(100% + 2px) !important;
+
+  transform: translateY(3px) !important;
+}
+
+
+.threat-intelligence
+.table-wrap
+tbody
+tr:last-child
+.ioc-actions:hover
+.ioc-action-menu,
+.threat-intelligence
+.table-wrap
+tbody
+tr:last-child
+.ioc-actions:focus-within
+.ioc-action-menu {
+  transform: translateY(0) !important;
+}
+
+
+/* Upward menu needs bridge below it */
+.threat-intelligence
+.table-wrap
+tbody
+tr:last-child
+.ioc-actions
+.ioc-action-menu::before {
+  top: auto !important;
+  bottom: -8px !important;
+}
+
+
+/* ------------------------------------------------------------
+   TABLE MUST NOT CLIP MENU
+   ------------------------------------------------------------ */
+
+.threat-intelligence .table-wrap,
+.threat-intelligence .table-wrap table,
+.threat-intelligence .table-wrap tbody,
+.threat-intelligence .table-wrap tr,
+.threat-intelligence .table-wrap td,
+.threat-intelligence .ioc-actions {
+  overflow: visible !important;
+}
+
+
+/* ------------------------------------------------------------
+   ACTION CELL
+   ------------------------------------------------------------ */
+
+.threat-intelligence .table-wrap td:last-child {
+  position: relative !important;
+
+  overflow: visible !important;
+
+  text-align: right !important;
+}
+
+
+/* ------------------------------------------------------------
+   REDUCE ACCIDENTAL MENU DISAPPEARANCE
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-actions:hover {
+  z-index: 10000 !important;
+}
+
+.threat-intelligence .ioc-actions:focus-within {
+  z-index: 10000 !important;
+}
+
+/* ============================================================
+   IOC LAYERING — FINAL Z-INDEX FIX
+   Action menu must stay below drawers/modals
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   TABLE ACTION MENU
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-actions {
+  position: relative !important;
+  z-index: 20 !important;
+}
+
+
+/*
+ * Keep the floating menu above the table,
+ * but BELOW any IOC drawer.
+ */
+.threat-intelligence .ioc-actions .ioc-action-menu {
+  z-index: 100 !important;
+}
+
+
+/* ------------------------------------------------------------
+   IOC RIGHT-SIDE DRAWER
+   Drawer must always cover the table/action menu
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-drawer-backdrop {
+  z-index: 3000 !important;
+}
+
+
+.threat-intelligence .ioc-details-drawer {
+  z-index: 3010 !important;
+}
+
+
+/* ------------------------------------------------------------
+   CONFIRMATION MODAL
+   Confirmation modal stays above drawer
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-modal-backdrop {
+  z-index: 5000 !important;
+}
+
+
+.threat-intelligence .ioc-modal {
+  z-index: 5010 !important;
+}
+
+
+/* ------------------------------------------------------------
+   IMPORTANT:
+   When drawer is open, table action menu can never visually
+   appear above it.
+   ------------------------------------------------------------ */
+
+.threat-intelligence .ioc-drawer-backdrop,
+.threat-intelligence .ioc-details-drawer,
+.threat-intelligence .ioc-modal-backdrop,
+.threat-intelligence .ioc-modal {
+  isolation: isolate !important;
+}
+/* ============================================================
+   IOC ACTION MENU — CLICK / FOCUS ONLY
+   Disable hover-open behavior
+   ============================================================ */
+
+/* Hidden by default */
+.threat-intelligence .ioc-actions .ioc-action-menu {
+  display: none !important;
+
+  opacity: 0 !important;
+  visibility: hidden !important;
+
+  pointer-events: none !important;
+
+  transform: translateY(-3px) !important;
+}
+
+/* Open only when the three-dot button is focused/clicked */
+.threat-intelligence .ioc-actions:focus-within .ioc-action-menu {
+  display: flex !important;
+  flex-direction: column !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+
+  pointer-events: auto !important;
+
+  transform: translateY(0) !important;
+}
+
+/* NEVER open merely because cursor is hovering */
+.threat-intelligence .ioc-actions:hover .ioc-action-menu {
+  display: none !important;
+}
+
+/* But if the action area contains focus, keep it open */
+.threat-intelligence .ioc-actions:hover:focus-within .ioc-action-menu {
+  display: flex !important;
+  flex-direction: column !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+
+  pointer-events: auto !important;
+}
+
+/* Menu positioning */
+.threat-intelligence .ioc-actions .ioc-action-menu {
+  position: absolute !important;
+
+  right: 0 !important;
+  top: calc(100% + 4px) !important;
+
+  z-index: 100 !important;
+
+  width: 180px !important;
+  min-width: 180px !important;
+
+  padding: 6px !important;
+
+  background: #0a1929 !important;
+
+  border: 1px solid rgba(103, 232, 249, 0.16) !important;
+  border-radius: 10px !important;
+
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.48),
+    0 5px 15px rgba(0, 0, 0, 0.25) !important;
+
+  overflow: hidden !important;
+}
+
+/* Last row opens upward */
+.threat-intelligence
+.table-wrap
+tbody
+tr:last-child
+.ioc-actions
+.ioc-action-menu {
+  top: auto !important;
+  bottom: calc(100% + 4px) !important;
+}
+
+/* Menu buttons */
+.threat-intelligence .ioc-action-menu button {
+  position: relative !important;
+  z-index: 2 !important;
+
+  width: 100% !important;
+  min-height: 36px !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  padding: 8px 10px !important;
+
+  border: 0 !important;
+  border-radius: 6px !important;
+
+  background: transparent !important;
+
+  color: #aebfce !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  text-align: left !important;
+
+  white-space: nowrap !important;
+
+  cursor: pointer !important;
+}
+
+.threat-intelligence .ioc-action-menu button:hover {
+  background: rgba(34, 211, 238, 0.09) !important;
+  color: #e2f7fb !important;
+}
+
+/* Keep table menu above table but below drawers */
+.threat-intelligence .ioc-actions {
+  position: relative !important;
+  z-index: 20 !important;
+}
+
+.threat-intelligence .ioc-drawer-backdrop {
+  z-index: 3000 !important;
+}
+
+.threat-intelligence .ioc-details-drawer {
+  z-index: 3010 !important;
+}
+
+.threat-intelligence .ioc-modal-backdrop {
+  z-index: 5000 !important;
+}
+
+
+/* ============================================================
+   IOC ACTION MENU — REACT CLICK CONTROLLED
+   ============================================================ */
+
+/* React controls visibility now. */
+.threat-intelligence .ioc-action-menu {
+  display: flex !important;
+  flex-direction: column !important;
+
+  position: absolute !important;
+  top: calc(100% + 5px) !important;
+  right: 0 !important;
+
+  z-index: 100 !important;
+
+  width: 190px !important;
+  min-width: 190px !important;
+
+  padding: 5px !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+
+  transform: none !important;
+
+  background: #0a1929 !important;
+  border: 1px solid rgba(103, 232, 249, 0.16) !important;
+  border-radius: 9px !important;
+
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.48),
+    0 5px 15px rgba(0, 0, 0, 0.25) !important;
+
+  overflow: hidden !important;
+}
+
+/*
+ * IMPORTANT:
+ * Do not open the menu from hover.
+ * The JSX conditionally renders it after click.
+ */
+.threat-intelligence .ioc-actions:hover .ioc-action-menu {
+  display: flex !important;
+}
+
+/* Last row opens upward. */
+.threat-intelligence
+.table-wrap
+tbody
+tr:last-child
+.ioc-actions
+.ioc-action-menu {
+  top: auto !important;
+  bottom: calc(100% + 5px) !important;
+}
+
+/* Three-dot open state. */
+.threat-intelligence .ioc-action-button.is-open {
+  background: rgba(34, 211, 238, 0.09) !important;
+  border-color: rgba(34, 211, 238, 0.30) !important;
+  color: #67e8f9 !important;
+}
+
+/* Menu items. */
+.threat-intelligence .ioc-action-menu button {
+  width: 100% !important;
+  min-height: 36px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+
+  padding: 8px 10px !important;
+
+  border: 0 !important;
+  border-radius: 6px !important;
+
+  background: transparent !important;
+  color: #aebfce !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  text-align: left !important;
+  white-space: nowrap !important;
+
+  cursor: pointer !important;
+}
+
+.threat-intelligence .ioc-action-menu button:hover {
+  background: rgba(34, 211, 238, 0.09) !important;
+  color: #e2f7fb !important;
+}
+
+.threat-intelligence .ioc-action-menu button:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.45) !important;
+  outline-offset: -2px !important;
+}
+
+/* ============================================================================
+ * Threat Intelligence — Filter Action Row
+ * ========================================================================== */
+
+.threat-intelligence .threat-intelligence-filter-actions {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  margin-top: 4px;
+}
+
+
+/* ============================================================================
+ * Threat Intelligence — Reset Button
+ * ========================================================================== */
+
+.threat-intelligence .threat-intelligence-filter-reset,
+.threat-intelligence .filter-reset-button,
+.threat-intelligence .ioc-filter-reset-button {
+  flex: 0 0 auto;
+
+  min-width: 118px;
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  box-sizing: border-box;
+
+  margin-left: auto;
+  padding: 0 14px;
+
+  border: 1px solid rgba(100, 116, 139, 0.42);
+  border-radius: 8px;
+
+  background: rgba(17, 28, 46, 0.95);
+
+  color: #aebbd0;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+
+  cursor: pointer;
+
+  opacity: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 2px 8px rgba(0, 0, 0, 0.16);
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+
+.threat-intelligence .threat-intelligence-filter-reset svg,
+.threat-intelligence .filter-reset-button svg,
+.threat-intelligence .ioc-filter-reset-button svg {
+  flex: 0 0 auto;
+
+  transition:
+    transform 160ms ease;
+}
+
+
+/* ============================================================================
+ * Reset — Disabled
+ * ========================================================================== */
+
+.threat-intelligence
+  .threat-intelligence-filter-reset:disabled,
+.threat-intelligence
+  .filter-reset-button:disabled,
+.threat-intelligence
+  .ioc-filter-reset-button:disabled {
+  opacity: 1;
+
+  background: rgba(15, 25, 41, 0.82);
+
+  border-color: rgba(100, 116, 139, 0.28);
+
+  color: #718096;
+
+  cursor: not-allowed;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.015),
+    0 1px 5px rgba(0, 0, 0, 0.10);
+}
+
+
+/* ============================================================================
+ * Reset — Enabled
+ * ========================================================================== */
+
+.threat-intelligence
+  .threat-intelligence-filter-reset:not(:disabled),
+.threat-intelligence
+  .filter-reset-button:not(:disabled),
+.threat-intelligence
+  .ioc-filter-reset-button:not(:disabled) {
+  background: rgba(24, 38, 59, 0.96);
+
+  border-color: rgba(100, 116, 139, 0.48);
+
+  color: #cbd5e1;
+
+  cursor: pointer;
+}
+
+
+.threat-intelligence
+  .threat-intelligence-filter-reset:not(:disabled):hover,
+.threat-intelligence
+  .filter-reset-button:not(:disabled):hover,
+.threat-intelligence
+  .ioc-filter-reset-button:not(:disabled):hover {
+  background: rgba(30, 47, 71, 0.98);
+
+  border-color: rgba(34, 211, 238, 0.38);
+
+  color: #e2e8f0;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 4px 12px rgba(0, 0, 0, 0.20);
+
+  transform: translateY(-1px);
+}
+
+
+.threat-intelligence
+  .threat-intelligence-filter-reset:not(:disabled):hover svg,
+.threat-intelligence
+  .filter-reset-button:not(:disabled):hover svg,
+.threat-intelligence
+  .ioc-filter-reset-button:not(:disabled):hover svg {
+  transform: rotate(-35deg);
+}
+
+
+.threat-intelligence
+  .threat-intelligence-filter-reset:not(:disabled):active,
+.threat-intelligence
+  .filter-reset-button:not(:disabled):active,
+.threat-intelligence
+  .ioc-filter-reset-button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+
+/* ============================================================================
+ * Threat Intelligence — Pagination Container
+ * ========================================================================== */
+
+.threat-intelligence .ioc-pagination {
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 12px;
+  padding: 10px 14px;
+
+  border: 1px solid rgba(30, 58, 85, 0.55);
+  border-radius: 10px;
+
+  background: rgba(7, 20, 34, 0.82);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.018),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+
+/* ============================================================================
+ * Pagination — Centered Content
+ * ========================================================================== */
+
+.threat-intelligence .ioc-pagination-content {
+  width: 100%;
+  max-width: 720px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 18px;
+
+  margin: 0 auto;
+}
+
+
+/* ============================================================================
+ * Pagination — Information
+ * ========================================================================== */
+
+.threat-intelligence .ioc-pagination-info {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  white-space: nowrap;
+
+  color: #8293aa;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+
+.threat-intelligence .ioc-pagination-info strong {
+  color: #d5deea;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+.threat-intelligence .ioc-pagination-label {
+  color: #94a3b8;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.threat-intelligence .ioc-pagination-separator {
+  color: #334155;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.threat-intelligence .ioc-pagination-total {
+  color: #8191a8;
+
+  font-size: 12px;
+  font-weight: 550;
+}
+
+
+.threat-intelligence .ioc-pagination-page {
+  color: #8293aa;
+
+  font-size: 12px;
+  font-weight: 550;
+}
+
+
+.threat-intelligence .ioc-pagination-page strong {
+  color: #cbd5e1;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* ============================================================================
+ * Pagination — Controls
+ * ========================================================================== */
+
+.threat-intelligence .ioc-pagination-controls {
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+/* ============================================================================
+ * Pagination — Buttons
+ * ========================================================================== */
+
+.threat-intelligence .ioc-pagination-button {
+  min-width: 78px;
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(51, 78, 106, 0.62);
+  border-radius: 8px;
+
+  background: rgba(12, 28, 45, 0.92);
+
+  color: #a7b6c9;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+
+  cursor: pointer;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+
+.threat-intelligence
+  .ioc-pagination-button:hover:not(:disabled) {
+  background: rgba(20, 42, 64, 0.96);
+
+  border-color: rgba(34, 211, 238, 0.34);
+
+  color: #dbe7f3;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 4px 10px rgba(0, 0, 0, 0.18);
+
+  transform: translateY(-1px);
+}
+
+
+.threat-intelligence
+  .ioc-pagination-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+
+.threat-intelligence
+  .ioc-pagination-button:focus-visible {
+  outline: none;
+
+  border-color: rgba(34, 211, 238, 0.55);
+
+  box-shadow:
+    0 0 0 2px rgba(34, 211, 238, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+
+.threat-intelligence
+  .ioc-pagination-button:disabled {
+  background: rgba(10, 24, 39, 0.72);
+
+  border-color: rgba(51, 78, 106, 0.32);
+
+  color: #526176;
+
+  cursor: not-allowed;
+
+  opacity: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.012),
+    0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ============================================================================
+ * Responsive
+ * ========================================================================== */
+
+@media (max-width: 760px) {
+  .threat-intelligence .ioc-pagination-content {
+    max-width: 100%;
+    gap: 14px;
+  }
+
+  .threat-intelligence .ioc-pagination-info {
+    gap: 5px;
+    font-size: 11px;
+  }
+
+  .threat-intelligence .ioc-pagination-button {
+    min-width: 70px;
+    height: 34px;
+    padding: 0 11px;
+  }
+}
+
+
+@media (max-width: 560px) {
+  .threat-intelligence .threat-intelligence-filter-actions {
+    align-items: stretch;
+  }
+
+  .threat-intelligence
+    .threat-intelligence-filter-reset,
+  .threat-intelligence
+    .filter-reset-button,
+  .threat-intelligence
+    .ioc-filter-reset-button {
+    min-width: 112px;
+  }
+
+  .threat-intelligence .ioc-pagination {
+    padding: 9px 10px;
+  }
+
+  .threat-intelligence .ioc-pagination-content {
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .threat-intelligence .ioc-pagination-info {
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .threat-intelligence .ioc-pagination-controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .threat-intelligence .ioc-pagination-button {
+    min-width: 82px;
+  }
+}
+
+/* ============================================================
+   THREAT INTELLIGENCE — RESET BUTTON POSITION
+   Reset stays on the lower row, aligned to the right.
+   ============================================================ */
+
+.threat-intelligence .threat-intelligence-filter-actions {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.threat-intelligence .threat-intelligence-filter-reset,
+.threat-intelligence .filter-reset-button,
+.threat-intelligence .ioc-filter-reset-button {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+
+  min-width: 118px;
+  height: 36px;
+  padding: 0 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(72, 101, 126, 0.55);
+  border-radius: 8px;
+
+  background: rgba(7, 20, 34, 0.9);
+  color: #a7bacb;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.threat-intelligence .threat-intelligence-filter-reset:hover,
+.threat-intelligence .filter-reset-button:hover,
+.threat-intelligence .ioc-filter-reset-button:hover {
+  border-color: rgba(34, 211, 238, 0.65);
+  color: #67e8f9;
+  background: rgba(12, 32, 50, 0.95);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.08);
+}
+
+.threat-intelligence .threat-intelligence-filter-reset:disabled,
+.threat-intelligence .filter-reset-button:disabled,
+.threat-intelligence .ioc-filter-reset-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+
+/* Keep the reset row separate from the filter controls */
+.threat-intelligence .threat-intelligence-filter-actions {
+  grid-column: 1 / -1;
+}
+
+
+/* Responsive */
+@media (max-width: 560px) {
+  .threat-intelligence .threat-intelligence-filter-actions {
+    justify-content: stretch;
+  }
+
+  .threat-intelligence .threat-intelligence-filter-reset,
+  .threat-intelligence .filter-reset-button,
+  .threat-intelligence .ioc-filter-reset-button {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+}
+
+
+/* ============================================================
+   THREAT INTELLIGENCE — FILTER RESET ROW
+   ============================================================ */
+
+.threat-intelligence .threat-intelligence-filter-actions {
+  width: 100% !important;
+  grid-column: 1 / -1 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+
+  margin-top: 4px !important;
+  padding: 0 !important;
+}
+
+.threat-intelligence .threat-intelligence-filter-reset {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+
+  min-width: 118px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 1px solid rgba(72, 101, 126, 0.55) !important;
+  border-radius: 8px !important;
+
+  background: rgba(7, 20, 34, 0.9) !important;
+  color: #a7bacb !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  cursor: pointer;
+}
+
+.threat-intelligence .threat-intelligence-filter-reset:hover:not(:disabled) {
+  border-color: rgba(34, 211, 238, 0.65) !important;
+  color: #67e8f9 !important;
+  background: rgba(12, 32, 50, 0.95) !important;
+}
+
+.threat-intelligence .threat-intelligence-filter-reset:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+}
+
+
+/* ============================================================
+   THREAT INTELLIGENCE — CENTERED PAGINATION
+   ============================================================ */
+
+.threat-intelligence .ioc-pagination {
+  width: 100% !important;
+  min-height: 64px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin-top: 12px !important;
+  padding: 8px 14px !important;
+
+  box-sizing: border-box !important;
+
+  border: 1px solid rgba(30, 58, 85, 0.55) !important;
+  border-radius: 10px !important;
+
+  background: rgba(7, 20, 34, 0.82) !important;
+}
+
+.threat-intelligence .ioc-pagination-content {
+  width: 100% !important;
+  max-width: 720px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 18px !important;
+  margin: 0 auto !important;
+}
+
+.threat-intelligence .ioc-pagination-info {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  white-space: nowrap !important;
+
+  color: #8293aa !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.threat-intelligence .ioc-pagination-controls {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 8px !important;
+}
+
+.threat-intelligence .ioc-pagination-controls > span {
+  white-space: nowrap !important;
+
+  color: #d5deea !important;
+
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.threat-intelligence .ioc-pagination-button {
+  min-width: 78px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 12px !important;
+
+  border: 1px solid rgba(72, 101, 126, 0.55) !important;
+  border-radius: 8px !important;
+
+  background: rgba(7, 20, 34, 0.9) !important;
+  color: #a7bacb !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  cursor: pointer !important;
+}
+
+.threat-intelligence .ioc-pagination-button:hover:not(:disabled) {
+  border-color: rgba(34, 211, 238, 0.65) !important;
+  color: #67e8f9 !important;
+  background: rgba(12, 32, 50, 0.95) !important;
+}
+
+.threat-intelligence .ioc-pagination-button:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 760px) {
+  .threat-intelligence .ioc-pagination-content {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .threat-intelligence .threat-intelligence-filter-actions {
+    justify-content: stretch !important;
+  }
+
+  .threat-intelligence .threat-intelligence-filter-reset {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .threat-intelligence .ioc-pagination-content {
+    flex-direction: column !important;
+  }
+}
+
+
+/* ============================================================
+   THREAT INTELLIGENCE — FILTER RESET ROW
+   ============================================================ */
+
+.threat-intelligence .threat-intelligence-filter-actions {
+  width: 100% !important;
+  grid-column: 1 / -1 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+
+  margin-top: 4px !important;
+  padding: 0 !important;
+}
+
+.threat-intelligence .threat-intelligence-filter-reset {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+
+  min-width: 118px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 1px solid rgba(72, 101, 126, 0.55) !important;
+  border-radius: 8px !important;
+
+  background: rgba(7, 20, 34, 0.9) !important;
+  color: #a7bacb !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  cursor: pointer;
+}
+
+.threat-intelligence .threat-intelligence-filter-reset:hover:not(:disabled) {
+  border-color: rgba(34, 211, 238, 0.65) !important;
+  color: #67e8f9 !important;
+  background: rgba(12, 32, 50, 0.95) !important;
+}
+
+.threat-intelligence .threat-intelligence-filter-reset:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+}
+
+
+/* ============================================================
+   THREAT INTELLIGENCE — CENTERED PAGINATION
+   ============================================================ */
+
+.threat-intelligence .ioc-pagination {
+  width: 100% !important;
+  min-height: 64px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin-top: 12px !important;
+  padding: 8px 14px !important;
+
+  box-sizing: border-box !important;
+
+  border: 1px solid rgba(30, 58, 85, 0.55) !important;
+  border-radius: 10px !important;
+
+  background: rgba(7, 20, 34, 0.82) !important;
+}
+
+.threat-intelligence .ioc-pagination-content {
+  width: 100% !important;
+  max-width: 720px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 18px !important;
+  margin: 0 auto !important;
+}
+
+.threat-intelligence .ioc-pagination-info {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  white-space: nowrap !important;
+
+  color: #8293aa !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.threat-intelligence .ioc-pagination-controls {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 8px !important;
+}
+
+.threat-intelligence .ioc-pagination-controls > span {
+  white-space: nowrap !important;
+
+  color: #d5deea !important;
+
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.threat-intelligence .ioc-pagination-button {
+  min-width: 78px !important;
+  height: 36px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 12px !important;
+
+  border: 1px solid rgba(72, 101, 126, 0.55) !important;
+  border-radius: 8px !important;
+
+  background: rgba(7, 20, 34, 0.9) !important;
+  color: #a7bacb !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  cursor: pointer !important;
+}
+
+.threat-intelligence .ioc-pagination-button:hover:not(:disabled) {
+  border-color: rgba(34, 211, 238, 0.65) !important;
+  color: #67e8f9 !important;
+  background: rgba(12, 32, 50, 0.95) !important;
+}
+
+.threat-intelligence .ioc-pagination-button:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 760px) {
+  .threat-intelligence .ioc-pagination-content {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .threat-intelligence .threat-intelligence-filter-actions {
+    justify-content: stretch !important;
+  }
+
+  .threat-intelligence .threat-intelligence-filter-reset {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .threat-intelligence .ioc-pagination-content {
+    flex-direction: column !important;
+  }
+}
