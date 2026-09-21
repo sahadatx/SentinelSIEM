@@ -56,3 +56,5 @@ deployment/production/tls/opensearch/**/*.key
 deployment/production/tls/opensearch/**/*.pem
 deployment/production/tls/opensearch/**/*.csr
 deployment/production/tls/opensearch/**/*.srl
+# Generated OpenSearch TLS admin material
+deployment/production/tls/opensearch/admin/
