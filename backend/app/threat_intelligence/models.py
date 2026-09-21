@@ -66,6 +66,18 @@ class IOCSeverity(StrEnum):
 class IOCStatus(StrEnum):
     """
     IOC lifecycle status.
+
+    ACTIVE:
+        IOC is currently trusted as an active threat-intelligence indicator.
+
+    EXPIRED:
+        IOC passed its configured expiration time.
+
+    REVOKED:
+        IOC has been explicitly invalidated by an authorized action.
+
+    IOC deletion is intentionally not part of the lifecycle. Historical
+    indicators remain available for investigation, correlation and audit.
     """
 
     ACTIVE = "active"
@@ -123,7 +135,7 @@ class IOC(BaseModel):
     """
     Canonical Threat Intelligence IOC domain model.
 
-    This model is the authoritative domain representation used by:
+    This is the authoritative domain representation used by:
 
         API
         Service
@@ -133,6 +145,10 @@ class IOC(BaseModel):
         Matching
 
     Persistence-specific details remain outside the domain model.
+
+    IOC records are retained rather than hard-deleted so historical
+    intelligence can continue to support investigation, correlation,
+    reporting and audit workflows.
     """
 
     model_config = ConfigDict(
@@ -242,6 +258,10 @@ class IOCCreate(BaseModel):
 
     API-layer representations such as confidence 0..100 are converted
     before this model is constructed.
+
+    New IOCs default to ACTIVE. Explicit lifecycle transitions such as
+    REVOKED should be handled through the appropriate service operation
+    rather than deletion.
     """
 
     model_config = ConfigDict(
