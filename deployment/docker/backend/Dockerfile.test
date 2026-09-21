@@ -1,0 +1,64 @@
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# ---------------------------------------------------------------------------
+# Build metadata
+# ---------------------------------------------------------------------------
+
+COPY pyproject.toml README.md LICENSE ./
+
+# ---------------------------------------------------------------------------
+# Application source
+# ---------------------------------------------------------------------------
+
+COPY backend ./backend
+
+# ---------------------------------------------------------------------------
+# Project-level artifacts required by the real Phase 01 → Phase 13
+# integration validation.
+# ---------------------------------------------------------------------------
+
+COPY docs ./docs
+COPY config ./config
+COPY plugins ./plugins
+COPY rules ./rules
+
+# ---------------------------------------------------------------------------
+# Install the project with development/test dependencies
+# ---------------------------------------------------------------------------
+
+RUN python -m pip install --upgrade pip \
+    && python -m pip install ".[dev]"
+
+# ---------------------------------------------------------------------------
+# Runtime environment
+# ---------------------------------------------------------------------------
+
+ENV PYTHONPATH=/app/backend \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# ---------------------------------------------------------------------------
+# Non-root runtime user
+# ---------------------------------------------------------------------------
+
+RUN useradd \
+        --system \
+        --uid 10001 \
+        --create-home \
+        --home-dir /home/siem \
+        siem \
+    && chown -R siem:siem /app /home/siem
+
+USER siem
+
+# ---------------------------------------------------------------------------
+# Integration test entrypoint
+# ---------------------------------------------------------------------------
+
+CMD ["python", "-m", "pytest"]
