@@ -1,4 +1,9 @@
 services:
+
+  # ==========================================================================
+  # PostgreSQL
+  # ==========================================================================
+
   postgres:
     image: ${POSTGRES_IMAGE:-postgres:16-alpine}
     restart: unless-stopped
@@ -10,6 +15,20 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+    # ------------------------------------------------------------------------
+    # Host-side integration-test / development access only.
+    #
+    # Docker services continue using:
+    #   postgresql+asyncpg://...@postgres:5432/...
+    #
+    # Host-side services use:
+    #   postgresql+asyncpg://...@127.0.0.1:5432/...
+    #
+    # PostgreSQL is NOT exposed on external interfaces.
+    # ------------------------------------------------------------------------
+    ports:
+      - "127.0.0.1:5432:5432"
 
     networks:
       - data
@@ -27,6 +46,19 @@ services:
 
     security_opt:
       - no-new-privileges:true
+
+
+  # ==========================================================================
+  # Redis
+  #
+  # Docker services:
+  #   redis://:${REDIS_PASSWORD}@redis:6379/0
+  #
+  # Host-side development:
+  #   redis://:${REDIS_PASSWORD}@127.0.0.1:6379/0
+  #
+  # Redis is exposed ONLY on localhost.
+  # ==========================================================================
 
   redis:
     image: ${REDIS_IMAGE:-redis:7-alpine}
@@ -48,6 +80,9 @@ services:
     networks:
       - data
 
+    ports:
+      - "127.0.0.1:6379:6379"
+
     healthcheck:
       test:
         [
@@ -61,6 +96,20 @@ services:
 
     security_opt:
       - no-new-privileges:true
+
+
+  # ==========================================================================
+  # OpenSearch
+  #
+  # Docker services:
+  #   https://sentinelsiem-opensearch:9200
+  #
+  # Host-side development:
+  #   https://127.0.0.1:9200
+  #
+  # IMPORTANT:
+  #   OpenSearch is bound ONLY to localhost on the host.
+  # ==========================================================================
 
   opensearch:
     image: ${OPENSEARCH_IMAGE:-opensearchproject/opensearch:2.19.0}
@@ -77,47 +126,98 @@ services:
         soft: -1
         hard: -1
 
-    volumes:
-      - opensearch_data:/usr/share/opensearch/data
+    # ------------------------------------------------------------------------
+    # Host-side development / integration access.
+    #
+    # Docker container still listens on :9200 internally.
+    # Host backend connects through:
+    #   https://127.0.0.1:9200
+    #
+    # Localhost-only binding prevents external exposure.
+    # ------------------------------------------------------------------------
+    ports:
+      - "127.0.0.1:9200:9200"
 
-      # ----------------------------------------------------------------
-      # SentinelSIEM OpenSearch configuration.
-      #
-      # Compose file:
-      # deployment/docker-compose/docker-compose.yml
-      #
-      # Correct project-relative location:
-      # deployment/production/tls/opensearch/
-      # ----------------------------------------------------------------
+    volumes:
+
+      # ----------------------------------------------------------------------
+      # Persistent OpenSearch data
+      # ----------------------------------------------------------------------
+
+      - type: volume
+        source: opensearch_data
+        target: /usr/share/opensearch/data
+
+      # ----------------------------------------------------------------------
+      # OpenSearch configuration
+      # ----------------------------------------------------------------------
 
       - type: bind
         source: ${OPENSEARCH_CONFIG_HOST_PATH:-../production/tls/opensearch/opensearch.yml}
         target: /usr/share/opensearch/config/opensearch.yml
         read_only: true
 
+      # ----------------------------------------------------------------------
+      # Root CA
+      # ----------------------------------------------------------------------
+
       - type: bind
         source: ${OPENSEARCH_ROOT_CA_HOST_PATH:-../production/tls/opensearch/opensearch-root-ca.pem}
         target: /usr/share/opensearch/config/opensearch-root-ca.pem
         read_only: true
+
+      # ----------------------------------------------------------------------
+      # HTTP certificate
+      # ----------------------------------------------------------------------
 
       - type: bind
         source: ${OPENSEARCH_HTTP_CERT_HOST_PATH:-../production/tls/opensearch/opensearch-http.crt}
         target: /usr/share/opensearch/config/opensearch-http.crt
         read_only: true
 
+      # ----------------------------------------------------------------------
+      # HTTP private key
+      # ----------------------------------------------------------------------
+
       - type: bind
         source: ${OPENSEARCH_HTTP_KEY_HOST_PATH:-../production/tls/opensearch/opensearch-http.key}
         target: /usr/share/opensearch/config/opensearch-http.key
         read_only: true
+
+      # ----------------------------------------------------------------------
+      # Transport certificate
+      # ----------------------------------------------------------------------
 
       - type: bind
         source: ${OPENSEARCH_TRANSPORT_CERT_HOST_PATH:-../production/tls/opensearch/opensearch-transport.crt}
         target: /usr/share/opensearch/config/opensearch-transport.crt
         read_only: true
 
+      # ----------------------------------------------------------------------
+      # Transport private key
+      # ----------------------------------------------------------------------
+
       - type: bind
         source: ${OPENSEARCH_TRANSPORT_KEY_HOST_PATH:-../production/tls/opensearch/opensearch-transport.key}
         target: /usr/share/opensearch/config/opensearch-transport.key
+        read_only: true
+
+      # ----------------------------------------------------------------------
+      # Securityadmin certificate
+      # ----------------------------------------------------------------------
+
+      - type: bind
+        source: ${OPENSEARCH_ADMIN_CERT_HOST_PATH:-../production/tls/opensearch/admin/kirk.crt}
+        target: /usr/share/opensearch/config/kirk.crt
+        read_only: true
+
+      # ----------------------------------------------------------------------
+      # Securityadmin private key
+      # ----------------------------------------------------------------------
+
+      - type: bind
+        source: ${OPENSEARCH_ADMIN_KEY_HOST_PATH:-../production/tls/opensearch/admin/kirk.key}
+        target: /usr/share/opensearch/config/kirk.key
         read_only: true
 
     networks:
@@ -130,7 +230,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl --silent --show-error --fail --cacert /usr/share/opensearch/config/opensearch-root-ca.pem -u \"admin:$${OPENSEARCH_INITIAL_ADMIN_PASSWORD}\" https://sentinelsiem-opensearch:9200/_cluster/health >/dev/null",
+          "curl --silent --show-error --fail --cacert /usr/share/opensearch/config/opensearch-root-ca.pem --cert /usr/share/opensearch/config/kirk.crt --key /usr/share/opensearch/config/kirk.key https://localhost:9200/_cluster/health >/dev/null",
         ]
       interval: 20s
       timeout: 10s
@@ -140,6 +240,50 @@ services:
     security_opt:
       - no-new-privileges:true
 
+
+  # ==========================================================================
+  # Database Migration Runner
+  # ==========================================================================
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/backend/Dockerfile
+
+    environment:
+      SIEM_ENVIRONMENT: ${SIEM_ENVIRONMENT:-production}
+
+      SIEM_DATABASE_URL: >-
+        postgresql+asyncpg://${POSTGRES_USER:-sentinsiem}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinsiem}
+
+      SIEM_AUTH_SECRET_KEY: ${SIEM_AUTH_SECRET_KEY:?SIEM_AUTH_SECRET_KEY must be set}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - data
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    profiles:
+      - migration
+
+
+  # ==========================================================================
+  # SentinelSIEM Backend
+  # ==========================================================================
+
   backend:
     build:
       context: ../..
@@ -148,36 +292,55 @@ services:
     restart: unless-stopped
 
     environment:
+
+      # ----------------------------------------------------------------------
+      # Application
+      # ----------------------------------------------------------------------
+
       SIEM_ENVIRONMENT: ${SIEM_ENVIRONMENT:-development}
       SIEM_DEBUG: ${SIEM_DEBUG:-false}
       SIEM_API_HOST: 0.0.0.0
       SIEM_API_PORT: 8000
       SIEM_LOG_LEVEL: ${SIEM_LOG_LEVEL:-INFO}
-      SIEM_MAX_REQUEST_BYTES: ${SIEM_MAX_REQUEST_BYTES:-10485760}
+      SIEM_MAX_REQUEST_BYTES: ${SIEM_MAX_REQUEST_BYTES:-1048576}
       SIEM_SHUTDOWN_TIMEOUT_SECONDS: ${SIEM_SHUTDOWN_TIMEOUT_SECONDS:-30}
 
+      # ----------------------------------------------------------------------
+      # PostgreSQL
+      # ----------------------------------------------------------------------
+
       SIEM_DATABASE_URL: >-
-        postgresql+asyncpg://${POSTGRES_USER:-sentinelsiem}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinelsiem}
+        postgresql+asyncpg://${POSTGRES_USER:-sentinsiem}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinsiem}
+
+      # ----------------------------------------------------------------------
+      # Authentication
+      # ----------------------------------------------------------------------
 
       SIEM_AUTH_SECRET_KEY: ${SIEM_AUTH_SECRET_KEY:?SIEM_AUTH_SECRET_KEY must be set}
       SIEM_AUTH_ALGORITHM: ${SIEM_AUTH_ALGORITHM:-HS256}
       SIEM_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES: ${SIEM_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES:-30}
-      SIEM_AUTH_ISSUER: ${SIEM_AUTH_ISSUER:-sentinelsiem}
-      SIEM_AUTH_AUDIENCE: ${SIEM_AUTH_AUDIENCE:-sentinelsiem-api}
+      SIEM_AUTH_ISSUER: ${SIEM_AUTH_ISSUER:-sentinsiem}
+      SIEM_AUTH_AUDIENCE: ${SIEM_AUTH_AUDIENCE:-sentinsiem-api}
 
-      # ----------------------------------------------------------------
-      # Redis realtime + ingestion configuration.
-      # ----------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # Redis
+      # ----------------------------------------------------------------------
+
       REDIS_URL: >-
         redis://:${REDIS_PASSWORD}@redis:6379/0
+
       EVENT_QUEUE_NAME: ${EVENT_QUEUE_NAME:-siem:events}
 
-      # ----------------------------------------------------------------
-      # OpenSearch event repository.
-      # ----------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # OpenSearch
+      #
+      # IMPORTANT:
+      # Docker backend MUST continue using the Docker service hostname.
+      # ----------------------------------------------------------------------
+
       OPENSEARCH_URL: https://sentinelsiem-opensearch:9200
       OPENSEARCH_USERNAME: ${OPENSEARCH_USERNAME:-admin}
-      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:?OPENSEARCH_INITIAL_ADMIN_PASSWORD must be set}
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_ADMIN_PASSWORD:?OPENSEARCH_ADMIN_PASSWORD must be set}
       OPENSEARCH_VERIFY_CERTS: "true"
       OPENSEARCH_CA_CERTS: /run/secrets/opensearch-root-ca.pem
 
@@ -197,7 +360,11 @@ services:
       - data
 
     volumes:
-      # Same certificate location used by OpenSearch.
+
+      # ----------------------------------------------------------------------
+      # OpenSearch Root CA
+      # ----------------------------------------------------------------------
+
       - type: bind
         source: ${OPENSEARCH_ROOT_CA_HOST_PATH:-../production/tls/opensearch/opensearch-root-ca.pem}
         target: /run/secrets/opensearch-root-ca.pem
@@ -230,6 +397,117 @@ services:
       retries: 5
       start_period: 20s
 
+
+  # ==========================================================================
+  # SentinelSIEM Integration Test Runner
+  #
+  # IMPORTANT:
+  # Do NOT inject SIEM_ENVIRONMENT here.
+  #
+  # Unit test:
+  #   Settings(_env_file=None)
+  #
+  # must be able to verify:
+  #   development
+  # ==========================================================================
+
+  integration-test:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/backend/Dockerfile.test
+
+    environment:
+
+      # ----------------------------------------------------------------------
+      # Application
+      # ----------------------------------------------------------------------
+
+      SIEM_DEBUG: "false"
+      SIEM_LOG_LEVEL: ${SIEM_LOG_LEVEL:-INFO}
+      SIEM_MAX_REQUEST_BYTES: ${SIEM_MAX_REQUEST_BYTES:-1048576}
+      SIEM_SHUTDOWN_TIMEOUT_SECONDS: ${SIEM_SHUTDOWN_TIMEOUT_SECONDS:-30}
+
+      # ----------------------------------------------------------------------
+      # PostgreSQL
+      # ----------------------------------------------------------------------
+
+      SIEM_DATABASE_URL: >-
+        postgresql+asyncpg://${POSTGRES_USER:-sentinsiem}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sentinsiem}
+
+      # ----------------------------------------------------------------------
+      # Authentication
+      # ----------------------------------------------------------------------
+
+      SIEM_AUTH_SECRET_KEY: ${SIEM_AUTH_SECRET_KEY:?SIEM_AUTH_SECRET_KEY must be set}
+      SIEM_AUTH_ALGORITHM: ${SIEM_AUTH_ALGORITHM:-HS256}
+      SIEM_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES: ${SIEM_AUTH_ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      SIEM_AUTH_ISSUER: ${SIEM_AUTH_ISSUER:-sentinsiem}
+      SIEM_AUTH_AUDIENCE: ${SIEM_AUTH_AUDIENCE:-sentinsiem-api}
+
+      # ----------------------------------------------------------------------
+      # Redis
+      # ----------------------------------------------------------------------
+
+      REDIS_URL: >-
+        redis://:${REDIS_PASSWORD}@redis:6379/0
+
+      EVENT_QUEUE_NAME: ${EVENT_QUEUE_NAME:-siem:events}
+
+      # ----------------------------------------------------------------------
+      # OpenSearch
+      # ----------------------------------------------------------------------
+
+      OPENSEARCH_URL: https://sentinelsiem-opensearch:9200
+      OPENSEARCH_USERNAME: ${OPENSEARCH_USERNAME:-admin}
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_ADMIN_PASSWORD:?OPENSEARCH_ADMIN_PASSWORD must be set}
+      OPENSEARCH_VERIFY_CERTS: "true"
+      OPENSEARCH_CA_CERTS: /run/secrets/opensearch-root-ca.pem
+
+      # ----------------------------------------------------------------------
+      # Test execution
+      # ----------------------------------------------------------------------
+
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      opensearch:
+        condition: service_healthy
+
+    networks:
+      - data
+
+    volumes:
+      - type: bind
+        source: ${OPENSEARCH_ROOT_CA_HOST_PATH:-../production/tls/opensearch/opensearch-root-ca.pem}
+        target: /run/secrets/opensearch-root-ca.pem
+        read_only: true
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    profiles:
+      - integration
+
+
+  # ==========================================================================
+  # Worker
+  # ==========================================================================
+
   worker:
     build:
       context: ../..
@@ -243,13 +521,18 @@ services:
       REDIS_URL: >-
         redis://:${REDIS_PASSWORD}@redis:6379/0
 
+      EVENT_QUEUE_NAME: ${EVENT_QUEUE_NAME:-siem:events}
+
+      # ----------------------------------------------------------------------
+      # OpenSearch
+      # ----------------------------------------------------------------------
+
       OPENSEARCH_URL: https://sentinelsiem-opensearch:9200
       OPENSEARCH_USERNAME: ${OPENSEARCH_USERNAME:-admin}
-      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:?OPENSEARCH_INITIAL_ADMIN_PASSWORD must be set}
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_ADMIN_PASSWORD:?OPENSEARCH_ADMIN_PASSWORD must be set}
       OPENSEARCH_VERIFY_CERTS: "true"
       OPENSEARCH_CA_CERTS: /run/secrets/opensearch-root-ca.pem
 
-      EVENT_QUEUE_NAME: ${EVENT_QUEUE_NAME:-siem:events}
       WORKER_RETRY_DELAY_SECONDS: ${WORKER_RETRY_DELAY_SECONDS:-2.0}
 
     depends_on:
@@ -278,6 +561,11 @@ services:
 
     cap_drop:
       - ALL
+
+
+  # ==========================================================================
+  # Collector
+  # ==========================================================================
 
   collector:
     build:
@@ -321,6 +609,14 @@ services:
     cap_drop:
       - ALL
 
+
+  # ==========================================================================
+  # Frontend
+  #
+  # Nginx uses /tmp for runtime temporary files.
+  # The container remains read-only while /tmp is provided through tmpfs.
+  # ==========================================================================
+
   frontend:
     build:
       context: ../..
@@ -339,7 +635,7 @@ services:
     read_only: true
 
     tmpfs:
-      - /tmp/nginx:mode=1777
+      - /tmp:mode=1777
 
     security_opt:
       - no-new-privileges:true
@@ -365,7 +661,13 @@ services:
       retries: 5
       start_period: 15s
 
+
+# ==============================================================================
+# Networks
+# ==============================================================================
+
 networks:
+
   edge:
     name: sentinelsiem_edge
 
@@ -374,9 +676,15 @@ networks:
 
   data:
     name: sentinelsiem_data
-    internal: true
+    external: true
+
+
+# ==============================================================================
+# Volumes
+# ==============================================================================
 
 volumes:
+
   postgres_data:
     name: sentinelsiem_postgres_data
 
