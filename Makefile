@@ -1,7 +1,10 @@
-.PHONY: install test lint format-check typecheck compile quality
+.PHONY: install dev test lint format-check typecheck compile quality
 
 install:
 	python -m pip install -e ".[dev]"
+
+dev:
+	python tools/dev_server.py
 
 test:
 	pytest
