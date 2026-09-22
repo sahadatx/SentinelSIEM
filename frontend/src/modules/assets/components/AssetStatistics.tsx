@@ -217,38 +217,6 @@ export default function AssetStatistics({
           );
         })}
       </div>
-
-      {/* ======================================================================
-          Critical Risk Information
-          ====================================================================== */}
-
-      {statistics.critical > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400">
-            <AlertTriangle
-              size={16}
-              strokeWidth={1.8}
-              aria-hidden="true"
-            />
-          </div>
-
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-red-300">
-              Critical risk assets
-            </p>
-
-            <p className="text-xs text-slate-500">
-              {statistics.critical.toLocaleString()}{" "}
-              asset
-              {statistics.critical === 1
-                ? ""
-                : "s"}{" "}
-              currently classified as
-              critical risk.
-            </p>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

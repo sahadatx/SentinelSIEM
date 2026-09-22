@@ -8462,3 +8462,172 @@ section.flex.flex-col.gap-4.rounded-xl.border.border-slate-800\/80.bg-slate-950\
     padding: 0 10px !important;
   }
 }
+
+/* ==========================================================================
+ * 04. HEADER TITLE AREA
+ * ========================================================================== */
+
+.assets-page > .mx-auto > section:first-child > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div
+  > div:last-child {
+  min-width: max-content;
+  flex: 0 1 auto;
+}
+
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div
+  > div:last-child
+  > p {
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+ * 04. HEADER TITLE AREA
+ * ========================================================================== */
+
+.assets-page > .mx-auto > section:first-child > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: max-content;
+  min-width: 0;
+}
+
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div
+  > div:last-child {
+  flex: 0 0 auto;
+  min-width: max-content;
+}
+
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div
+  > div:last-child
+  > p {
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* ==========================================================================
+ * 04. HEADER TITLE AREA
+ * ========================================================================== */
+
+.assets-page > .mx-auto > section:first-child > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  width: max-content;
+  min-width: 0;
+
+  gap: 0;
+}
+
+/* Remove header icon */
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div
+  > div:first-child {
+  display: none;
+}
+
+/* Title */
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  > div
+  > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  width: max-content;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+/* Assets title */
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  h1 {
+  margin: 0;
+
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* Description below title */
+.assets-page
+  > .mx-auto
+  > section:first-child
+  > div:first-child
+  h1
+  + p {
+  display: block;
+
+  width: max-content;
+  max-width: none;
+
+  margin: 4px 0 0;
+
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
