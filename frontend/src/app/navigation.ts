@@ -40,7 +40,6 @@
 
 import type { LucideIcon } from "lucide-react";
 
-
 /**
  * ============================================================================
  * Feature Navigation
@@ -60,7 +59,6 @@ import {
 } from "../modules/threat-intelligence/navigation";
 import { usersNavigation } from "../modules/users/navigation";
 import { systemNavigation } from "../modules/system/navigation";
-
 
 /**
  * ============================================================================
@@ -86,7 +84,6 @@ import { systemNavigation } from "../modules/system/navigation";
 export type NavigationSection =
   | "operations"
   | "administration";
-
 
 /**
  * ============================================================================
@@ -142,7 +139,6 @@ export interface NavigationItem {
   section: NavigationSection;
 }
 
-
 /**
  * ============================================================================
  * Feature Navigation Contract
@@ -163,7 +159,6 @@ interface FeatureNavigationItem {
   icon: LucideIcon;
   end?: boolean;
 }
-
 
 /**
  * ============================================================================
@@ -203,7 +198,6 @@ function composeNavigationItem(
   return navigationItem;
 }
 
-
 /**
  * ============================================================================
  * Users Navigation Adapter
@@ -214,7 +208,6 @@ function composeNavigationItem(
  * Keep the compatibility adapter here so the application registry does
  * not duplicate the Users module's permission, label, or icon values.
  */
-
 function composeUsersNavigationItem(
   section: NavigationSection,
 ): NavigationItem {
@@ -229,7 +222,6 @@ function composeUsersNavigationItem(
   );
 }
 
-
 /**
  * ============================================================================
  * Central Navigation Registry
@@ -242,56 +234,82 @@ function composeUsersNavigationItem(
  * All feature-specific navigation metadata remains owned by its module.
  *
  * Ordering here controls the visual ordering inside AppShell.
+ *
+ * Locked SentinelSIEM sidebar structure:
+ *
+ * OPERATIONS
+ * ├── Overview
+ * ├── Events
+ * ├── Alerts
+ * ├── Incidents
+ * ├── Detections
+ * ├── Threat Intelligence
+ * ├── MITRE ATT&CK
+ * ├── Assets
+ * └── System Health
+ *
+ * ADMINISTRATION
+ * ├── Users
+ * └── Audit Logs
  */
 export const navigation: NavigationItem[] = [
-
   /**
    * --------------------------------------------------------------------------
    * Operations
    * --------------------------------------------------------------------------
    */
 
+  // 1. Overview
   composeNavigationItem(
     dashboardNavigation,
     "operations",
   ),
 
+  // 2. Events
   composeNavigationItem(
     eventsNavigation,
     "operations",
   ),
 
+  // 3. Alerts
   composeNavigationItem(
     alertsNavigation,
     "operations",
   ),
 
+  // 4. Incidents
   composeNavigationItem(
     incidentsNavigation,
     "operations",
   ),
 
-  composeNavigationItem(
-    threatIntelligenceNavigation,
-    "operations",
-  ),
-
+  // 5. Detections
   composeNavigationItem(
     detectionNavigation,
     "operations",
   ),
 
+  // 6. Threat Intelligence
+  composeNavigationItem(
+    threatIntelligenceNavigation,
+    "operations",
+  ),
+
+  // 7. MITRE ATT&CK
   composeNavigationItem(
     mitreNavigation,
     "operations",
   ),
 
+  // 8. Assets
   composeNavigationItem(
     assetsNavigation,
     "operations",
   ),
 
-  composeUsersNavigationItem(
+  // 9. System Health
+  composeNavigationItem(
+    systemNavigation,
     "operations",
   ),
 
@@ -301,17 +319,17 @@ export const navigation: NavigationItem[] = [
    * --------------------------------------------------------------------------
    */
 
+  // 10. Users
+  composeUsersNavigationItem(
+    "administration",
+  ),
+
+  // 11. Audit Logs
   composeNavigationItem(
     auditNavigation,
     "administration",
   ),
-
-  composeNavigationItem(
-    systemNavigation,
-    "administration",
-  ),
 ];
-
 
 /**
  * ============================================================================
@@ -341,7 +359,6 @@ export function getNavigation(
   );
 }
 
-
 /**
  * ============================================================================
  * Navigation Group Helpers
@@ -366,7 +383,6 @@ export function getNavigationBySection(
       item.section === section,
   );
 }
-
 
 /**
  * ============================================================================
