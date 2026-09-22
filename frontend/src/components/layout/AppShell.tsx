@@ -26,10 +26,13 @@
  *      │    └── Status Footer
  *      │
  *      ├── Topbar
- *      │    ├── Application Identity
  *      │    ├── Environment
  *      │    ├── Notifications
- *      │    └── User Profile
+ *      │    ├── User Identity
+ *      │    │    ├── Avatar
+ *      │    │    ├── Username
+ *      │    │    └── Role
+ *      │    └── Sign Out
  *      │
  *      └── Routed Content
  *
@@ -60,7 +63,6 @@ import {
   CircleGauge,
   LogOut,
   Radio,
-  UserCircle,
 } from "lucide-react";
 
 import {
@@ -93,7 +95,10 @@ function formatEnvironment(
   }
 
   return environment
-    .replace(/[-_]+/g, " ")
+    .replace(
+      /[-_]+/g,
+      " ",
+    )
     .replace(
       /\b\w/g,
       (character) =>
@@ -104,6 +109,9 @@ function formatEnvironment(
 
 /**
  * Format the primary authenticated role.
+ *
+ * The authenticated user already provides roles through the existing
+ * AuthUser contract. No additional identity field is introduced here.
  */
 function formatRole(
   roles?: string[],
@@ -113,7 +121,10 @@ function formatRole(
     "Authenticated User";
 
   return role
-    .replace(/[-_]+/g, " ")
+    .replace(
+      /[-_]+/g,
+      " ",
+    )
     .replace(
       /\b\w/g,
       (character) =>
@@ -123,11 +134,7 @@ function formatRole(
 
 
 /**
- * Generate safe user initials.
- *
- * AuthUser currently exposes username as the authenticated identity.
- * display_name is intentionally NOT referenced here because it is not part
- * of the frontend AuthUser contract.
+ * Generate safe user initials from the existing username.
  */
 function getUserInitials(
   username: string | null | undefined,
@@ -302,8 +309,8 @@ export function AppShell() {
   /**
    * AuthUser exposes username.
    *
-   * Do not reference display_name here because it does not exist on the
-   * frontend AuthUser type.
+   * Keep using the existing authenticated identity field. No display_name
+   * field or additional backend identity contract is introduced.
    */
   const username =
     user?.username?.trim() ||
@@ -346,8 +353,6 @@ export function AppShell() {
    *   1. receives the already filtered navigation
    *   2. separates Operations from Administration
    *   3. renders both sections in a stable order
-   *
-   * Individual module permissions remain outside this component.
    */
 
   const visibleNavigation =
@@ -361,14 +366,8 @@ export function AppShell() {
    * Navigation Grouping
    * ==========================================================================
    *
-   * The canonical navigation registry defines:
-   *
-   *   Operations
-   *   Administration
-   *
    * Items without an explicit administration section are treated as
-   * Operations. This keeps the application shell backward-compatible with
-   * existing module navigation definitions.
+   * Operations.
    */
 
   const operationsNavigation =
@@ -392,6 +391,10 @@ export function AppShell() {
    * ==========================================================================
    * Logout
    * ==========================================================================
+   *
+   * Uses the existing authentication API and existing auth store lifecycle.
+   *
+   * No new logout behavior is introduced.
    */
 
   async function handleLogout() {
@@ -653,6 +656,16 @@ export function AppShell() {
 
 
             {/* ========================================================== */}
+            {/* Separator                                                   */}
+            {/* ========================================================== */}
+
+            <div
+              className="topbar-divider"
+              aria-hidden="true"
+            />
+
+
+            {/* ========================================================== */}
             {/* Notifications                                               */}
             {/* ========================================================== */}
 
@@ -677,72 +690,82 @@ export function AppShell() {
 
 
             {/* ========================================================== */}
-            {/* User Profile                                                */}
+            {/* Separator                                                   */}
             {/* ========================================================== */}
 
-            <div className="user-menu">
+            <div
+              className="topbar-divider"
+              aria-hidden="true"
+            />
 
-              <div className="user-summary">
 
-                <div
-                  className="user-summary-avatar"
-                  aria-hidden="true"
-                >
-                  {initials}
-                </div>
+            {/* ========================================================== */}
+            {/* User Identity                                               */}
+            {/* ========================================================== */}
 
-                <div className="user-summary-content">
+            <div className="user-identity">
 
-                  <strong>
-                    {username}
-                  </strong>
+              <div
+                className="user-avatar"
+                aria-hidden="true"
+              >
+                {initials}
+              </div>
 
-                  <span>
-                    {role}
-                  </span>
+              <div className="user-identity-content">
 
-                </div>
+                <strong>
+                  {username}
+                </strong>
 
-                <UserCircle
-                  size={17}
-                  aria-hidden="true"
-                  className="user-summary-icon"
-                />
+                <span>
+                  {role}
+                </span>
 
               </div>
 
-
-              {/* ======================================================== */}
-              {/* Logout                                                    */}
-              {/* ======================================================== */}
-
-              <button
-                className="logout-button"
-                type="button"
-                onClick={
-                  handleLogout
-                }
-                disabled={
-                  loggingOut
-                }
-                aria-label="Sign out"
-                title="Sign out"
-              >
-
-                <LogOut
-                  size={15}
-                  aria-hidden="true"
-                />
-
-                <span>
-                  {loggingOut
-                    ? "Signing out..."
-                    : "Sign out"}
-                </span>
-
-              </button>
-
             </div>
+
+
+            {/* ========================================================== */}
+            {/* Separator                                                   */}
+            {/* ========================================================== */}
+
+            <div
+              className="topbar-divider"
+              aria-hidden="true"
+            />
+
+
+            {/* ========================================================== */}
+            {/* Sign Out                                                    */}
+            {/* ========================================================== */}
+
+            <button
+              className="logout-button"
+              type="button"
+              onClick={
+                handleLogout
+              }
+              disabled={
+                loggingOut
+              }
+              aria-label="Sign out"
+              title="Sign out"
+            >
+
+              <LogOut
+                size={16}
+                aria-hidden="true"
+              />
+
+              <span>
+                {loggingOut
+                  ? "Signing out..."
+                  : "Sign out"}
+              </span>
+
+            </button>
 
           </div>
 
