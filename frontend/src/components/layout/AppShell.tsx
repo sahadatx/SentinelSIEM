@@ -7,7 +7,7 @@
  *
  * Responsibilities:
  * - Global application layout
- * - Sidebar navigation
+ * - Permission-filtered sidebar navigation
  * - Operations navigation
  * - Administration navigation
  * - Authenticated user presentation
@@ -33,13 +33,19 @@
  *      │
  *      └── Routed Content
  *
- * Navigation remains owned by:
+ * Navigation ownership:
  *
  *   frontend/src/app/navigation.ts
  *
- * Backend authorization remains the final security boundary.
+ * AppShell intentionally does not define:
+ * - individual application routes
+ * - individual module permissions
+ * - role-specific navigation rules
+ * - module ordering
  *
- * Dashboard-specific Zustand state is intentionally NOT used here.
+ * Navigation remains permission-aware through getNavigation().
+ *
+ * Backend authorization remains the final security boundary.
  *
  * ============================================================================
  */
@@ -161,7 +167,6 @@ function getUserInitials(
  * Shared renderer keeps Operations and Administration navigation visually and
  * behaviorally consistent.
  */
-
 function NavigationLink({
   to,
   label,
@@ -204,7 +209,6 @@ function NavigationLink({
  * App Shell
  * ============================================================================
  */
-
 export function AppShell() {
   const navigate =
     useNavigate();
@@ -334,7 +338,16 @@ export function AppShell() {
    *
    *   frontend/src/app/navigation.ts
    *
-   * AppShell only renders the permission-filtered registry.
+   * getNavigation() is responsible for returning the permission-filtered
+   * navigation registry.
+   *
+   * AppShell only:
+   *
+   *   1. receives the already filtered navigation
+   *   2. separates Operations from Administration
+   *   3. renders both sections in a stable order
+   *
+   * Individual module permissions remain outside this component.
    */
 
   const visibleNavigation =
@@ -348,13 +361,14 @@ export function AppShell() {
    * Navigation Grouping
    * ==========================================================================
    *
-   * navigation.ts provides the section metadata.
+   * The canonical navigation registry defines:
    *
-   * Operations:
-   *   Main SOC operational modules.
+   *   Operations
+   *   Administration
    *
-   * Administration:
-   *   Administrative/system modules.
+   * Items without an explicit administration section are treated as
+   * Operations. This keeps the application shell backward-compatible with
+   * existing module navigation definitions.
    */
 
   const operationsNavigation =
@@ -424,9 +438,7 @@ export function AppShell() {
 
         <div className="sidebar-brand">
 
-          <div
-            className="brand"
-          >
+          <div className="brand">
 
             <div
               className="brand-mark"
