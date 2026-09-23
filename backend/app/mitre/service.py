@@ -592,8 +592,8 @@ class MitreService:
                 getattr(
                     technique,
                     "external_id",
-                    None,
-                ) or technique.id,
+                    technique.id,
+                ),
             ).strip().upper()
 
             coverage_items.append(
@@ -688,8 +688,8 @@ class MitreService:
                 getattr(
                     technique,
                     "external_id",
-                    None,
-                ) or technique.id,
+                    technique.id,
+                ),
             ).strip().upper()
 
             mappings = await self.manager.mappings_for_technique(
